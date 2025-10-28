@@ -1,0 +1,2183 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Histórico de Estudos</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  :root {
+    --primary-color: #4a6fa5;
+    --secondary-color: #166088;
+    --accent-color: #4fc3f7;
+    --success-color: #4caf50;
+    --success-gradient: linear-gradient(135deg, #4caf50, #66bb6a, #81c784);
+    --success-dark: #388e3c;
+    --warning-color: #ff9800;
+    --danger-color: #f44336;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --text-color: #333;
+    --border-radius: 12px;
+    --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    --sidebar-width: 250px;
+  }
+  
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: #f5f7fa;
+    display: flex;
+    min-height: 100vh;
+  }
+  
+  #sidebar {
+    width: var(--sidebar-width);
+    background: linear-gradient(135deg, #2c3e50, #4a6fa5);
+    color: white;
+    padding: 30px 20px;
+    position: fixed;
+    height: 100%;
+    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    z-index: 100;
+  }
+  
+  #sidebar .logo {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  #sidebar .logo h2 {
+    color: white;
+    font-weight: 500;
+  }
+  
+  #sidebar .logo i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: var(--accent-color);
+  }
+  
+  .sidebar-menu {
+    list-style: none;
+  }
+  
+  .sidebar-menu li {
+    margin-bottom: 10px;
+  }
+  
+  .sidebar-button {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    border-radius: var(--border-radius);
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+  }
+  
+  .sidebar-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+  }
+  
+  .sidebar-button i {
+    margin-right: 10px;
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+  }
+  
+  .sidebar-button.active {
+    background-color: var(--accent-color);
+    color: var(--dark-color);
+    font-weight: 500;
+  }
+  
+  #main-content {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: calc(var(--sidebar-width) + 30px);
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+  
+  .header h1 {
+    color: var(--primary-color);
+    font-weight: 500;
+  }
+  
+  .stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .stat-card {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--box-shadow);
+    text-align: center;
+    transition: transform 0.3s ease;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-3px);
+  }
+  
+  .stat-card h3 {
+    color: var(--secondary-color);
+    font-size: 1rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .stat-card p {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+  
+  .time-period-selector {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+  }
+  
+  .time-period-button {
+    padding: 12px 20px;
+    font-size: 1rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: white;
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .time-period-button:hover {
+    background-color: var(--accent-color);
+    color: white;
+    transform: translateY(-2px);
+  }
+  
+  .time-period-button.active {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .chart-container {
+    margin: 30px 0;
+    padding: 30px;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 30px 0;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+  }
+  
+  th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  th {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 500;
+    position: sticky;
+    top: 0;
+  }
+  
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  .progress-container {
+    height: 10px;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+  
+  .progress-bar {
+    height: 100%;
+    border-radius: 5px;
+    background: linear-gradient(90deg, var(--accent-color), var(--primary-color));
+    width: 0%;
+    transition: width 0.5s ease;
+  }
+  
+  .accuracy-high {
+    color: var(--success-color);
+    font-weight: 500;
+  }
+  
+  .accuracy-medium {
+    color: var(--warning-color);
+    font-weight: 500;
+  }
+  
+  .accuracy-low {
+    color: var(--danger-color);
+    font-weight: 500;
+  }
+  
+  .streak-high {
+    background-color: #e8f5e9 !important;
+    font-weight: 500;
+  }
+  
+  .streak-fire {
+    color: #ff5722;
+    margin-left: 5px;
+  }
+  
+  .streak-trophy {
+    color: #ffc107;
+    margin-left: 5px;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  .view-container {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 30px;
+    margin-bottom: 30px;
+  }
+  
+  .view-container h2 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  /* Calendário de Metas - VERSÃO COM CÍRCULOS E SEQUÊNCIAS */
+  .calendar-container {
+    margin: 30px 0;
+    padding: 30px;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+  }
+  
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .calendar-header h2 {
+    color: var(--primary-color);
+    font-weight: 500;
+  }
+  
+  .calendar-nav {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .calendar-nav button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .calendar-nav button:hover {
+    background-color: var(--secondary-color);
+    transform: scale(1.05);
+  }
+  
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+  
+  .calendar-day-header {
+    text-align: center;
+    padding: 10px;
+    font-weight: 500;
+    color: var(--secondary-color);
+    background-color: #f0f4f8;
+    border-radius: 5px;
+  }
+  
+  .calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: #f8f9fa;
+    position: relative;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    overflow: hidden;
+    margin: 2px;
+  }
+  
+  .calendar-day:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .calendar-day.today {
+    border-color: var(--accent-color);
+    background-color: #e3f2fd;
+  }
+  
+  .calendar-day.completed {
+    background: var(--success-gradient);
+    color: white;
+    border: 2px solid var(--success-dark);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    animation: pulse 2s infinite;
+  }
+  
+  .calendar-day.completed:hover {
+    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+    transform: scale(1.15);
+  }
+  
+  .calendar-day.partial {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border: 2px solid var(--warning-color);
+  }
+  
+  .calendar-day.not-completed {
+    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+    border: 2px solid var(--danger-color);
+  }
+  
+  .calendar-day-number {
+    font-size: 1rem;
+    font-weight: 600;
+    z-index: 2;
+  }
+  
+  .calendar-day-status {
+    margin-top: 2px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    z-index: 2;
+  }
+  
+  .calendar-day.completed .calendar-day-status {
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  
+  .calendar-day.completed::before {
+    content: "★";
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.7rem;
+    color: gold;
+    text-shadow: 0 0 2px rgba(0,0,0,0.5);
+    z-index: 3;
+  }
+  
+  .calendar-day.completed::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 60%);
+    z-index: 1;
+  }
+  
+  /* Efeito de sequência - linhas conectando dias consecutivos */
+  .calendar-day.sequence-start {
+    position: relative;
+  }
+  
+  .calendar-day.sequence-start::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    width: 8px;
+    height: 2px;
+    background-color: var(--success-dark);
+    z-index: 1;
+  }
+  
+  .calendar-day.sequence-middle {
+    position: relative;
+  }
+  
+  .calendar-day.sequence-middle::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    width: 8px;
+    height: 2px;
+    background-color: var(--success-dark);
+    z-index: 1;
+  }
+  
+  .calendar-day.sequence-middle::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    width: 8px;
+    height: 2px;
+    background-color: var(--success-dark);
+    z-index: 1;
+  }
+  
+  .calendar-day.sequence-end {
+    position: relative;
+  }
+  
+  .calendar-day.sequence-end::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    width: 8px;
+    height: 2px;
+    background-color: var(--success-dark);
+    z-index: 1;
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    }
+    50% {
+      box-shadow: 0 4px 16px rgba(76, 175, 80, 0.5);
+    }
+    100% {
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    }
+  }
+  
+  .calendar-legend {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 20px;
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+  }
+  
+  .legend-color.completed {
+    background: var(--success-gradient);
+    border-color: var(--success-dark);
+    animation: pulse 2s infinite;
+  }
+  
+  .legend-color.partial {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border-color: var(--warning-color);
+  }
+  
+  .legend-color.not-completed {
+    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+    border-color: var(--danger-color);
+  }
+  
+  .legend-color.no-data {
+    background-color: #f8f9fa;
+    border: 2px solid #e0e0e0;
+  }
+  
+  .calendar-summary {
+    margin-top: 20px;
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #f0f4f8, #e3f2fd);
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--primary-color);
+  }
+  
+  .calendar-summary h3 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  .calendar-summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+  }
+  
+  .summary-stat {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .summary-stat.completed {
+    border-top: 4px solid var(--success-color);
+  }
+  
+  .summary-stat.partial {
+    border-top: 4px solid var(--warning-color);
+  }
+  
+  .summary-stat.total {
+    border-top: 4px solid var(--primary-color);
+  }
+  
+  .summary-stat h4 {
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+  }
+  
+  .summary-stat p {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--dark-color);
+  }
+  
+  .summary-stat.completed p {
+    color: var(--success-color);
+  }
+  
+  .summary-stat.partial p {
+    color: var(--warning-color);
+  }
+  
+  .summary-stat.total p {
+    color: var(--primary-color);
+  }
+
+  /* Status de sincronização */
+  .sync-status {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 15px;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    z-index: 1000;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+  }
+  
+  .sync-status.syncing {
+    background-color: var(--warning-color);
+    color: white;
+  }
+  
+  .sync-status.synced {
+    background-color: var(--success-color);
+    color: white;
+  }
+  
+  .sync-status.error {
+    background-color: var(--danger-color);
+    color: white;
+  }
+
+  /* Botões de sincronização */
+  .sync-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  
+  .sync-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+  }
+  
+  .sync-button.upload {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .sync-button.download {
+    background-color: var(--success-color);
+    color: white;
+  }
+  
+  .sync-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  @media (max-width: 992px) {
+    #sidebar {
+      width: 70px;
+      padding: 20px 10px;
+      overflow: hidden;
+    }
+    
+    #sidebar .logo h2,
+    .sidebar-button span {
+      display: none;
+    }
+    
+    #sidebar .logo i {
+      margin-right: 0;
+      font-size: 1.8rem;
+    }
+    
+    .sidebar-button {
+      justify-content: center;
+      padding: 12px 5px;
+    }
+    
+    .sidebar-button i {
+      margin-right: 0;
+      font-size: 1.3rem;
+    }
+    
+    #main-content {
+      margin-left: 70px;
+      padding-left: 20px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .stats-container {
+      grid-template-columns: 1fr 1fr;
+    }
+    
+    .time-period-selector {
+      gap: 10px;
+    }
+    
+    .time-period-button {
+      padding: 10px 15px;
+      font-size: 0.9rem;
+    }
+    
+    .calendar-grid {
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+    
+    .calendar-day-number {
+      font-size: 0.9rem;
+    }
+    
+    .calendar-day-status {
+      font-size: 0.6rem;
+    }
+    
+    .calendar-summary-stats {
+      grid-template-columns: 1fr;
+    }
+    
+    .sync-buttons {
+      flex-direction: column;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .stats-container {
+      grid-template-columns: 1fr;
+    }
+    
+    th, td {
+      padding: 10px 8px;
+      font-size: 0.9rem;
+    }
+    
+    .chart-container {
+      padding: 15px;
+    }
+    
+    .calendar-grid {
+      grid-template-columns: repeat(7, 1fr);
+    }
+    
+    .calendar-day-number {
+      font-size: 0.8rem;
+    }
+    
+    .calendar-day-status {
+      display: none;
+    }
+    
+    .calendar-legend {
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+  }
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <div class="logo">
+    <i class="fas fa-book-open"></i>
+    <h2>Study Tracker</h2>
+  </div>
+  <ul class="sidebar-menu">
+    <li>
+      <a href="index.html" class="sidebar-button">
+        <i class="fas fa-stopwatch"></i>
+        <span>Tracker</span>
+      </a>
+    </li>
+    <li>
+      <a href="#" class="sidebar-button active">
+        <i class="fas fa-history"></i>
+        <span>Histórico</span>
+      </a>
+    </li>
+    <li>
+      <a href="conteudos.html" class="sidebar-button">
+        <i class="fas fa-book"></i>
+        <span>Conteúdos</span>
+      </a>
+    </li>
+  </ul>
+</div>
+
+<div id="main-content">
+  <div class="header">
+    <h1><i class="fas fa-chart-line"></i> Histórico de Estudos</h1>
+  </div>
+  
+  <!-- Botões de sincronização manual -->
+  <div class="sync-buttons">
+    <button id="uploadButton" class="sync-button upload">
+      <i class="fas fa-cloud-upload-alt"></i> Enviar para Nuvem
+    </button>
+    <button id="downloadButton" class="sync-button download">
+      <i class="fas fa-cloud-download-alt"></i> Buscar da Nuvem
+    </button>
+  </div>
+  
+  <div class="stats-container">
+    <div class="stat-card">
+      <h3><i class="fas fa-clock"></i> Tempo Total</h3>
+      <p id="totalTime">0h</p>
+    </div>
+    
+    <div class="stat-card">
+      <h3><i class="fas fa-calendar-day"></i> Hoje</h3>
+      <p id="todayTime">0h</p>
+    </div>
+    
+    <div class="stat-card">
+      <h3><i class="fas fa-calendar-week"></i> Esta Semana</h3>
+      <p id="weekTime">0h</p>
+    </div>
+    
+    <div class="stat-card">
+      <h3><i class="fas fa-calendar-alt"></i> Este Mês</h3>
+      <p id="monthTime">0h</p>
+    </div>
+    
+    <div class="stat-card">
+      <h3><i class="fas fa-calendar"></i> Este Ano</h3>
+      <p id="yearTime">0h</p>
+    </div>
+    
+    <div class="stat-card">
+      <h3><i class="fas fa-bullseye"></i> Média Diária</h3>
+      <p id="dailyAverage">0h</p>
+    </div>
+    
+    <div class="stat-card">
+      <h3><i class="fas fa-fire"></i> Sequência Atual</h3>
+      <p id="currentStreak">0 dias</p>
+    </div>
+    
+    <div class="stat-card">
+      <h3><i class="fas fa-trophy"></i> Recorde</h3>
+      <p id="recordStreak">0 dias</p>
+    </div>
+  </div>
+  
+  <!-- Calendário de Metas - VERSÃO COM CÍRCULOS E SEQUÊNCIAS -->
+  <div class="calendar-container">
+    <div class="calendar-header">
+      <h2><i class="fas fa-calendar-alt"></i> Calendário de Metas - 30 Questões/Dia</h2>
+      <div class="calendar-nav">
+        <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+        <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+    <div id="calendar"></div>
+    <div class="calendar-legend">
+      <div class="legend-item">
+        <div class="legend-color completed"></div>
+        <span><strong>Meta Cumprida!</strong> (30+ questões)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color partial"></div>
+        <span>Parcial (1-29 questões)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color not-completed"></div>
+        <span>Sem questões</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color no-data"></div>
+        <span>Dias futuros</span>
+      </div>
+    </div>
+    <div class="calendar-summary">
+      <h3><i class="fas fa-chart-pie"></i> Resumo do Mês</h3>
+      <div class="calendar-summary-stats">
+        <div class="summary-stat completed">
+          <h4>Dias com Meta Cumprida</h4>
+          <p id="completedDays">0</p>
+        </div>
+        <div class="summary-stat partial">
+          <h4>Dias com Estudo Parcial</h4>
+          <p id="partialDays">0</p>
+        </div>
+        <div class="summary-stat total">
+          <h4>Total de Questões</h4>
+          <p id="totalQuestions">0</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="time-period-selector">
+    <button class="time-period-button active" data-period="daily">
+      <i class="fas fa-calendar-day"></i> Diário
+    </button>
+    <button class="time-period-button" data-period="weekly">
+      <i class="fas fa-calendar-week"></i> Semanal
+    </button>
+    <button class="time-period-button" data-period="monthly">
+      <i class="fas fa-calendar-alt"></i> Mensal
+    </button>
+    <button class="time-period-button" data-period="yearly">
+      <i class="fas fa-calendar"></i> Anual
+    </button>
+  </div>
+  
+  <div class="chart-container">
+    <canvas id="studyChart"></canvas>
+  </div>
+  
+  <div class="view-container" id="dailyView">
+    <h2><i class="fas fa-calendar-day"></i> Detalhes Diários</h2>
+    <table id="dailyTable">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Tempo</th>
+          <th>Sessões</th>
+          <th>Exercícios</th>
+          <th>Acertos</th>
+          <th>Precisão</th>
+        </tr>
+      </thead>
+      <tbody id="dailyTableBody">
+        <!-- Dados serão inseridos aqui via JavaScript -->
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="view-container hidden" id="weeklyView">
+    <h2><i class="fas fa-calendar-week"></i> Detalhes Semanais</h2>
+    <table id="weeklyTable">
+      <thead>
+        <tr>
+          <th>Semana</th>
+          <th>Tempo</th>
+          <th>Sessões</th>
+          <th>Exercícios</th>
+          <th>Acertos</th>
+          <th>Precisão</th>
+          <th>Meta (20h)</th>
+        </tr>
+      </thead>
+      <tbody id="weeklyTableBody">
+        <!-- Dados serão inseridos aqui via JavaScript -->
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="view-container hidden" id="monthlyView">
+    <h2><i class="fas fa-calendar-alt"></i> Detalhes Mensais</h2>
+    <table id="monthlyTable">
+      <thead>
+        <tr>
+          <th>Mês</th>
+          <th>Tempo</th>
+          <th>Sessões</th>
+          <th>Exercícios</th>
+          <th>Acertos</th>
+          <th>Precisão</th>
+          <th>Média Diária</th>
+        </tr>
+      </thead>
+      <tbody id="monthlyTableBody">
+        <!-- Dados serão inseridos aqui via JavaScript -->
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="view-container hidden" id="yearlyView">
+    <h2><i class="fas fa-calendar"></i> Detalhes Anuais</h2>
+    <table id="yearlyTable">
+      <thead>
+        <tr>
+          <th>Ano</th>
+          <th>Tempo</th>
+          <th>Sessões</th>
+          <th>Exercícios</th>
+          <th>Acertos</th>
+          <th>Precisão</th>
+          <th>Média Mensal</th>
+        </tr>
+      </thead>
+      <tbody id="yearlyTableBody">
+        <!-- Dados serão inseridos aqui via JavaScript -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Status de sincronização -->
+<div id="syncStatus" class="sync-status hidden">
+  <i class="fas fa-sync"></i> <span id="syncMessage">Sincronizando...</span>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Configuração do Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
+    authDomain: "meu-study-tracker.firebaseapp.com",
+    databaseURL: "https://meu-study-tracker-default-rtdb.firebaseio.com",
+    projectId: "meu-study-tracker",
+    storageBucket: "meu-study-tracker.firebasestorage.app",
+    messagingSenderId: "715609213126",
+    appId: "1:715609213126:web:cffaa561585893341b6fc7"
+  };
+
+  // Inicializar Firebase
+  let database;
+  try {
+    const app = firebase.initializeApp(firebaseConfig);
+    database = firebase.database();
+    console.log("Firebase inicializado com sucesso!");
+  } catch (error) {
+    console.error("Erro ao inicializar Firebase:", error);
+    showSyncStatus("Erro na conexão com Firebase", "error");
+  }
+
+  // Carrega os dados do localStorage
+  let sessionsByDate = JSON.parse(localStorage.getItem('sessionsByDate')) || {};
+  let studyChart;
+  let currentCalendarMonth = new Date().getMonth();
+  let currentCalendarYear = new Date().getFullYear();
+
+  // Elementos da página
+  const totalTimeElement = document.getElementById('totalTime');
+  const todayTimeElement = document.getElementById('todayTime');
+  const weekTimeElement = document.getElementById('weekTime');
+  const monthTimeElement = document.getElementById('monthTime');
+  const yearTimeElement = document.getElementById('yearTime');
+  const dailyAverageElement = document.getElementById('dailyAverage');
+  const currentStreakElement = document.getElementById('currentStreak');
+  const recordStreakElement = document.getElementById('recordStreak');
+  
+  const dailyTableBody = document.getElementById('dailyTableBody');
+  const weeklyTableBody = document.getElementById('weeklyTableBody');
+  const monthlyTableBody = document.getElementById('monthlyTableBody');
+  const yearlyTableBody = document.getElementById('yearlyTableBody');
+  
+  const dailyView = document.getElementById('dailyView');
+  const weeklyView = document.getElementById('weeklyView');
+  const monthlyView = document.getElementById('monthlyView');
+  const yearlyView = document.getElementById('yearlyView');
+  
+  const timePeriodButtons = document.querySelectorAll('.time-period-button');
+  
+  // Elementos do calendário
+  const calendarElement = document.getElementById('calendar');
+  const prevMonthButton = document.getElementById('prevMonth');
+  const nextMonthButton = document.getElementById('nextMonth');
+  const completedDaysElement = document.getElementById('completedDays');
+  const partialDaysElement = document.getElementById('partialDays');
+  const totalQuestionsElement = document.getElementById('totalQuestions');
+
+  // Elementos de sincronização
+  const syncStatusElement = document.getElementById('syncStatus');
+  const syncMessageElement = document.getElementById('syncMessage');
+  const uploadButton = document.getElementById('uploadButton');
+  const downloadButton = document.getElementById('downloadButton');
+
+  // ========== FUNÇÕES DE SINCRONIZAÇÃO FIREBASE ==========
+
+  // Salvar dados no Firebase
+  async function saveToFirebase() {
+    if (!database) {
+      showSyncStatus("Firebase não inicializado", "error");
+      return false;
+    }
+
+    try {
+      showSyncStatus('Enviando dados para nuvem...', 'syncing');
+      
+      // Salvar dados no Firebase
+      await database.ref('studyData').set(sessionsByDate);
+      
+      // Atualizar timestamp da última sincronização
+      await database.ref('lastSync').set(Date.now());
+      
+      showSyncStatus('Dados enviados com sucesso!', 'synced');
+      
+      // Esconder status após 3 segundos
+      setTimeout(() => {
+        hideSyncStatus();
+      }, 3000);
+      
+      return true;
+    } catch (error) {
+      console.error('Erro ao salvar no Firebase:', error);
+      showSyncStatus('Erro ao enviar dados', 'error');
+      return false;
+    }
+  }
+
+  // Carregar dados do Firebase
+  async function loadFromFirebase() {
+    if (!database) {
+      showSyncStatus("Firebase não inicializado", "error");
+      return false;
+    }
+
+    try {
+      showSyncStatus('Buscando dados da nuvem...', 'syncing');
+      
+      const snapshot = await database.ref('studyData').once('value');
+      const firebaseData = snapshot.val();
+      
+      if (firebaseData && Object.keys(firebaseData).length > 0) {
+        sessionsByDate = firebaseData;
+        localStorage.setItem('sessionsByDate', JSON.stringify(sessionsByDate));
+        
+        showSyncStatus('Dados carregados com sucesso!', 'synced');
+        
+        // Atualizar a interface
+        updateAllDisplays();
+        
+        // Esconder status após 3 segundos
+        setTimeout(() => {
+          hideSyncStatus();
+        }, 3000);
+        
+        return true;
+      } else {
+        showSyncStatus('Nenhum dado encontrado na nuvem', 'error');
+        return false;
+      }
+    } catch (error) {
+      console.error('Erro ao carregar do Firebase:', error);
+      showSyncStatus('Erro ao buscar dados', 'error');
+      return false;
+    }
+  }
+
+  // Verificar se há dados mais recentes no Firebase
+  async function checkForUpdates() {
+    if (!database) return;
+
+    try {
+      const snapshot = await database.ref('lastSync').once('value');
+      const lastFirebaseSync = snapshot.val();
+      const lastLocalSync = localStorage.getItem('lastSync');
+      
+      // Se o Firebase tem dados mais recentes, carregue-os
+      if (lastFirebaseSync && (!lastLocalSync || lastFirebaseSync > parseInt(lastLocalSync))) {
+        console.log('Dados mais recentes encontrados no Firebase, carregando...');
+        await loadFromFirebase();
+        localStorage.setItem('lastSync', lastFirebaseSync);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar atualizações:', error);
+    }
+  }
+
+  // Mostrar status de sincronização
+  function showSyncStatus(message, type) {
+    syncMessageElement.textContent = message;
+    syncStatusElement.className = `sync-status ${type}`;
+    syncStatusElement.classList.remove('hidden');
+  }
+
+  // Esconder status de sincronização
+  function hideSyncStatus() {
+    syncStatusElement.classList.add('hidden');
+  }
+
+  // ========== FUNÇÕES DO SISTEMA ORIGINAL ==========
+
+  // Converte tempo no formato HH:MM:SS para horas
+  function timeToHours(timeStr) {
+    const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+    return hours + (minutes / 60) + (seconds / 3600);
+  }
+
+  // Formata horas para exibição (com 1 casa decimal)
+  function formatHours(hours) {
+    return hours.toFixed(1) + 'h';
+  }
+
+  // Converte tempo no formato HH:MM:SS para milissegundos
+  function timeToMilliseconds(timeStr) {
+    const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+    return (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
+  }
+
+  // Calcula estatísticas totais
+  function calculateTotalStatistics() {
+    let totalMilliseconds = 0;
+    let totalExercisesDone = 0;
+    let totalExercisesCorrect = 0;
+    let totalSessions = 0;
+
+    for (const date in sessionsByDate) {
+      if (sessionsByDate.hasOwnProperty(date)) {
+        const sessions = sessionsByDate[date];
+
+        sessions.forEach(session => {
+          const timeMs = timeToMilliseconds(session.time);
+          totalMilliseconds += timeMs;
+          totalExercisesDone += session.exercisesDone;
+          totalExercisesCorrect += session.exercisesCorrect;
+          totalSessions++;
+        });
+      }
+    }
+
+    return {
+      totalTime: totalMilliseconds / 3600000, // em horas
+      totalExercisesDone: totalExercisesDone,
+      totalExercisesCorrect: totalExercisesCorrect,
+      totalSessions: totalSessions,
+      averageAccuracy: totalExercisesDone > 0 ? (totalExercisesCorrect / totalExercisesDone * 100).toFixed(2) : 0,
+      dailyAverage: totalMilliseconds > 0 ? (totalMilliseconds / Object.keys(sessionsByDate).length) / 3600000 : 0
+    };
+  }
+
+  // Calcula estatísticas para um período específico (hoje, semana, mês, ano)
+  function calculatePeriodStatistics(period) {
+    const now = new Date();
+    let startDate;
+    
+    if (period === 'today') {
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    } else if (period === 'week') {
+      const day = now.getDay();
+      const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Ajuste para domingo como primeiro dia
+      startDate = new Date(now.setDate(diff));
+      startDate.setHours(0, 0, 0, 0);
+    } else if (period === 'month') {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else if (period === 'year') {
+      startDate = new Date(now.getFullYear(), 0, 1);
+    }
+    
+    let periodMilliseconds = 0;
+    let periodExercisesDone = 0;
+    let periodExercisesCorrect = 0;
+    let periodSessions = 0;
+
+    for (const date in sessionsByDate) {
+      if (sessionsByDate.hasOwnProperty(date)) {
+        const [year, month, day] = date.split('-').map(Number);
+        const sessionDate = new Date(year, month - 1, day);
+        
+        if (sessionDate >= startDate) {
+          const sessions = sessionsByDate[date];
+
+          sessions.forEach(session => {
+            const timeMs = timeToMilliseconds(session.time);
+            periodMilliseconds += timeMs;
+            periodExercisesDone += session.exercisesDone;
+            periodExercisesCorrect += session.exercisesCorrect;
+            periodSessions++;
+          });
+        }
+      }
+    }
+
+    return {
+      time: periodMilliseconds / 3600000, // em horas
+      exercisesDone: periodExercisesDone,
+      exercisesCorrect: periodExercisesCorrect,
+      sessions: periodSessions,
+      accuracy: periodExercisesDone > 0 ? (periodExercisesCorrect / periodExercisesDone * 100).toFixed(2) : 0
+    };
+  }
+
+  // Calcula sequência de dias consecutivos
+  function calculateStreaks() {
+    // Garante que as datas estejam ordenadas da mais antiga para a mais recente
+    const dates = Object.keys(sessionsByDate).sort((a, b) => new Date(a) - new Date(b));
+    if (dates.length === 0) {
+      return { currentStreak: 0, recordStreak: 0 };
+    }
+
+    // --- 1. CALCULA A SEQUÊNCIA RECORDE ---
+    // Itera por todas as datas para encontrar a maior sequência já feita
+    let recordStreak = 0;
+    let tempStreak = 0;
+    if (dates.length > 0) {
+      tempStreak = 1;
+      recordStreak = 1;
+      for (let i = 1; i < dates.length; i++) {
+        const currentDate = new Date(dates[i]);
+        const previousDate = new Date(dates[i - 1]);
+        const diffTime = currentDate.getTime() - previousDate.getTime();
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+          // Dia consecutivo, aumenta a sequência temporária
+          tempStreak++;
+        } else {
+          // Quebrou a sequência, reinicia a contagem
+          tempStreak = 1;
+        }
+
+        // Atualiza o recorde se a sequência atual for maior
+        if (tempStreak > recordStreak) {
+          recordStreak = tempStreak;
+        }
+      }
+    }
+
+    // --- 2. CALCULA A SEQUÊNCIA ATUAL ---
+    // Conta de trás para frente a partir do dia mais recente
+    let currentStreak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const mostRecentStudyDate = new Date(dates[dates.length - 1]);
+    mostRecentStudyDate.setHours(0, 0, 0, 0);
+
+    const diffFromToday = Math.round((today.getTime() - mostRecentStudyDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    // A sequência atual só é válida se o último estudo foi hoje ou ontem
+    if (diffFromToday <= 1) {
+      currentStreak = 1;
+      // Começa do penúltimo e vai voltando
+      for (let i = dates.length - 2; i >= 0; i--) {
+        const currentDate = new Date(dates[i]);
+        const previousDate = new Date(dates[i + 1]); // O "anterior" aqui é o dia seguinte na lista
+        const diffTime = previousDate.getTime() - currentDate.getTime();
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+          currentStreak++;
+        } else {
+          // Encontrou uma quebra, para a contagem da sequência ATUAL imediatamente
+          break;
+        }
+      }
+    }
+
+    return {
+      currentStreak: currentStreak,
+      recordStreak: recordStreak
+    };
+  }
+
+  // Atualiza as estatísticas na página
+  function updateStatistics() {
+    const totalStats = calculateTotalStatistics();
+    const todayStats = calculatePeriodStatistics('today');
+    const weekStats = calculatePeriodStatistics('week');
+    const monthStats = calculatePeriodStatistics('month');
+    const yearStats = calculatePeriodStatistics('year');
+    const streaks = calculateStreaks();
+
+    totalTimeElement.textContent = formatHours(totalStats.totalTime);
+    todayTimeElement.textContent = formatHours(todayStats.time);
+    weekTimeElement.textContent = formatHours(weekStats.time);
+    monthTimeElement.textContent = formatHours(monthStats.time);
+    yearTimeElement.textContent = formatHours(yearStats.time);
+    dailyAverageElement.textContent = formatHours(totalStats.dailyAverage);
+    
+    currentStreakElement.textContent = `${streaks.currentStreak} dias`;
+    if (streaks.currentStreak > 0) {
+      currentStreakElement.innerHTML += `<span class="streak-fire">🔥</span>`;
+    }
+    
+    recordStreakElement.textContent = `${streaks.recordStreak} dias`;
+    if (streaks.recordStreak >= 5) {
+      recordStreakElement.innerHTML += `<span class="streak-trophy">🏆</span>`;
+    }
+  }
+
+  // Gera dados para o gráfico
+  function generateChartData(period) {
+    const now = new Date();
+    let labels = [];
+    let data = [];
+    let backgroundColors = [];
+    
+    if (period === 'daily') {
+      // Últimos 7 dias
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+        
+        labels.push(`${date.getDate()}/${date.getMonth() + 1}`);
+        
+        if (sessionsByDate[dateKey]) {
+          let dayMilliseconds = 0;
+          sessionsByDate[dateKey].forEach(session => {
+            dayMilliseconds += timeToMilliseconds(session.time);
+          });
+          data.push((dayMilliseconds / 3600000).toFixed(1)); // Converter para horas com 1 decimal
+        } else {
+          data.push(0);
+        }
+        
+        backgroundColors.push(date.toDateString() === now.toDateString() ? '#4fc3f7' : '#4a6fa5');
+      }
+    } else if (period === 'weekly') {
+      // Últimas 8 semanas
+      for (let i = 7; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - (i * 7));
+        
+        // Encontra o início da semana (domingo)
+        const startOfWeek = new Date(date);
+        startOfWeek.setDate(date.getDate() - date.getDay());
+        
+        // Encontra o fim da semana (sábado)
+        const endOfWeek = new Date(date);
+        endOfWeek.setDate(date.getDate() + (6 - date.getDay()));
+        
+        labels.push(`${startOfWeek.getDate()}/${startOfWeek.getMonth() + 1} - ${endOfWeek.getDate()}/${endOfWeek.getMonth() + 1}`);
+        
+        let weekMilliseconds = 0;
+        
+        // Itera por todos os dias na semana
+        for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate() + 1)) {
+          const dateKey = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+          
+          if (sessionsByDate[dateKey]) {
+            sessionsByDate[dateKey].forEach(session => {
+              weekMilliseconds += timeToMilliseconds(session.time);
+            });
+          }
+        }
+        
+        data.push((weekMilliseconds / 3600000).toFixed(1)); // Converter para horas com 1 decimal
+        
+        // Verifica se a semana atual está no intervalo
+        const currentWeekStart = new Date(now);
+        currentWeekStart.setDate(now.getDate() - now.getDay());
+        backgroundColors.push(
+          startOfWeek.toDateString() === currentWeekStart.toDateString() ? '#4fc3f7' : '#4a6fa5'
+        );
+      }
+    } else if (period === 'monthly') {
+      // Últimos 6 meses
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+        
+        labels.push(`${month}/${year.toString().slice(2)}`);
+        
+        let monthMilliseconds = 0;
+        
+        // Itera por todos os dias no mês
+        for (const dateKey in sessionsByDate) {
+          if (sessionsByDate.hasOwnProperty(dateKey)) {
+            const [y, m, d] = dateKey.split('-').map(Number);
+            
+            if (y === year && m === month) {
+              sessionsByDate[dateKey].forEach(session => {
+                monthMilliseconds += timeToMilliseconds(session.time);
+              });
+            }
+          }
+        }
+        
+        data.push((monthMilliseconds / 3600000).toFixed(1)); // Converter para horas com 1 decimal
+        backgroundColors.push(month === now.getMonth() + 1 && year === now.getFullYear() ? '#4fc3f7' : '#4a6fa5');
+      }
+    } else if (period === 'yearly') {
+      // Últimos 5 anos
+      for (let i = 4; i >= 0; i--) {
+        const year = now.getFullYear() - i;
+        labels.push(year.toString());
+        
+        let yearMilliseconds = 0;
+        
+        // Itera por todos os dias no ano
+        for (const dateKey in sessionsByDate) {
+          if (sessionsByDate.hasOwnProperty(dateKey)) {
+            const [y, m, d] = dateKey.split('-').map(Number);
+            
+            if (y === year) {
+              sessionsByDate[dateKey].forEach(session => {
+                yearMilliseconds += timeToMilliseconds(session.time);
+              });
+            }
+          }
+        }
+        
+        data.push((yearMilliseconds / 3600000).toFixed(1)); // Converter para horas com 1 decimal
+        backgroundColors.push(year === now.getFullYear() ? '#4fc3f7' : '#4a6fa5');
+      }
+    }
+    
+    return { labels, data, backgroundColors };
+  }
+
+  // Atualiza o gráfico
+  function updateChart(period) {
+    const ctx = document.getElementById('studyChart').getContext('2d');
+    const chartData = generateChartData(period);
+    
+    if (studyChart) {
+      studyChart.destroy();
+    }
+    
+    studyChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: chartData.labels,
+        datasets: [{
+          label: 'Horas Estudadas',
+          data: chartData.data,
+          backgroundColor: chartData.backgroundColors,
+          borderColor: '#166088',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Horas'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: period === 'daily' ? 'Dias' : 
+                    period === 'weekly' ? 'Semanas' : 
+                    period === 'monthly' ? 'Meses' : 'Anos'
+            }
+          }
+        },
+        plugins: {
+          title: {
+            display: true,
+            text: period === 'daily' ? 'Horas Estudadas nos Últimos 7 Dias' : 
+                  period === 'weekly' ? 'Horas Estudadas nas Últimas 8 Semanas' : 
+                  period === 'monthly' ? 'Horas Estudadas nos Últimos 6 Meses' : 'Horas Estudadas nos Últimos 5 Anos'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${context.raw}h`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Preenche a tabela diária
+  function fillDailyTable() {
+    dailyTableBody.innerHTML = '';
+    
+    // Ordena as datas do mais recente para o mais antigo
+    const sortedDates = Object.keys(sessionsByDate).sort((a, b) => {
+      return new Date(b) - new Date(a);
+    });
+    
+    // Calcula a sequência atual para destacar dias consecutivos
+    const streaks = calculateStreaks();
+    let consecutiveDays = 0;
+    let previousDate = null;
+    
+    sortedDates.forEach((date, index) => {
+      const [year, month, day] = date.split('-');
+      const formattedDate = `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+      
+      let dayMilliseconds = 0;
+      let dayExercisesDone = 0;
+      let dayExercisesCorrect = 0;
+      let daySessions = sessionsByDate[date].length;
+      
+      sessionsByDate[date].forEach(session => {
+        dayMilliseconds += timeToMilliseconds(session.time);
+        dayExercisesDone += session.exercisesDone;
+        dayExercisesCorrect += session.exercisesCorrect;
+      });
+      
+      const hours = (dayMilliseconds / 3600000).toFixed(1);
+      const accuracy = dayExercisesDone > 0 ? (dayExercisesCorrect / dayExercisesDone * 100).toFixed(2) : 0;
+      const accuracyClass = getAccuracyClass(accuracy);
+      
+      // Verifica se é um dia consecutivo
+      const currentDate = new Date(date);
+      currentDate.setHours(0, 0, 0, 0);
+      
+      let isConsecutive = false;
+      if (previousDate) {
+        const diffTime = previousDate - currentDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays === 1) {
+          consecutiveDays++;
+          isConsecutive = true;
+        } else if (diffDays > 1) {
+          consecutiveDays = 0;
+        }
+      } else {
+        consecutiveDays = 1;
+      }
+      
+      previousDate = currentDate;
+      
+      const row = document.createElement('tr');
+      if (isConsecutive && consecutiveDays > 0) {
+        row.classList.add('streak-high');
+      }
+      
+      row.innerHTML = `
+        <td>${formattedDate}</td>
+        <td>${hours}h</td>
+        <td>${daySessions}</td>
+        <td>${dayExercisesDone}</td>
+        <td>${dayExercisesCorrect}</td>
+        <td class="${accuracyClass}">${accuracy}%</td>
+      `;
+      
+      dailyTableBody.appendChild(row);
+    });
+  }
+
+  // Preenche a tabela semanal
+  function fillWeeklyTable() {
+    weeklyTableBody.innerHTML = '';
+    
+    // Agrupa os dados por semana
+    const weeklyData = {};
+    
+    for (const date in sessionsByDate) {
+      if (sessionsByDate.hasOwnProperty(date)) {
+        const [year, month, day] = date.split('-').map(Number);
+        const sessionDate = new Date(year, month - 1, day);
+        const weekStart = getWeekStartDate(sessionDate);
+        const weekKey = `${weekStart.getFullYear()}-${weekStart.getMonth() + 1}-${weekStart.getDate()}`;
+        
+        if (!weeklyData[weekKey]) {
+          weeklyData[weekKey] = {
+            time: 0,
+            exercisesDone: 0,
+            exercisesCorrect: 0,
+            sessions: 0,
+            weekStart: weekStart
+          };
+        }
+        
+        sessionsByDate[date].forEach(session => {
+          weeklyData[weekKey].time += timeToMilliseconds(session.time);
+          weeklyData[weekKey].exercisesDone += session.exercisesDone;
+          weeklyData[weekKey].exercisesCorrect += session.exercisesCorrect;
+          weeklyData[weekKey].sessions += 1;
+        });
+      }
+    }
+    
+    // Ordena as semanas do mais recente para o mais antigo
+    const sortedWeeks = Object.keys(weeklyData).sort((a, b) => {
+      return new Date(b) - new Date(a);
+    });
+    
+    sortedWeeks.forEach(weekKey => {
+      const weekData = weeklyData[weekKey];
+      const weekEnd = new Date(weekData.weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      
+      const formattedWeek = `${weekData.weekStart.getDate()}/${weekData.weekStart.getMonth() + 1} - ${weekEnd.getDate()}/${weekEnd.getMonth() + 1}`;
+      
+      const hours = (weekData.time / 3600000).toFixed(1);
+      const accuracy = weekData.exercisesDone > 0 ? (weekData.exercisesCorrect / weekData.exercisesDone * 100).toFixed(2) : 0;
+      const accuracyClass = getAccuracyClass(accuracy);
+      
+      const progress = Math.min((hours / 20) * 100, 100);
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${formattedWeek}</td>
+        <td>${hours}h</td>
+        <td>${weekData.sessions}</td>
+        <td>${weekData.exercisesDone}</td>
+        <td>${weekData.exercisesCorrect}</td>
+        <td class="${accuracyClass}">${accuracy}%</td>
+        <td>
+          ${hours}h / 20h
+          <div class="progress-container">
+            <div class="progress-bar" style="width: ${progress}%"></div>
+          </div>
+        </td>
+      `;
+      
+      weeklyTableBody.appendChild(row);
+    });
+  }
+
+  // Preenche a tabela mensal
+  function fillMonthlyTable() {
+    monthlyTableBody.innerHTML = '';
+    
+    // Agrupa os dados por mês
+    const monthlyData = {};
+    
+    for (const date in sessionsByDate) {
+      if (sessionsByDate.hasOwnProperty(date)) {
+        const [year, month] = date.split('-').map(Number);
+        const monthKey = `${year}-${month}`;
+        
+        if (!monthlyData[monthKey]) {
+          monthlyData[monthKey] = {
+            time: 0,
+            exercisesDone: 0,
+            exercisesCorrect: 0,
+            sessions: 0,
+            year: year,
+            month: month,
+            daysWithSessions: 0
+          };
+        }
+        
+        let hasSession = false;
+        sessionsByDate[date].forEach(session => {
+          monthlyData[monthKey].time += timeToMilliseconds(session.time);
+          monthlyData[monthKey].exercisesDone += session.exercisesDone;
+          monthlyData[monthKey].exercisesCorrect += session.exercisesCorrect;
+          monthlyData[monthKey].sessions += 1;
+          hasSession = true;
+        });
+        
+        if (hasSession) {
+          monthlyData[monthKey].daysWithSessions += 1;
+        }
+      }
+    }
+    
+    // Ordena os meses do mais recente para o mais antigo
+    const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
+      const [aYear, aMonth] = a.split('-').map(Number);
+      const [bYear, bMonth] = b.split('-').map(Number);
+      return new Date(bYear, bMonth - 1) - new Date(aYear, aMonth - 1);
+    });
+    
+    sortedMonths.forEach(monthKey => {
+      const monthData = monthlyData[monthKey];
+      const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      const formattedMonth = `${monthNames[monthData.month - 1]} ${monthData.year}`;
+      
+      const hours = (monthData.time / 3600000).toFixed(1);
+      const accuracy = monthData.exercisesDone > 0 ? (monthData.exercisesCorrect / monthData.exercisesDone * 100).toFixed(2) : 0;
+      const accuracyClass = getAccuracyClass(accuracy);
+      
+      const dailyAverage = monthData.daysWithSessions > 0 ? 
+        ((monthData.time / monthData.daysWithSessions) / 3600000).toFixed(1) : 0;
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${formattedMonth}</td>
+        <td>${hours}h</td>
+        <td>${monthData.sessions}</td>
+        <td>${monthData.exercisesDone}</td>
+        <td>${monthData.exercisesCorrect}</td>
+        <td class="${accuracyClass}">${accuracy}%</td>
+        <td>${dailyAverage}h</td>
+      `;
+      
+      monthlyTableBody.appendChild(row);
+    });
+  }
+
+  // Preenche a tabela anual
+  function fillYearlyTable() {
+    yearlyTableBody.innerHTML = '';
+    
+    // Agrupa os dados por ano
+    const yearlyData = {};
+    
+    for (const date in sessionsByDate) {
+      if (sessionsByDate.hasOwnProperty(date)) {
+        const year = date.split('-')[0];
+        
+        if (!yearlyData[year]) {
+          yearlyData[year] = {
+            time: 0,
+            exercisesDone: 0,
+            exercisesCorrect: 0,
+            sessions: 0,
+            monthsWithSessions: new Set()
+          };
+        }
+        
+        const month = date.split('-')[1];
+        yearlyData[year].monthsWithSessions.add(month);
+        
+        sessionsByDate[date].forEach(session => {
+          yearlyData[year].time += timeToMilliseconds(session.time);
+          yearlyData[year].exercisesDone += session.exercisesDone;
+          yearlyData[year].exercisesCorrect += session.exercisesCorrect;
+          yearlyData[year].sessions += 1;
+        });
+      }
+    }
+    
+    // Ordena os anos do mais recente para o mais antigo
+    const sortedYears = Object.keys(yearlyData).sort((a, b) => b - a);
+    
+    sortedYears.forEach(year => {
+      const yearData = yearlyData[year];
+      
+      const hours = (yearData.time / 3600000).toFixed(1);
+      const accuracy = yearData.exercisesDone > 0 ? (yearData.exercisesCorrect / yearData.exercisesDone * 100).toFixed(2) : 0;
+      const accuracyClass = getAccuracyClass(accuracy);
+      
+      const monthlyAverage = yearData.monthsWithSessions.size > 0 ? 
+        ((yearData.time / yearData.monthsWithSessions.size) / 3600000).toFixed(1) : 0;
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${year}</td>
+        <td>${hours}h</td>
+        <td>${yearData.sessions}</td>
+        <td>${yearData.exercisesDone}</td>
+        <td>${yearData.exercisesCorrect}</td>
+        <td class="${accuracyClass}">${accuracy}%</td>
+        <td>${monthlyAverage}h</td>
+      `;
+      
+      yearlyTableBody.appendChild(row);
+    });
+  }
+
+  // Retorna a classe CSS baseada na precisão
+  function getAccuracyClass(accuracy) {
+    accuracy = parseFloat(accuracy);
+    if (accuracy >= 80) return 'accuracy-high';
+    if (accuracy >= 50) return 'accuracy-medium';
+    return 'accuracy-low';
+  }
+
+  // Retorna a data de início da semana (domingo)
+  function getWeekStartDate(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day;
+    d.setHours(0, 0, 0, 0);
+    return new Date(d.setDate(diff));
+  }
+
+  // Alterna entre as visualizações (diária, semanal, mensal, anual)
+  function switchView(period) {
+    dailyView.classList.add('hidden');
+    weeklyView.classList.add('hidden');
+    monthlyView.classList.add('hidden');
+    yearlyView.classList.add('hidden');
+    
+    if (period === 'daily') {
+      dailyView.classList.remove('hidden');
+    } else if (period === 'weekly') {
+      weeklyView.classList.remove('hidden');
+    } else if (period === 'monthly') {
+      monthlyView.classList.remove('hidden');
+    } else if (period === 'yearly') {
+      yearlyView.classList.remove('hidden');
+    }
+    
+    // Atualiza o gráfico
+    updateChart(period);
+  }
+
+  // ========== CALENDÁRIO DE METAS - VERSÃO COM CÍRCULOS E SEQUÊNCIAS ==========
+  
+  // Gera o calendário para o mês e ano especificados
+  function generateCalendar(month, year) {
+    const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    
+    // Cria o cabeçalho do calendário
+    let calendarHTML = `
+      <div class="calendar-header">
+        <h3>${monthNames[month]} ${year}</h3>
+      </div>
+      <div class="calendar-grid">
+        <div class="calendar-day-header">Dom</div>
+        <div class="calendar-day-header">Seg</div>
+        <div class="calendar-day-header">Ter</div>
+        <div class="calendar-day-header">Qua</div>
+        <div class="calendar-day-header">Qui</div>
+        <div class="calendar-day-header">Sex</div>
+        <div class="calendar-day-header">Sáb</div>
+    `;
+    
+    // Obtém o primeiro dia do mês e o último dia do mês
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    // Obtém o dia da semana do primeiro dia (0 = Domingo, 1 = Segunda, etc.)
+    const firstDayIndex = firstDay.getDay();
+    
+    // Obtém o número de dias no mês
+    const daysInMonth = lastDay.getDate();
+    
+    // Obtém a data atual
+    const today = new Date();
+    
+    // Preenche os dias vazios antes do primeiro dia do mês
+    for (let i = 0; i < firstDayIndex; i++) {
+      calendarHTML += `<div class="calendar-day"></div>`;
+    }
+    
+    // Identifica sequências de dias consecutivos com meta cumprida
+    const completedSequences = findCompletedSequences(month, year);
+    
+    // Preenche os dias do mês
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateKey = `${year}-${month + 1}-${day}`;
+      const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
+      
+      // Verifica se há dados para este dia
+      let dayStatus = '';
+      let statusClass = '';
+      let dayExercises = 0;
+      let additionalClass = '';
+      let sequenceClass = '';
+      
+      if (sessionsByDate[dateKey]) {
+        sessionsByDate[dateKey].forEach(session => {
+          dayExercises += session.exercisesDone;
+        });
+        
+        if (dayExercises >= 30) {
+          statusClass = 'completed';
+          dayStatus = '✓';
+          additionalClass = 'completed';
+          
+          // Verifica se este dia faz parte de uma sequência
+          const sequenceInfo = getSequenceInfo(day, completedSequences);
+          if (sequenceInfo) {
+            sequenceClass = sequenceInfo.position;
+          }
+        } else if (dayExercises > 0) {
+          statusClass = 'partial';
+          dayStatus = `${dayExercises}`;
+          additionalClass = 'partial';
+        } else {
+          statusClass = 'not-completed';
+          dayStatus = '✗';
+          additionalClass = 'not-completed';
+        }
+      } else {
+        // Verifica se é um dia futuro
+        const currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0);
+        const dayDate = new Date(year, month, day);
+        
+        if (dayDate > currentDate) {
+          statusClass = '';
+          dayStatus = '';
+          additionalClass = '';
+        } else {
+          statusClass = 'not-completed';
+          dayStatus = '✗';
+          additionalClass = 'not-completed';
+        }
+      }
+      
+      calendarHTML += `
+        <div class="calendar-day ${isToday ? 'today' : ''} ${additionalClass} ${sequenceClass}">
+          <div class="calendar-day-number">${day}</div>
+          <div class="calendar-day-status ${statusClass}">${dayStatus}</div>
+        </div>
+      `;
+    }
+    
+    calendarHTML += `</div>`;
+    calendarElement.innerHTML = calendarHTML;
+    
+    // Atualiza o resumo do mês
+    updateMonthSummary(month, year);
+  }
+  
+  // Encontra sequências de dias consecutivos com meta cumprida
+  function findCompletedSequences(month, year) {
+    const sequences = [];
+    let currentSequence = [];
+    
+    // Obtém o número de dias no mês
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateKey = `${year}-${month + 1}-${day}`;
+      let dayExercises = 0;
+      
+      if (sessionsByDate[dateKey]) {
+        sessionsByDate[dateKey].forEach(session => {
+          dayExercises += session.exercisesDone;
+        });
+      }
+      
+      if (dayExercises >= 30) {
+        // Meta cumprida, adiciona ao dia à sequência atual
+        currentSequence.push(day);
+      } else {
+        // Meta não cumprida, finaliza a sequência atual se houver
+        if (currentSequence.length > 0) {
+          sequences.push([...currentSequence]);
+          currentSequence = [];
+        }
+      }
+    }
+    
+    // Adiciona a última sequência se houver
+    if (currentSequence.length > 0) {
+      sequences.push([...currentSequence]);
+    }
+    
+    return sequences;
+  }
+  
+  // Obtém informações sobre a posição de um dia em uma sequência
+  function getSequenceInfo(day, sequences) {
+    for (const sequence of sequences) {
+      const index = sequence.indexOf(day);
+      if (index !== -1) {
+        if (sequence.length === 1) {
+          return { position: '' }; // Apenas um dia na sequência
+        } else if (index === 0) {
+          return { position: 'sequence-start' }; // Primeiro dia da sequência
+        } else if (index === sequence.length - 1) {
+          return { position: 'sequence-end' }; // Último dia da sequência
+        } else {
+          return { position: 'sequence-middle' }; // Dia no meio da sequência
+        }
+      }
+    }
+    return null;
+  }
+  
+  // Atualiza o resumo do mês
+  function updateMonthSummary(month, year) {
+    let totalExercises = 0;
+    let daysWithExercises = 0;
+    let daysCompletedGoal = 0;
+    let daysPartial = 0;
+    
+    // Obtém o número de dias no mês
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    
+    // Conta os exercícios para cada dia do mês
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateKey = `${year}-${month + 1}-${day}`;
+      
+      if (sessionsByDate[dateKey]) {
+        let dayExercises = 0;
+        sessionsByDate[dateKey].forEach(session => {
+          dayExercises += session.exercisesDone;
+        });
+        
+        totalExercises += dayExercises;
+        daysWithExercises++;
+        
+        if (dayExercises >= 30) {
+          daysCompletedGoal++;
+        } else if (dayExercises > 0) {
+          daysPartial++;
+        }
+      }
+    }
+    
+    completedDaysElement.textContent = daysCompletedGoal;
+    partialDaysElement.textContent = daysPartial;
+    totalQuestionsElement.textContent = totalExercises;
+  }
+  
+  // Navega para o mês anterior
+  function prevMonth() {
+    currentCalendarMonth--;
+    if (currentCalendarMonth < 0) {
+      currentCalendarMonth = 11;
+      currentCalendarYear--;
+    }
+    generateCalendar(currentCalendarMonth, currentCalendarYear);
+  }
+  
+  // Navega para o próximo mês
+  function nextMonth() {
+    currentCalendarMonth++;
+    if (currentCalendarMonth > 11) {
+      currentCalendarMonth = 0;
+      currentCalendarYear++;
+    }
+    generateCalendar(currentCalendarMonth, currentCalendarYear);
+  }
+
+  // Atualiza todas as exibições
+  function updateAllDisplays() {
+    updateStatistics();
+    fillDailyTable();
+    fillWeeklyTable();
+    fillMonthlyTable();
+    fillYearlyTable();
+    updateChart('daily');
+    generateCalendar(currentCalendarMonth, currentCalendarYear);
+  }
+
+  // Inicializa a página
+  async function init() {
+    // Primeiro inicializa com dados locais
+    updateAllDisplays();
+    
+    // Depois tenta carregar do Firebase (sem bloquear a interface)
+    setTimeout(async () => {
+      if (database) {
+        await loadFromFirebase();
+      }
+    }, 1000);
+    
+    // Configura verificação periódica de atualizações (a cada 30 segundos)
+    setInterval(checkForUpdates, 30000);
+    
+    // Adiciona event listeners aos botões de período
+    timePeriodButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        timePeriodButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        switchView(button.dataset.period);
+      });
+    });
+    
+    // Adiciona event listeners aos botões de navegação do calendário
+    prevMonthButton.addEventListener('click', prevMonth);
+    nextMonthButton.addEventListener('click', nextMonth);
+    
+    // Adiciona event listeners aos botões de sincronização
+    uploadButton.addEventListener('click', saveToFirebase);
+    downloadButton.addEventListener('click', loadFromFirebase);
+  }
+
+  // Inicia a aplicação quando o DOM estiver carregado
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

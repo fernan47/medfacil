@@ -40,26 +40,20 @@
         <p id="errorMessage"></p>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script> <script>
-        
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+
     <script>
-      const firebaseConfig = {
-      apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
-      authDomain: "meu-study-tracker.firebaseapp.com",
-      databaseURL: "https://meu-study-tracker-default-rtdb.firebaseio.com",
-      projectId: "meu-study-tracker",
-      storageBucket: "meu-study-tracker.firebasestorage.app",
-      messagingSenderId: "715609213126",
-      appId: "1:715609213126:web:3e9cbe7e840ea20a1b6fc7"
-    };
-        
+        // Objeto de configuração (apenas a sua versão correta)
         const firebaseConfig = {
-            apiKey: "...",
-            authDomain: "...",
-            databaseURL: "...",
-            // ...cole o resto da sua configuração aqui
+            apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
+            authDomain: "meu-study-tracker.firebaseapp.com",
+            databaseURL: "https://meu-study-tracker-default-rtdb.firebaseio.com",
+            projectId: "meu-study-tracker",
+            storageBucket: "meu-study-tracker.firebasestorage.app",
+            messagingSenderId: "715609213126",
+            appId: "1:715609213126:web:3e9cbe7e840ea20a1b6fc7"
         };
 
         // Inicializa o Firebase
@@ -73,7 +67,6 @@
         const btnSignup = document.getElementById('btnSignup');
 
         // --- Funções de Login e Cadastro ---
-
         // 1. Criar Conta
         btnSignup.addEventListener('click', () => {
             const email = document.getElementById('email').value;
@@ -132,8 +125,7 @@
             if (user) {
                 // O usuário ESTÁ logado.
                 console.log('Status: Logado. Redirecionando para o app...');
-                // Redireciona para sua página principal do tracker.
-                // MUDE 'tracker.html' para o nome da sua página principal (ex: 'index.html' antigo)
+                // Redireciona para sua página principal
                 window.location.href = 'index.html'; 
             } else {
                 // O usuário NÃO está logado.
@@ -141,7 +133,6 @@
                 errorMessage.textContent = '';
             }
         });
-
     </script>
 </body>
 </html>

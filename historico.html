@@ -384,9 +384,14 @@
     console.error("Erro ao inicializar Firebase:", error);
   }
 
-  // Espera o HTML da página estar pronto ANTES de verificar o login
-  document.addEventListener('DOMContentLoaded', () => {
+  // =======================================================
+  // --- CORREÇÃO: USAR 'window.onload' ---
+  // =======================================================
+  // Espera TUDO (HTML, CSS, scripts externos como Chart.js) carregar.
+  window.addEventListener('load', () => {
     
+    console.log("Página e todos os scripts carregados. Verificando login...");
+
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         const dbRef = database.ref('users/' + user.uid + '/sessionsByDate');
@@ -687,7 +692,6 @@
             return { labels, data, backgroundColors };
           }
           function updateChart(period) {
-            // Adicionando uma verificação para garantir que o elemento exista
             const chartElement = document.getElementById('studyChart');
             if (!chartElement) {
               console.error("Elemento 'studyChart' não encontrado.");
@@ -951,7 +955,6 @@
             updateChart(period);
           }
           function generateCalendar(month, year) {
-            // Adicionando uma verificação para garantir que o elemento exista
             if (!calendarElement) {
                 console.error("Elemento 'calendar' não encontrado.");
                 return;
@@ -1169,15 +1172,11 @@
             sessionsByDate = {}; 
           }
           
-          // ==================================================
-          // --- CORREÇÃO: "EMPURRANDO" A ATUALIZAÇÃO DA TELA ---
-          // ==================================================
-          // Envolvemos a chamada em um setTimeout de 0ms.
-          // Isso a move para o final da fila de execução,
-          // garantindo que o DOM e o Chart.js estejam prontos.
-          setTimeout(() => {
-             updateAllDisplays();
-          }, 100);
+          // Agora que os dados estão carregados, renderiza a tela.
+          // Como estamos dentro do 'window.onload', o Chart.js
+          // e o DOM estão 100% prontos.
+          console.log("Desenhando gráfico e calendário...");
+          updateAllDisplays();
           
         } catch (errorObject) {
           console.error("A leitura do Firebase falhou:", errorObject);
@@ -1190,7 +1189,7 @@
       }
     }); // Fim do auth.onAuthStateChanged
     
-  }); // --- FIM DO DOMCONTENTLOADED ---
+  }); // --- FIM DO window.addEventListener('load') ---
 
 </script>
 </body>

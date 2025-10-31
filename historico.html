@@ -357,10 +357,11 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script> <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script> 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-  // Configuração do Firebase (A SUA CONFIGURAÇÃO ORIGINAL)
+  // === CORREÇÃO: Usando a MESMA config do index.html ===
   const firebaseConfig = {
     apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
     authDomain: "meu-study-tracker.firebaseapp.com",
@@ -368,7 +369,7 @@
     projectId: "meu-study-tracker",
     storageBucket: "meu-study-tracker.firebasestorage.app",
     messagingSenderId: "715609213126",
-    appId: "1:715609213126:web:cffaa561585893341b6fc7"
+    appId: "1:715609213126:web:3e9cbe7e840ea20a1b6fc7" // <-- Esta é a ID correta!
   };
 
   // --- INICIALIZAÇÃO DO FIREBASE ---
@@ -377,7 +378,7 @@
   try {
     const app = firebase.initializeApp(firebaseConfig);
     database = firebase.database();
-    auth = firebase.auth(); // Adicionado
+    auth = firebase.auth(); 
     console.log("Firebase (histórico) inicializado com sucesso!");
   } catch (error) {
     console.error("Erro ao inicializar Firebase:", error);
@@ -387,7 +388,6 @@
   // =======================================================
   // --- GUARDA DE AUTENTICAÇÃO (OTIMIZADO) ---
   // =======================================================
-  // Adicionamos 'async' para poder usar 'await dbRef.get()'
   auth.onAuthStateChanged(async (user) => {
     if (user) {
       // O USUÁRIO ESTÁ LOGADO!
@@ -430,14 +430,7 @@
       const totalQuestionsElement = document.getElementById('totalQuestions');
       const btnLogout = document.getElementById('btnLogout');
 
-      // --- FUNÇÕES DE CÁLCULO/DISPLAY (Seu código original, sem alterações) ---
-      // (As funções timeToHours, formatHours, timeToMilliseconds,
-      // calculateTotalStatistics, calculatePeriodStatistics, calculateStreaks,
-      // updateStatistics, generateChartData, updateChart, fillDailyTable,
-      // fillWeeklyTable, fillMonthlyTable, fillYearlyTable, getAccuracyClass,
-      // getWeekStartDate, switchView, generateCalendar, findCompletedSequences,
-      // getSequenceInfo, updateMonthSummary, prevMonth, nextMonth,
-      // updateAllDisplays... vêm aqui, exatamente como eram)
+      // --- FUNÇÕES DE CÁLCULO/DISPLAY (Seu código original) ---
       
         function timeToHours(timeStr) {
           const [hours, minutes, seconds] = timeStr.split(':').map(Number);
@@ -557,7 +550,7 @@
           let currentStreak = 0;
           const today = new Date();
           today.setHours(0, 0, 0, 0);
-          if (dates.length === 0) return { currentStreak: 0, recordStreak: recordStreak }; // Proteção caso não haja datas
+          if (dates.length === 0) return { currentStreak: 0, recordStreak: recordStreak }; 
           const mostRecentStudyDate = new Date(dates[dates.length - 1]);
           mostRecentStudyDate.setHours(0, 0, 0, 0);
           const diffFromToday = Math.round((today.getTime() - mostRecentStudyDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -1140,6 +1133,7 @@
         e.preventDefault();
         auth.signOut().then(() => {
           console.log('Usuário deslogado.');
+          // o 'onAuthStateChanged' vai pegar isso e redirecionar
         }).catch((error) => {
           console.error('Erro ao sair:', error);
         });

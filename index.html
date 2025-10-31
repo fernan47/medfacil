@@ -648,7 +648,7 @@
     // 2. Ele é chamado NOVAMENTE, de forma automática, sempre que os dados 
     //    mudam na nuvem (ex: quando você salva uma sessão).
     
-    dbRef.onValue((snapshot) => {
+    dbRef.on('value', (snapshot) => {
       console.log("Dados recebidos ou atualizados do Firebase.");
       const data = snapshot.val();
       
@@ -673,4 +673,5 @@
     
   </script>
 </body>
+
 </html>

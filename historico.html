@@ -361,7 +361,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-  // === CORREÇÃO: Usando a MESMA config do index.html ===
+  // Configuração correta do Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
     authDomain: "meu-study-tracker.firebaseapp.com",
@@ -369,7 +369,7 @@
     projectId: "meu-study-tracker",
     storageBucket: "meu-study-tracker.firebasestorage.app",
     messagingSenderId: "715609213126",
-    appId: "1:715609213126:web:3e9cbe7e840ea20a1b6fc7" // <-- Esta é a ID correta!
+    appId: "1:715609213126:web:3e9cbe7e840ea20a1b6fc7" // A ID correta
   };
 
   // --- INICIALIZAÇÃO DO FIREBASE ---
@@ -382,7 +382,6 @@
     console.log("Firebase (histórico) inicializado com sucesso!");
   } catch (error) {
     console.error("Erro ao inicializar Firebase:", error);
-    alert("Erro na conexão com Firebase. Verifique a configuração.");
   }
 
   // =======================================================
@@ -391,8 +390,6 @@
   auth.onAuthStateChanged(async (user) => {
     if (user) {
       // O USUÁRIO ESTÁ LOGADO!
-      console.log("Usuário (histórico) logado:", user.uid);
-      
       const dbRef = database.ref('users/' + user.uid + '/sessionsByDate');
 
       // =======================================================
@@ -430,7 +427,7 @@
       const totalQuestionsElement = document.getElementById('totalQuestions');
       const btnLogout = document.getElementById('btnLogout');
 
-      // --- FUNÇÕES DE CÁLCULO/DISPLAY (Seu código original) ---
+      // --- FUNÇÕES DE CÁLCULO/DISPLAY ---
       
         function timeToHours(timeStr) {
           const [hours, minutes, seconds] = timeStr.split(':').map(Number);
@@ -1102,6 +1099,10 @@
           }
           generateCalendar(currentCalendarMonth, currentCalendarYear);
         }
+        
+        // =======================================================
+        // --- CORREÇÃO: ADICIONANDO A FUNÇÃO FALTANTE ---
+        // =======================================================
         function updateAllDisplays() {
           console.log("Atualizando todas as exibições...");
           updateStatistics();
@@ -1115,7 +1116,6 @@
       
       // --- EVENT LISTENERS E CARREGAMENTO INICIAL ---
 
-      // Configura os botões de período
       timePeriodButtons.forEach(button => {
         button.addEventListener('click', () => {
           timePeriodButtons.forEach(btn => btn.classList.remove('active'));
@@ -1124,40 +1124,41 @@
         });
       });
 
-      // Configura os botões do calendário
       prevMonthButton.addEventListener('click', prevMonth);
       nextMonthButton.addEventListener('click', nextMonth);
       
-      // Configura o botão de Sair
       btnLogout.addEventListener('click', (e) => {
         e.preventDefault();
         auth.signOut().then(() => {
           console.log('Usuário deslogado.');
-          // o 'onAuthStateChanged' vai pegar isso e redirecionar
         }).catch((error) => {
           console.error('Erro ao sair:', error);
         });
       });
 
+      // =================================================================
       // --- OTIMIZAÇÃO: CARREGAMENTO INICIAL (UMA SÓ VEZ) ---
-      // Substituímos o 'dbRef.on()' por 'dbRef.get()'
+      // =================================================================
       try {
         console.log("Buscando dados do histórico (uma única vez)...");
         const snapshot = await dbRef.get();
         
         if (snapshot.exists()) {
-          sessionsByDate = snapshot.val(); // Carrega os dados na variável local
+          sessionsByDate = snapshot.val(); 
         } else {
           console.log("Nenhum dado encontrado para este usuário.");
-          sessionsByDate = {}; // Começa vazio
+          sessionsByDate = {}; 
         }
         
         // Agora que os dados estão carregados, renderiza a tela.
+        // Isso vai funcionar pois `updateAllDisplays` agora existe!
         updateAllDisplays();
         
       } catch (errorObject) {
-        console.error("A leitura do Firebase falhou: " + errorObject.name);
-        alert("Não foi possível conectar ao banco de dados. Verifique sua configuração do Firebase e as regras de segurança.");
+        // --- MUDANÇA: REMOVIDO O ALERT() ---
+        // Substituímos o 'alert' por um 'console.error' para
+        // não interromper o usuário.
+        console.error("A leitura do Firebase falhou:", errorObject);
       }
       
       // =======================================================

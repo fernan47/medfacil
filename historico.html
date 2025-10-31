@@ -384,16 +384,11 @@
     console.error("Erro ao inicializar Firebase:", error);
   }
 
-  // =======================================================
-  // --- CORREÇÃO: ESPERAR O DOM CARREGAR ---
-  // =======================================================
   // Espera o HTML da página estar pronto ANTES de verificar o login
   document.addEventListener('DOMContentLoaded', () => {
     
-    // Agora que o DOM está pronto, verificamos o login
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        // O USUÁRIO ESTÁ LOGADO!
         const dbRef = database.ref('users/' + user.uid + '/sessionsByDate');
 
         // =======================================================
@@ -406,7 +401,6 @@
         let currentCalendarYear = new Date().getFullYear();
 
         // --- SELETORES DE ELEMENTOS ---
-        // (Agora temos certeza que esses elementos existem)
         const totalTimeElement = document.getElementById('totalTime');
         const todayTimeElement = document.getElementById('todayTime');
         const weekTimeElement = document.getElementById('weekTime');
@@ -434,11 +428,14 @@
 
         // --- FUNÇÕES DE CÁLCULO/DISPLAY ---
         
-        // (Seu bloco de funções de 'timeToHours' até 'updateAllDisplays'
+        // (Todo o seu bloco de funções de 'timeToHours' até 'updateAllDisplays'
         // vem aqui, exatamente como no código anterior)
         
           function timeToHours(timeStr) {
-            const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+            if (!timeStr) return 0;
+            const parts = timeStr.split(':').map(Number);
+            if (parts.length !== 3) return 0;
+            const [hours, minutes, seconds] = parts;
             return hours + (minutes / 60) + (seconds / 3600);
           }
           function formatHours(hours) {
@@ -690,7 +687,18 @@
             return { labels, data, backgroundColors };
           }
           function updateChart(period) {
-            const ctx = document.getElementById('studyChart').getContext('2d');
+            // Adicionando uma verificação para garantir que o elemento exista
+            const chartElement = document.getElementById('studyChart');
+            if (!chartElement) {
+              console.error("Elemento 'studyChart' não encontrado.");
+              return;
+            }
+            const ctx = chartElement.getContext('2d');
+            if (!ctx) {
+              console.error("Contexto 2D do canvas não pôde ser obtido.");
+              return;
+            }
+            
             const chartData = generateChartData(period);
             if (studyChart) {
               studyChart.destroy();
@@ -943,6 +951,12 @@
             updateChart(period);
           }
           function generateCalendar(month, year) {
+            // Adicionando uma verificação para garantir que o elemento exista
+            if (!calendarElement) {
+                console.error("Elemento 'calendar' não encontrado.");
+                return;
+            }
+            
             const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
             let calendarHTML = `
               <div class="calendar-header">
@@ -1108,9 +1122,6 @@
             generateCalendar(currentCalendarMonth, currentCalendarYear);
           }
           
-          // =======================================================
-          // --- FUNÇÃO DE INICIALIZAÇÃO (RESTAURADA) ---
-          // =======================================================
           function updateAllDisplays() {
             console.log("Atualizando todas as exibições...");
             updateStatistics();
@@ -1118,8 +1129,8 @@
             fillWeeklyTable();
             fillMonthlyTable();
             fillYearlyTable();
-            updateChart('daily'); // <-- Esta chamada agora vai funcionar
-            generateCalendar(currentCalendarMonth, currentCalendarYear); // <-- Esta chamada agora vai funcionar
+            updateChart('daily');
+            generateCalendar(currentCalendarMonth, currentCalendarYear);
           }
         
         // --- EVENT LISTENERS E CARREGAMENTO INICIAL ---
@@ -1158,18 +1169,20 @@
             sessionsByDate = {}; 
           }
           
-          // Agora que os dados estão carregados, renderiza a tela.
-          updateAllDisplays();
+          // ==================================================
+          // --- CORREÇÃO: "EMPURRANDO" A ATUALIZAÇÃO DA TELA ---
+          // ==================================================
+          // Envolvemos a chamada em um setTimeout de 0ms.
+          // Isso a move para o final da fila de execução,
+          // garantindo que o DOM e o Chart.js estejam prontos.
+          setTimeout(() => {
+             updateAllDisplays();
+          }, 0);
           
         } catch (errorObject) {
-          // Removemos o alert() para não incomodar o usuário.
           console.error("A leitura do Firebase falhou:", errorObject);
         }
         
-        // =======================================================
-        // <<< FIM DO CÓDIGO DA APLICAÇÃO >>>
-        // =======================================================
-
       } else {
         // O USUÁRIO NÃO ESTÁ LOGADO!
         console.log("Usuário (histórico) não logado. Redirecionando para login.html...");

@@ -9,8 +9,7 @@
   
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-  
-  <style>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script> <style>
     /* Seu CSS original completo (sem alterações) */
     :root {
       --primary-color: #4a6fa5;
@@ -108,8 +107,7 @@
     </div>
     <ul class="sidebar-menu">
       <li>
-        <a href="#" class="sidebar-button active">
-          <i class="fas fa-home"></i>
+        <a href="#" class="sidebar-button active"> <i class="fas fa-home"></i>
           <span>Início</span>
         </a>
       </li>
@@ -137,6 +135,12 @@
           <span>Importar Dados</span>
         </a>
       </li>
+      <li>
+        <a id="btnLogout" href="#" class="sidebar-button">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Sair</span>
+        </a>
+      </li>
     </ul>
   </div>
 
@@ -154,7 +158,6 @@
         <p id="todayExercises">0</p>
       </div>
     </div>
-
     <div class="timer-section">
       <div id="timer">00:00:00</div>
       <div class="button-container">
@@ -166,7 +169,6 @@
         </button>
       </div>
     </div>
-
     <div class="exercises-section">
       <div class="input-group">
         <label for="exercisesInput"><i class="fas fa-tasks"></i> Exercícios Feitos:</label>
@@ -177,7 +179,6 @@
         <input type="number" id="correctExercisesInput" value="0" min="0">
       </div>
     </div>
-
     <div class="stats-container">
       <div class="stat-card">
         <h3><i class="fas fa-clock"></i> Tempo Total</h3>
@@ -207,471 +208,485 @@
         </div>
       </div>
     </div>
-
     <div id="sessionList"></div>
   </div>
 
   <script>
+    // Sua Configuração do Firebase (copiada do seu código)
     const firebaseConfig = {
-    apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
-    authDomain: "meu-study-tracker.firebaseapp.com",
-    databaseURL: "https://meu-study-tracker-default-rtdb.firebaseio.com",
-    projectId: "meu-study-tracker",
-    storageBucket: "meu-study-tracker.firebasestorage.app",
-    messagingSenderId: "715609213126",
-    appId: "1:715609213126:web:3e9cbe7e840ea20a1b6fc7"
-  };
+      apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
+      authDomain: "meu-study-tracker.firebaseapp.com",
+      databaseURL: "https://meu-study-tracker-default-rtdb.firebaseio.com",
+      projectId: "meu-study-tracker",
+      storageBucket: "meu-study-tracker.firebasestorage.app",
+      messagingSenderId: "715609213126",
+      appId: "1:715609213126:web:3e9cbe7e840ea20a1b6fc7"
+    };
 
     // --- INICIALIZAÇÃO DO FIREBASE ---
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
-    // 'sessionsByDate' será o nó principal no seu banco de dados onde tudo será salvo
-    const dbRef = database.ref('sessionsByDate');
+    const auth = firebase.auth(); // <-- INICIALIZA O SERVIÇO DE AUTH
 
-
-    // --- VARIÁVEIS GLOBAIS ---
-    let startTime;
-    let timerInterval;
-    let totalTime = 0;
-    // REMOVIDO: a leitura do localStorage. Esta variável agora será preenchida pelo Firebase
-    let sessionsByDate = {}; 
-
-    // --- SELETORES DE ELEMENTOS (sem mudança) ---
-    const timerDisplay = document.getElementById('timer');
-    const startButton = document.getElementById('startButton');
-    const stopButton = document.getElementById('stopButton');
-    const sessionList = document.getElementById('sessionList');
-    const downloadButton = document.getElementById('downloadButton');
-    const totalStudyTimeDisplay = document.getElementById('totalStudyTime');
-    const totalExercisesDoneDisplay = document.getElementById('totalExercisesDone');
-    const totalExercisesCorrectDisplay = document.getElementById('totalExercisesCorrect');
-    const averageAccuracyDisplay = document.getElementById('averageAccuracy');
-    const weeklyStudyTimeDisplay = document.getElementById('weeklyStudyTime');
-    const todayStudyTimeDisplay = document.getElementById('todayStudyTime');
-    const todayExercisesDisplay = document.getElementById('todayExercises');
-
-    // --- FUNÇÕES DE LÓGICA (a maioria sem mudança) ---
     
-    function startStudySession() {
-      startTime = new Date().getTime();
-      timerInterval = setInterval(updateTimer, 1000);
-      startButton.classList.add('hidden');
-      stopButton.classList.remove('hidden');
-    }
+    // =======================================================
+    // === PASSO 3.3: ADICIONAR O "GUARDA" DE AUTENTICAÇÃO ===
+    // =======================================================
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        // O USUÁRIO ESTÁ LOGADO!
+        console.log("Usuário logado:", user.uid);
+        
+        // --- MODIFICAÇÃO PRINCIPAL DA DBREF ---
+        // Aponta para a pasta DO USUÁRIO logado
+        // Ex: 'users/Abc...123/sessionsByDate'
+        const dbRef = database.ref('users/' + user.uid + '/sessionsByDate');
 
-    // --- FUNÇÃO STOP (MODIFICADA) ---
-    function stopStudySession() {
-      clearInterval(timerInterval);
-      startButton.classList.remove('hidden');
-      stopButton.classList.add('hidden');
+        // =======================================================
+        // <<< TODO O SEU CÓDIGO JS ANTIGO FOI MOVIDO AQUI PARA DENTRO >>>
+        // =======================================================
 
-      const sessionTime = formatTime(totalTime);
-      const exercisesInput = document.getElementById('exercisesInput');
-      const correctExercisesInput = document.getElementById('correctExercisesInput');
-      const exercisesDone = parseInt(exercisesInput.value);
-      const exercisesCorrect = parseInt(correctExercisesInput.value);
-      const currentDate = new Date();
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth() + 1;
-      const day = currentDate.getDate();
-      const dateKey = `${year}-${month}-${day}`;
+        // --- VARIÁVEIS GLOBAIS ---
+        let startTime;
+        let timerInterval;
+        let totalTime = 0;
+        let sessionsByDate = {}; // Começa vazio, será preenchido pelo Firebase
 
-      if (!sessionsByDate[dateKey]) {
-        sessionsByDate[dateKey] = [];
-      }
+        // --- SELETORES DE ELEMENTOS ---
+        const timerDisplay = document.getElementById('timer');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const sessionList = document.getElementById('sessionList');
+        const downloadButton = document.getElementById('downloadButton');
+        const totalStudyTimeDisplay = document.getElementById('totalStudyTime');
+        const totalExercisesDoneDisplay = document.getElementById('totalExercisesDone');
+        const totalExercisesCorrectDisplay = document.getElementById('totalExercisesCorrect');
+        const averageAccuracyDisplay = document.getElementById('averageAccuracy');
+        const weeklyStudyTimeDisplay = document.getElementById('weeklyStudyTime');
+        const todayStudyTimeDisplay = document.getElementById('todayStudyTime');
+        const todayExercisesDisplay = document.getElementById('todayExercises');
+        const btnLogout = document.getElementById('btnLogout'); // <-- Pega o botão de Sair
+        const importButton = document.getElementById('importButton');
+        const fileInput = document.createElement('input');
 
-      const accuracy = exercisesDone > 0 ? (exercisesCorrect / exercisesDone * 100).toFixed(2) : '0.00';
+        // --- FUNÇÕES DE LÓGICA (Seu código original, sem mudanças) ---
+        
+        function startStudySession() {
+          startTime = new Date().getTime();
+          timerInterval = setInterval(updateTimer, 1000);
+          startButton.classList.add('hidden');
+          stopButton.classList.remove('hidden');
+        }
 
-      const sessionData = {
-        time: sessionTime,
-        exercisesDone: exercisesDone,
-        exercisesCorrect: exercisesCorrect,
-        accuracy: accuracy
-      };
+        function stopStudySession() {
+          clearInterval(timerInterval);
+          startButton.classList.remove('hidden');
+          stopButton.classList.add('hidden');
 
-      sessionsByDate[dateKey].push(sessionData);
+          const sessionTime = formatTime(totalTime);
+          const exercisesInput = document.getElementById('exercisesInput');
+          const correctExercisesInput = document.getElementById('correctExercisesInput');
+          const exercisesDone = parseInt(exercisesInput.value);
+          const exercisesCorrect = parseInt(correctExercisesInput.value);
+          const currentDate = new Date();
+          const year = currentDate.getFullYear();
+          const month = currentDate.getMonth() + 1;
+          const day = currentDate.getDate();
+          const dateKey = `${year}-${month}-${day}`;
 
-      // --- MUDANÇA PRINCIPAL: Salva no FIREBASE em vez do localStorage ---
-      dbRef.set(sessionsByDate)
-        .then(() => {
-          console.log("Dados salvos no Firebase com sucesso!");
-        })
-        .catch((error) => {
-          console.error("Erro ao salvar dados no Firebase: ", error);
-          alert("Erro ao salvar sessão. Verifique sua conexão e a configuração do Firebase.");
-        });
+          if (!sessionsByDate[dateKey]) {
+            sessionsByDate[dateKey] = [];
+          }
 
-      // Limpa os campos e reseta o timer
-      totalTime = 0;
-      updateDisplay();
-      
-      // NÃO PRECISA MAIS CHAMAR as funções update...() aqui.
-      // O 'dbRef.onValue' (no final do script) vai detectar a mudança 
-      // e atualizar a tela automaticamente.
-    }
+          const accuracy = exercisesDone > 0 ? (exercisesCorrect / exercisesDone * 100).toFixed(2) : '0.00';
 
-    function getStartOfWeek(date) {
-      const d = new Date(date);
-      const day = d.getDay();
-      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-      d.setHours(0, 0, 0, 0);
-      return new Date(d.setDate(diff));
-    }
+          const sessionData = {
+            time: sessionTime,
+            exercisesDone: exercisesDone,
+            exercisesCorrect: exercisesCorrect,
+            accuracy: accuracy
+          };
 
-    function calculateWeeklyStudyTime() {
-      const now = new Date();
-      const startOfWeek = getStartOfWeek(now);
-      let weeklyMilliseconds = 0;
+          sessionsByDate[dateKey].push(sessionData);
 
-      for (const dateKey in sessionsByDate) {
-        if (sessionsByDate.hasOwnProperty(dateKey)) {
-          const [year, month, day] = dateKey.split('-').map(Number);
-          const sessionDate = new Date(year, month - 1, day);
-          if (sessionDate >= startOfWeek) {
+          // Salva no Firebase (agora no caminho 'users/UID/sessionsByDate')
+          dbRef.set(sessionsByDate)
+            .then(() => {
+              console.log("Dados salvos no Firebase com sucesso!");
+            })
+            .catch((error) => {
+              console.error("Erro ao salvar dados no Firebase: ", error);
+              alert("Erro ao salvar sessão. Verifique sua conexão e a configuração do Firebase.");
+            });
+
+          totalTime = 0;
+          updateDisplay();
+        }
+
+        function getStartOfWeek(date) {
+          const d = new Date(date);
+          const day = d.getDay();
+          const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+          d.setHours(0, 0, 0, 0);
+          return new Date(d.setDate(diff));
+        }
+
+        function calculateWeeklyStudyTime() {
+          const now = new Date();
+          const startOfWeek = getStartOfWeek(now);
+          let weeklyMilliseconds = 0;
+          for (const dateKey in sessionsByDate) {
+            if (sessionsByDate.hasOwnProperty(dateKey)) {
+              const [year, month, day] = dateKey.split('-').map(Number);
+              const sessionDate = new Date(year, month - 1, day);
+              if (sessionDate >= startOfWeek) {
+                sessionsByDate[dateKey].forEach(session => {
+                  const timeParts = (session.time || "0:0:0").split(':').map(Number); // Adiciona checagem
+                  if(timeParts.length === 3) {
+                    const [hours, minutes, seconds] = timeParts;
+                    weeklyMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
+                  }
+                });
+              }
+            }
+          }
+          return formatTime(weeklyMilliseconds);
+        }
+
+        function calculateTodayStats() {
+          const currentDate = new Date();
+          const year = currentDate.getFullYear();
+          const month = currentDate.getMonth() + 1;
+          const day = currentDate.getDate();
+          const dateKey = `${year}-${month}-${day}`;
+          let todayMilliseconds = 0;
+          let todayExercises = 0;
+          if (sessionsByDate[dateKey]) {
             sessionsByDate[dateKey].forEach(session => {
-              const timeParts = session.time.split(':');
-              const hours = parseInt(timeParts[0]);
-              const minutes = parseInt(timeParts[1]);
-              const seconds = parseInt(timeParts[2]);
-              weeklyMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
+              const timeParts = (session.time || "0:0:0").split(':').map(Number); // Adiciona checagem
+              if(timeParts.length === 3) {
+                const [hours, minutes, seconds] = timeParts;
+                todayMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
+              }
+              todayExercises += session.exercisesDone || 0;
             });
           }
+          return {
+            time: formatTime(todayMilliseconds),
+            exercises: todayExercises
+          };
         }
-      }
-      return formatTime(weeklyMilliseconds);
-    }
 
-    function calculateTodayStats() {
-      const currentDate = new Date();
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth() + 1;
-      const day = currentDate.getDate();
-      const dateKey = `${year}-${month}-${day}`;
-      let todayMilliseconds = 0;
-      let todayExercises = 0;
-      if (sessionsByDate[dateKey]) {
-        sessionsByDate[dateKey].forEach(session => {
-          const timeParts = session.time.split(':');
-          const hours = parseInt(timeParts[0]);
-          const minutes = parseInt(timeParts[1]);
-          const seconds = parseInt(timeParts[2]);
-          todayMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
-          todayExercises += session.exercisesDone;
-        });
-      }
-      return {
-        time: formatTime(todayMilliseconds),
-        exercises: todayExercises
-      };
-    }
+        function updateTodayStats() {
+          const todayStats = calculateTodayStats();
+          todayStudyTimeDisplay.textContent = todayStats.time;
+          todayExercisesDisplay.textContent = todayStats.exercises;
+        }
 
-    function updateTodayStats() {
-      const todayStats = calculateTodayStats();
-      todayStudyTimeDisplay.textContent = todayStats.time;
-      todayExercisesDisplay.textContent = todayStats.exercises;
-    }
+        function updateWeeklyStudyTime() {
+          weeklyStudyTimeDisplay.textContent = calculateWeeklyStudyTime();
+        }
 
-    function updateWeeklyStudyTime() {
-      weeklyStudyTimeDisplay.textContent = calculateWeeklyStudyTime();
-    }
+        function updateWeeklyProgress() {
+          const weeklyTime = calculateWeeklyStudyTime();
+          const [hours, minutes, seconds] = weeklyTime.split(':').map(Number);
+          const totalHours = hours + (minutes / 60) + (seconds / 3600);
+          const weeklyGoal = 20;
+          const progress = Math.min((totalHours / weeklyGoal) * 100, 100);
+          document.getElementById('weeklyProgress').style.width = `${progress}%`;
+        }
 
-    function updateWeeklyProgress() {
-      const weeklyTime = calculateWeeklyStudyTime();
-      const [hours, minutes, seconds] = weeklyTime.split(':').map(Number);
-      const totalHours = hours + (minutes / 60) + (seconds / 3600);
-      const weeklyGoal = 20;
-      const progress = Math.min((totalHours / weeklyGoal) * 100, 100);
-      document.getElementById('weeklyProgress').style.width = `${progress}%`;
-    }
+        function getAccuracyClass(accuracy) {
+          if (accuracy >= 80) return 'accuracy-high';
+          if (accuracy >= 50) return 'accuracy-medium';
+          return 'accuracy-low';
+        }
 
-    function getAccuracyClass(accuracy) {
-      if (accuracy >= 80) return 'accuracy-high';
-      if (accuracy >= 50) return 'accuracy-medium';
-      return 'accuracy-low';
-    }
-
-    function updateSessionList() {
-      sessionList.innerHTML = '';
-      const sortedDates = Object.keys(sessionsByDate).sort((a, b) => {
-        const dateA = new Date(a.split('-').join('/'));
-        const dateB = new Date(b.split('-').join('/'));
-        return dateB - dateA;
-      });
-      for (const date of sortedDates) {
-        if (sessionsByDate.hasOwnProperty(date)) {
-          const dateHeader = document.createElement('h3');
-          dateHeader.className = 'session-date';
-          dateHeader.textContent = formatDateDisplay(date);
-          sessionList.appendChild(dateHeader);
-
-          const dailySummary = document.createElement('div');
-          dailySummary.className = 'daily-summary';
-          const dailyTime = calculateDailyStudyTime(date);
-          const dailyExercises = calculateDailyExercises(date);
-          const accuracyClass = getAccuracyClass(parseFloat(dailyExercises.accuracy));
-          dailySummary.innerHTML = `
-            <h4><i class="fas fa-calendar-day"></i> Resumo do Dia</h4>
-            <div class="daily-summary-stats">
-              <div class="daily-summary-stat">
-                <div class="value">${dailyTime}</div>
-                <div class="label">Tempo estudado</div>
-              </div>
-              <div class="daily-summary-stat">
-                <div class="value">${dailyExercises.totalExercises}</div>
-                <div class="label">Exercícios</div>
-              </div>
-              <div class="daily-summary-stat">
-                <div class="value">${dailyExercises.totalCorrect}</div>
-                <div class="label">Acertos</div>
-              </div>
-              <div class="daily-summary-stat ${accuracyClass}">
-                <div class="value">${dailyExercises.accuracy}%</div>
-                <div class="label">Precisão</div>
-              </div>
-            </div>
-          `;
-          sessionList.appendChild(dailySummary);
-
-          sessionsByDate[date].forEach((session, index) => {
-            const sessionItem = document.createElement('div');
-            sessionItem.className = 'session-item';
-            const accuracyClass = getAccuracyClass(parseFloat(session.accuracy));
-            sessionItem.innerHTML = `
-              <div class="session-stat"><strong>Sessão ${index + 1}:</strong></div>
-              <div class="session-stat"><i class="fas fa-clock"></i> ${session.time}</div>
-              <div class="session-stat"><i class="fas fa-tasks"></i> ${session.exercisesDone}</div>
-              <div class="session-stat"><i class="fas fa-check-circle"></i> ${session.exercisesCorrect}</div>
-              <div class="session-stat ${accuracyClass}"><i class="fas fa-bullseye"></i> ${session.accuracy}%</div>
-            `;
-            sessionList.appendChild(sessionItem);
+        function updateSessionList() {
+          sessionList.innerHTML = '';
+          const sortedDates = Object.keys(sessionsByDate).sort((a, b) => {
+            const dateA = new Date(a.split('-').join('/'));
+            const dateB = new Date(b.split('-').join('/'));
+            return dateB - dateA;
           });
-        }
-      }
-    }
+          for (const date of sortedDates) {
+            if (sessionsByDate.hasOwnProperty(date)) {
+              const dateHeader = document.createElement('h3');
+              dateHeader.className = 'session-date';
+              dateHeader.textContent = formatDateDisplay(date);
+              sessionList.appendChild(dateHeader);
 
-    function calculateDailyStudyTime(dateKey) {
-      let dailyMilliseconds = 0;
-      if (sessionsByDate[dateKey]) {
-        sessionsByDate[dateKey].forEach(session => {
-          const timeParts = session.time.split(':');
-          const hours = parseInt(timeParts[0]);
-          const minutes = parseInt(timeParts[1]);
-          const seconds = parseInt(timeParts[2]);
-          dailyMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
-        });
-      }
-      return formatTime(dailyMilliseconds);
-    }
+              const dailySummary = document.createElement('div');
+              dailySummary.className = 'daily-summary';
+              const dailyTime = calculateDailyStudyTime(date);
+              const dailyExercises = calculateDailyExercises(date);
+              const accuracyClass = getAccuracyClass(parseFloat(dailyExercises.accuracy));
+              dailySummary.innerHTML = `
+                <h4><i class="fas fa-calendar-day"></i> Resumo do Dia</h4>
+                <div class="daily-summary-stats">
+                  <div class="daily-summary-stat">
+                    <div class="value">${dailyTime}</div>
+                    <div class="label">Tempo estudado</div>
+                  </div>
+                  <div class="daily-summary-stat">
+                    <div class="value">${dailyExercises.totalExercises}</div>
+                    <div class="label">Exercícios</div>
+                  </div>
+                  <div class="daily-summary-stat">
+                    <div class="value">${dailyExercises.totalCorrect}</div>
+                    <div class="label">Acertos</div>
+                  </div>
+                  <div class="daily-summary-stat ${accuracyClass}">
+                    <div class="value">${dailyExercises.accuracy}%</div>
+                    <div class="label">Precisão</div>
+                  </div>
+                </div>
+              `;
+              sessionList.appendChild(dailySummary);
 
-    function calculateDailyExercises(dateKey) {
-      let totalExercises = 0;
-      let totalCorrect = 0;
-      if (sessionsByDate[dateKey]) {
-        sessionsByDate[dateKey].forEach(session => {
-          totalExercises += session.exercisesDone;
-          totalCorrect += session.exercisesCorrect;
-        });
-      }
-      return {
-        totalExercises: totalExercises,
-        totalCorrect: totalCorrect,
-        accuracy: totalExercises > 0 ? (totalCorrect / totalExercises * 100).toFixed(2) : '0.00'
-      };
-    }
-
-    function formatDateDisplay(dateString) {
-      const [year, month, day] = dateString.split('-');
-      const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-      return `${day} de ${months[parseInt(month) - 1]} de ${year}`;
-    }
-
-    function updateTimer() {
-      const currentTime = new Date().getTime();
-      totalTime = currentTime - startTime;
-      timerDisplay.textContent = formatTime(totalTime);
-    }
-
-    function formatTime(milliseconds) {
-      const hours = Math.floor(milliseconds / 3600000);
-      const minutes = Math.floor((milliseconds % 3600000) / 60000);
-      const seconds = Math.floor((milliseconds % 60000) / 1000);
-      return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
-    }
-
-    function pad(num) {
-      return num.toString().padStart(2, '0');
-    }
-
-    function updateDisplay() {
-      document.getElementById('exercisesInput').value = 0;
-      document.getElementById('correctExercisesInput').value = 0;
-    }
-
-    function updateTotalStudyTime() {
-      let totalMilliseconds = 0;
-      for (const date in sessionsByDate) {
-        if (sessionsByDate.hasOwnProperty(date)) {
-          const sessions = sessionsByDate[date];
-          sessions.forEach(session => {
-            const timeParts = session.time.split(':');
-            const hours = parseInt(timeParts[0]);
-            const minutes = parseInt(timeParts[1]);
-            const seconds = parseInt(timeParts[2]);
-            totalMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
-          });
-        }
-      }
-      const totalFormatted = formatTime(totalMilliseconds);
-      totalStudyTimeDisplay.textContent = totalFormatted;
-    }
-
-    // --- FUNÇÃO DE DOWNLOAD (EXPORTAR - sem mudança) ---
-    // Esta função é útil para backups manuais
-    function downloadData() {
-      // Usa a variável global 'sessionsByDate' que é sincronizada com o Firebase
-      const dataStr = JSON.stringify(sessionsByDate, null, 2);
-      const blob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'dados_estudo_medfacil.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
-    // --- FUNÇÃO DE UPLOAD (IMPORTAR - MODIFICADA) ---
-    // Esta função agora envia os dados para o Firebase
-    function importData(event) {
-      const file = event.target.files[0];
-      if (!file) {
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        try {
-          const importedData = JSON.parse(e.target.result);
-          if (typeof importedData === 'object' && importedData !== null) {
-            
-            // --- MUDANÇA: Envia os dados importados para o FIREBASE ---
-            dbRef.set(importedData)
-              .then(() => {
-                alert('Dados importados com sucesso para a nuvem! A página será recarregada.');
-                // Recarrega a página para garantir que tudo puxe os dados frescos do Firebase
-                location.reload(); 
-              })
-              .catch((error) => {
-                alert('Erro ao enviar dados importados para o Firebase.');
-                console.error("Erro na importação (Firebase): ", error);
+              sessionsByDate[date].forEach((session, index) => {
+                const sessionItem = document.createElement('div');
+                sessionItem.className = 'session-item';
+                const accuracyClass = getAccuracyClass(parseFloat(session.accuracy));
+                sessionItem.innerHTML = `
+                  <div class="session-stat"><strong>Sessão ${index + 1}:</strong></div>
+                  <div class="session-stat"><i class="fas fa-clock"></i> ${session.time || '00:00:00'}</div>
+                  <div class="session-stat"><i class="fas fa-tasks"></i> ${session.exercisesDone || 0}</div>
+                  <div class="session-stat"><i class="fas fa-check-circle"></i> ${session.exercisesCorrect || 0}</div>
+                  <div class="session-stat ${accuracyClass}"><i class="fas fa-bullseye"></i> ${session.accuracy || 0}%</div>
+                `;
+                sessionList.appendChild(sessionItem);
               });
-              
-          } else {
-            throw new Error("Formato de arquivo inválido.");
+            }
           }
-        } catch (error) {
-          alert('Erro ao importar o arquivo. Verifique se o arquivo está no formato correto.');
-          console.error("Erro na importação: ", error);
         }
-      };
-      reader.readAsText(file);
-    }
 
-    function calculateStatistics() {
-      let totalExercisesDone = 0;
-      let totalExercisesCorrect = 0;
-      let totalAccuracy = 0;
-      for (const date in sessionsByDate) {
-        if (sessionsByDate.hasOwnProperty(date)) {
-          const sessions = sessionsByDate[date];
-          sessions.forEach(session => {
-            totalExercisesDone += session.exercisesDone;
-            totalExercisesCorrect += session.exercisesCorrect;
+        function calculateDailyStudyTime(dateKey) {
+          let dailyMilliseconds = 0;
+          if (sessionsByDate[dateKey]) {
+            sessionsByDate[dateKey].forEach(session => {
+              const timeParts = (session.time || "0:0:0").split(':').map(Number); // Adiciona checagem
+              if(timeParts.length === 3) {
+                const [hours, minutes, seconds] = timeParts;
+                dailyMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
+              }
+            });
+          }
+          return formatTime(dailyMilliseconds);
+        }
+
+        function calculateDailyExercises(dateKey) {
+          let totalExercises = 0;
+          let totalCorrect = 0;
+          if (sessionsByDate[dateKey]) {
+            sessionsByDate[dateKey].forEach(session => {
+              totalExercises += session.exercisesDone || 0;
+              totalCorrect += session.exercisesCorrect || 0;
+            });
+          }
+          return {
+            totalExercises: totalExercises,
+            totalCorrect: totalCorrect,
+            accuracy: totalExercises > 0 ? (totalCorrect / totalExercises * 100).toFixed(2) : '0.00'
+          };
+        }
+
+        function formatDateDisplay(dateString) {
+          const [year, month, day] = dateString.split('-');
+          const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+          return `${day} de ${months[parseInt(month) - 1]} de ${year}`;
+        }
+
+        function updateTimer() {
+          const currentTime = new Date().getTime();
+          totalTime = currentTime - startTime;
+          timerDisplay.textContent = formatTime(totalTime);
+        }
+
+        function formatTime(milliseconds) {
+          const hours = Math.floor(milliseconds / 3600000);
+          const minutes = Math.floor((milliseconds % 3600000) / 60000);
+          const seconds = Math.floor((milliseconds % 60000) / 1000);
+          return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
+        }
+
+        function pad(num) {
+          return num.toString().padStart(2, '0');
+        }
+
+        function updateDisplay() {
+          document.getElementById('exercisesInput').value = 0;
+          document.getElementById('correctExercisesInput').value = 0;
+        }
+
+        function updateTotalStudyTime() {
+          let totalMilliseconds = 0;
+          for (const date in sessionsByDate) {
+            if (sessionsByDate.hasOwnProperty(date)) {
+              const sessions = sessionsByDate[date];
+              sessions.forEach(session => {
+                const timeParts = (session.time || "0:0:0").split(':').map(Number); // Adiciona checagem
+                if(timeParts.length === 3) {
+                  const [hours, minutes, seconds] = timeParts;
+                  totalMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
+                }
+              });
+            }
+          }
+          const totalFormatted = formatTime(totalMilliseconds);
+          totalStudyTimeDisplay.textContent = totalFormatted;
+        }
+
+        function downloadData() {
+          const dataStr = JSON.stringify(sessionsByDate, null, 2);
+          const blob = new Blob([dataStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'dados_estudo_medfacil.json';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+          
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            try {
+              const importedData = JSON.parse(e.target.result);
+              if (typeof importedData === 'object' && importedData !== null) {
+                
+                // Pergunta ao usuário se quer MESCLAR ou SUBSTITUIR
+                if (confirm("Você quer MESCLAR estes dados com os seus dados na nuvem?\n\n(Clique em 'Cancelar' para SUBSTITUIR TUDO na nuvem com este arquivo.)")) {
+                  // Lógica de Mesclagem (um pouco mais complexa)
+                  // Isso é uma mesclagem simples, priorizando os dados do arquivo
+                  const mergedData = { ...sessionsByDate, ...importedData };
+                  dbRef.set(mergedData).then(() => {
+                     alert('Dados mesclados com sucesso! A página será recarregada.');
+                     location.reload();
+                  });
+                } else {
+                  // Lógica de Substituição (a que você tinha)
+                  dbRef.set(importedData).then(() => {
+                    alert('Dados substituídos com sucesso! A página será recarregada.');
+                    location.reload();
+                  });
+                }
+                
+              } else {
+                throw new Error("Formato de arquivo inválido.");
+              }
+            } catch (error) {
+              alert('Erro ao importar o arquivo.');
+              console.error("Erro na importação: ", error);
+            }
+          };
+          reader.readAsText(file);
+        }
+
+        function calculateStatistics() {
+          let totalExercisesDone = 0;
+          let totalExercisesCorrect = 0;
+          for (const date in sessionsByDate) {
+            if (sessionsByDate.hasOwnProperty(date)) {
+              sessionsByDate[date].forEach(session => {
+                totalExercisesDone += session.exercisesDone || 0;
+                totalExercisesCorrect += session.exercisesCorrect || 0;
+              });
+            }
+          }
+          let totalAccuracy = 0;
+          if (totalExercisesDone > 0) {
+            totalAccuracy = (totalExercisesCorrect / totalExercisesDone * 100).toFixed(2);
+          }
+          return {
+            totalExercisesDone: totalExercisesDone,
+            totalExercisesCorrect: totalExercisesCorrect,
+            averageAccuracy: totalAccuracy
+          };
+        }
+
+        function updateStatisticsDisplay() {
+          const statistics = calculateStatistics();
+          totalExercisesDoneDisplay.textContent = statistics.totalExercisesDone;
+          totalExercisesCorrectDisplay.textContent = statistics.totalExercisesCorrect;
+          averageAccuracyDisplay.textContent = `${statistics.averageAccuracy}%`;
+        }
+        
+        function inicializarDashboard() {
+          console.log("Atualizando dashboard com dados...");
+          updateTotalStudyTime();
+          updateStatisticsDisplay();
+          updateWeeklyStudyTime();
+          updateWeeklyProgress();
+          updateSessionList();
+          updateTodayStats();
+        }
+
+        // --- LÓGICA PARA O BOTÃO DE IMPORTAR ---
+        fileInput.type = 'file';
+        fileInput.accept = '.json, .txt';
+        fileInput.style.display = 'none';
+        fileInput.addEventListener('change', importData);
+        document.body.appendChild(fileInput);
+
+        importButton.addEventListener('click', () => fileInput.click());
+
+        // --- EVENT LISTENERS ---
+        startButton.addEventListener('click', startStudySession);
+        stopButton.addEventListener('click', stopStudySession);
+        downloadButton.addEventListener('click', downloadData);
+
+        // --- NOVO EVENT LISTENER PARA O LOGOUT ---
+        btnLogout.addEventListener('click', (e) => {
+          e.preventDefault();
+          auth.signOut().then(() => {
+            console.log('Usuário deslogado.');
+            // O 'onAuthStateChanged' vai pegar isso e redirecionar
+            // para 'login.html' automaticamente.
+          }).catch((error) => {
+            console.error('Erro ao sair:', error);
           });
-        }
-      }
-      if (totalExercisesDone > 0) {
-        totalAccuracy = (totalExercisesCorrect / totalExercisesDone * 100).toFixed(2);
-      }
-      return {
-        totalExercisesDone: totalExercisesDone,
-        totalExercisesCorrect: totalExercisesCorrect,
-        averageAccuracy: totalAccuracy
-      };
-    }
+        });
 
-    function updateStatisticsDisplay() {
-      const statistics = calculateStatistics();
-      totalExercisesDoneDisplay.textContent = statistics.totalExercisesDone;
-      totalExercisesCorrectDisplay.textContent = statistics.totalExercisesCorrect;
-      averageAccuracyDisplay.textContent = `${statistics.averageAccuracy}%`;
-    }
-    
-    // --- NOVA FUNÇÃO DE INICIALIZAÇÃO ---
-    // Agrupa todas as funções que atualizam a tela
-    function inicializarDashboard() {
-      console.log("Atualizando dashboard com dados...");
-      updateTotalStudyTime();
-      updateStatisticsDisplay();
-      updateWeeklyStudyTime();
-      updateWeeklyProgress();
-      updateSessionList();
-      updateTodayStats();
-    }
+        // --- CARREGAMENTO INICIAL DOS DADOS (Ouvinte Principal) ---
+        // Este código agora usa o 'dbRef' que aponta para 'users/UID/...'
+        dbRef.on('value', (snapshot) => {
+          console.log("Dados recebidos ou atualizados do Firebase.");
+          const data = snapshot.val();
+          
+          sessionsByDate = data || {}; 
+          
+          inicializarDashboard();
+          
+          if (Object.keys(sessionsByDate).length > 0) {
+            downloadButton.classList.remove('hidden');
+          } else {
+            downloadButton.classList.add('hidden');
+          }
+          
+        }, (errorObject) => {
+          console.error("A leitura do Firebase falhou: " + errorObject.name);
+          alert("Não foi possível conectar ao banco de dados. Verifique sua configuração do Firebase e as regras de segurança.");
+        });
 
+        // =======================================================
+        // <<< FIM DO CÓDIGO JS ANTIGO >>>
+        // =======================================================
 
-    // --- LÓGICA PARA O BOTÃO DE IMPORTAR (sem mudança) ---
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.json, .txt';
-    fileInput.style.display = 'none';
-    fileInput.addEventListener('change', importData);
-    document.body.appendChild(fileInput);
-
-    const importButton = document.getElementById('importButton');
-    importButton.addEventListener('click', () => fileInput.click());
-
-    // --- EVENT LISTENERS (sem mudança) ---
-    startButton.addEventListener('click', startStudySession);
-    stopButton.addEventListener('click', stopStudySession);
-    downloadButton.addEventListener('click', downloadData);
-
-    // =================================================================
-    // --- CARREGAMENTO INICIAL DOS DADOS (MODIFICADO) ---
-    // =================================================================
-    
-    // Removemos todas as chamadas de inicialização que estavam soltas aqui
-    // e as movemos para dentro do 'onValue'
-    
-    // O 'onValue' é o "ouvinte" do Firebase.
-    // 1. Ele é chamado uma vez quando a página carrega, com todos os dados.
-    // 2. Ele é chamado NOVAMENTE, de forma automática, sempre que os dados 
-    //    mudam na nuvem (ex: quando você salva uma sessão).
-    
-    dbRef.on('value', (snapshot) => {
-      console.log("Dados recebidos ou atualizados do Firebase.");
-      const data = snapshot.val();
-      
-      // Atualiza nossa variável local com os dados da nuvem
-      sessionsByDate = data || {}; 
-      
-      // Chama a função que atualiza TODA a interface gráfica
-      inicializarDashboard();
-      
-      // Atualiza a visibilidade do botão de download
-      if (Object.keys(sessionsByDate).length > 0) {
-        downloadButton.classList.remove('hidden');
       } else {
-        downloadButton.classList.add('hidden');
+        // O USUÁRIO NÃO ESTÁ LOGADO!
+        // Redireciona ele para a página de login.
+        console.log("Usuário não logado. Redirecionando para login.html...");
+        // Certifique-se de que o nome do arquivo está correto (login.html)
+        window.location.href = 'login.html'; 
       }
-      
-    }, (errorObject) => {
-      // Trata erros de leitura do banco de dados
-      console.error("A leitura do Firebase falhou: " + errorObject.name);
-      alert("Não foi possível conectar ao banco de dados. Verifique sua configuração do Firebase e as regras de segurança.");
     });
     
   </script>
 </body>
-
 </html>

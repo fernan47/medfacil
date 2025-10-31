@@ -1038,1146 +1038,810 @@
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  // Configuração do Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
-    authDomain: "meu-study-tracker.firebaseapp.com",
-    databaseURL: "https://meu-study-tracker-default-rtdb.firebaseio.com",
-    projectId: "meu-study-tracker",
-    storageBucket: "meu-study-tracker.firebasestorage.app",
-    messagingSenderId: "715609213126",
-    appId: "1:715609213126:web:cffaa561585893341b6fc7"
-  };
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  // Inicializar Firebase
-  let database;
-  try {
-    const app = firebase.initializeApp(firebaseConfig);
-    database = firebase.database();
-    console.log("Firebase inicializado com sucesso!");
-  } catch (error) {
-    console.error("Erro ao inicializar Firebase:", error);
-    showSyncStatus("Erro na conexão com Firebase", "error");
-  }
-
-  // Carrega os dados do localStorage
-  let sessionsByDate = JSON.parse(localStorage.getItem('sessionsByDate')) || {};
-  let studyChart;
-  let currentCalendarMonth = new Date().getMonth();
-  let currentCalendarYear = new Date().getFullYear();
-
-  // Elementos da página
-  const totalTimeElement = document.getElementById('totalTime');
-  const todayTimeElement = document.getElementById('todayTime');
-  const weekTimeElement = document.getElementById('weekTime');
-  const monthTimeElement = document.getElementById('monthTime');
-  const yearTimeElement = document.getElementById('yearTime');
-  const dailyAverageElement = document.getElementById('dailyAverage');
-  const currentStreakElement = document.getElementById('currentStreak');
-  const recordStreakElement = document.getElementById('recordStreak');
-  
-  const dailyTableBody = document.getElementById('dailyTableBody');
-  const weeklyTableBody = document.getElementById('weeklyTableBody');
-  const monthlyTableBody = document.getElementById('monthlyTableBody');
-  const yearlyTableBody = document.getElementById('yearlyTableBody');
-  
-  const dailyView = document.getElementById('dailyView');
-  const weeklyView = document.getElementById('weeklyView');
-  const monthlyView = document.getElementById('monthlyView');
-  const yearlyView = document.getElementById('yearlyView');
-  
-  const timePeriodButtons = document.querySelectorAll('.time-period-button');
-  
-  // Elementos do calendário
-  const calendarElement = document.getElementById('calendar');
-  const prevMonthButton = document.getElementById('prevMonth');
-  const nextMonthButton = document.getElementById('nextMonth');
-  const completedDaysElement = document.getElementById('completedDays');
-  const partialDaysElement = document.getElementById('partialDays');
-  const totalQuestionsElement = document.getElementById('totalQuestions');
-
-  // Elementos de sincronização
-  const syncStatusElement = document.getElementById('syncStatus');
-  const syncMessageElement = document.getElementById('syncMessage');
-  const uploadButton = document.getElementById('uploadButton');
-  const downloadButton = document.getElementById('downloadButton');
-
-  // ========== FUNÇÕES DE SINCRONIZAÇÃO FIREBASE ==========
-
-  // Salvar dados no Firebase
-  async function saveToFirebase() {
-    if (!database) {
-      showSyncStatus("Firebase não inicializado", "error");
-      return false;
-    }
-
-    try {
-      showSyncStatus('Enviando dados para nuvem...', 'syncing');
-      
-      // Salvar dados no Firebase
-      await database.ref('studyData').set(sessionsByDate);
-      
-      // Atualizar timestamp da última sincronização
-      await database.ref('lastSync').set(Date.now());
-      
-      showSyncStatus('Dados enviados com sucesso!', 'synced');
-      
-      // Esconder status após 3 segundos
-      setTimeout(() => {
-        hideSyncStatus();
-      }, 3000);
-      
-      return true;
-    } catch (error) {
-      console.error('Erro ao salvar no Firebase:', error);
-      showSyncStatus('Erro ao enviar dados', 'error');
-      return false;
-    }
-  }
-
-  // Carregar dados do Firebase
-  async function loadFromFirebase() {
-    if (!database) {
-      showSyncStatus("Firebase não inicializado", "error");
-      return false;
-    }
-
-    try {
-      showSyncStatus('Buscando dados da nuvem...', 'syncing');
-      
-      const snapshot = await database.ref('studyData').once('value');
-      const firebaseData = snapshot.val();
-      
-      if (firebaseData && Object.keys(firebaseData).length > 0) {
-        sessionsByDate = firebaseData;
-        localStorage.setItem('sessionsByDate', JSON.stringify(sessionsByDate));
-        
-        showSyncStatus('Dados carregados com sucesso!', 'synced');
-        
-        // Atualizar a interface
-        updateAllDisplays();
-        
-        // Esconder status após 3 segundos
-        setTimeout(() => {
-          hideSyncStatus();
-        }, 3000);
-        
-        return true;
-      } else {
-        showSyncStatus('Nenhum dado encontrado na nuvem', 'error');
-        return false;
-      }
-    } catch (error) {
-      console.error('Erro ao carregar do Firebase:', error);
-      showSyncStatus('Erro ao buscar dados', 'error');
-      return false;
-    }
-  }
-
-  // Verificar se há dados mais recentes no Firebase
-  async function checkForUpdates() {
-    if (!database) return;
-
-    try {
-      const snapshot = await database.ref('lastSync').once('value');
-      const lastFirebaseSync = snapshot.val();
-      const lastLocalSync = localStorage.getItem('lastSync');
-      
-      // Se o Firebase tem dados mais recentes, carregue-os
-      if (lastFirebaseSync && (!lastLocalSync || lastFirebaseSync > parseInt(lastLocalSync))) {
-        console.log('Dados mais recentes encontrados no Firebase, carregando...');
-        await loadFromFirebase();
-        localStorage.setItem('lastSync', lastFirebaseSync);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar atualizações:', error);
-    }
-  }
-
-  // Mostrar status de sincronização
-  function showSyncStatus(message, type) {
-    syncMessageElement.textContent = message;
-    syncStatusElement.className = `sync-status ${type}`;
-    syncStatusElement.classList.remove('hidden');
-  }
-
-  // Esconder status de sincronização
-  function hideSyncStatus() {
-    syncStatusElement.classList.add('hidden');
-  }
-
-  // ========== FUNÇÕES DO SISTEMA ORIGINAL ==========
-
-  // Converte tempo no formato HH:MM:SS para horas
-  function timeToHours(timeStr) {
-    const [hours, minutes, seconds] = timeStr.split(':').map(Number);
-    return hours + (minutes / 60) + (seconds / 3600);
-  }
-
-  // Formata horas para exibição (com 1 casa decimal)
-  function formatHours(hours) {
-    return hours.toFixed(1) + 'h';
-  }
-
-  // Converte tempo no formato HH:MM:SS para milissegundos
-  function timeToMilliseconds(timeStr) {
-    const [hours, minutes, seconds] = timeStr.split(':').map(Number);
-    return (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
-  }
-
-  // Calcula estatísticas totais
-  function calculateTotalStatistics() {
-    let totalMilliseconds = 0;
-    let totalExercisesDone = 0;
-    let totalExercisesCorrect = 0;
-    let totalSessions = 0;
-
-    for (const date in sessionsByDate) {
-      if (sessionsByDate.hasOwnProperty(date)) {
-        const sessions = sessionsByDate[date];
-
-        sessions.forEach(session => {
-          const timeMs = timeToMilliseconds(session.time);
-          totalMilliseconds += timeMs;
-          totalExercisesDone += session.exercisesDone;
-          totalExercisesCorrect += session.exercisesCorrect;
-          totalSessions++;
-        });
-      }
-    }
-
-    return {
-      totalTime: totalMilliseconds / 3600000, // em horas
-      totalExercisesDone: totalExercisesDone,
-      totalExercisesCorrect: totalExercisesCorrect,
-      totalSessions: totalSessions,
-      averageAccuracy: totalExercisesDone > 0 ? (totalExercisesCorrect / totalExercisesDone * 100).toFixed(2) : 0,
-      dailyAverage: totalMilliseconds > 0 ? (totalMilliseconds / Object.keys(sessionsByDate).length) / 3600000 : 0
+  <script>
+    // Configuração do Firebase (A SUA CONFIGURAÇÃO ORIGINAL - ESTÁ CORRETA)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
+      authDomain: "meu-study-tracker.firebaseapp.com",
+      databaseURL: "https://meu-study-tracker-default-rtdb.firebaseio.com",
+      projectId: "meu-study-tracker",
+      storageBucket: "meu-study-tracker.firebasestorage.app",
+      messagingSenderId: "715609213126",
+      appId: "1:715609213126:web:cffaa561585893341b6fc7"
     };
-  }
 
-  // Calcula estatísticas para um período específico (hoje, semana, mês, ano)
-  function calculatePeriodStatistics(period) {
-    const now = new Date();
-    let startDate;
-    
-    if (period === 'today') {
-      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    } else if (period === 'week') {
-      const day = now.getDay();
-      const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Ajuste para domingo como primeiro dia
-      startDate = new Date(now.setDate(diff));
-      startDate.setHours(0, 0, 0, 0);
-    } else if (period === 'month') {
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    } else if (period === 'year') {
-      startDate = new Date(now.getFullYear(), 0, 1);
+    // Inicializar Firebase
+    let database;
+    try {
+      const app = firebase.initializeApp(firebaseConfig);
+      database = firebase.database();
+      console.log("Firebase (histórico) inicializado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao inicializar Firebase:", error);
+      alert("Erro na conexão com Firebase. Verifique a configuração.");
     }
+  
+    // --- CORREÇÃO 1: APONTAR PARA O BANCO DE DADOS CORRETO ---
+    // O index.html salva em 'sessionsByDate', então esta página deve LER de 'sessionsByDate'.
+    const dbRef = database.ref('sessionsByDate');
+
+    // --- CORREÇÃO 2: REMOVER O LOCALSTORAGE DO INÍCIO ---
+    // Esta variável agora será preenchida pelo Firebase em tempo real.
+    let sessionsByDate = {}; 
     
-    let periodMilliseconds = 0;
-    let periodExercisesDone = 0;
-    let periodExercisesCorrect = 0;
-    let periodSessions = 0;
+    let studyChart;
+    let currentCalendarMonth = new Date().getMonth();
+    let currentCalendarYear = new Date().getFullYear();
 
-    for (const date in sessionsByDate) {
-      if (sessionsByDate.hasOwnProperty(date)) {
-        const [year, month, day] = date.split('-').map(Number);
-        const sessionDate = new Date(year, month - 1, day);
-        
-        if (sessionDate >= startDate) {
+    // Elementos da página (Seu código original, sem mudanças)
+    const totalTimeElement = document.getElementById('totalTime');
+    const todayTimeElement = document.getElementById('todayTime');
+    const weekTimeElement = document.getElementById('weekTime');
+    const monthTimeElement = document.getElementById('monthTime');
+    const yearTimeElement = document.getElementById('yearTime');
+    const dailyAverageElement = document.getElementById('dailyAverage');
+    const currentStreakElement = document.getElementById('currentStreak');
+    const recordStreakElement = document.getElementById('recordStreak');
+    const dailyTableBody = document.getElementById('dailyTableBody');
+    const weeklyTableBody = document.getElementById('weeklyTableBody');
+    const monthlyTableBody = document.getElementById('monthlyTableBody');
+    const yearlyTableBody = document.getElementById('yearlyTableBody');
+    const dailyView = document.getElementById('dailyView');
+    const weeklyView = document.getElementById('weeklyView');
+    const monthlyView = document.getElementById('monthlyView');
+    const yearlyView = document.getElementById('yearlyView');
+    const timePeriodButtons = document.querySelectorAll('.time-period-button');
+    const calendarElement = document.getElementById('calendar');
+    const prevMonthButton = document.getElementById('prevMonth');
+    const nextMonthButton = document.getElementById('nextMonth');
+    const completedDaysElement = document.getElementById('completedDays');
+    const partialDaysElement = document.getElementById('partialDays');
+    const totalQuestionsElement = document.getElementById('totalQuestions');
+
+    // --- CORREÇÃO 3: REMOVER BOTÕES E FUNÇÕES DE SYNC MANUAL ---
+    // O 'dbRef.on()' que adicionaremos no final torna os botões
+    // 'uploadButton' e 'downloadButton' e as funções 'saveToFirebase', 
+    // 'loadFromFirebase', 'checkForUpdates', etc., desnecessários.
+    // Você pode apagar os botões do HTML também.
+
+    // ========== FUNÇÕES DO SISTEMA ORIGINAL ==========
+    // TODAS as suas funções de cálculo e exibição
+    // (timeToHours, formatHours, calculateTotalStatistics, calculatePeriodStatistics,
+    // calculateStreaks, updateStatistics, generateChartData, updateChart,
+    // fillDailyTable, fillWeeklyTable, fillMonthlyTable, fillYearlyTable,
+    // getAccuracyClass, getWeekStartDate, switchView, generateCalendar,
+    // findCompletedSequences, getSequenceInfo, updateMonthSummary,
+    // prevMonth, nextMonth, updateAllDisplays)
+    //
+    // ...COLE TODAS ELAS AQUI, SEM NENHUMA MUDANÇA...
+    // (O seu código original para elas está perfeito)
+    //
+    // [Vou colar elas abaixo para garantir]
+
+    function timeToHours(timeStr) {
+      const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+      return hours + (minutes / 60) + (seconds / 3600);
+    }
+    function formatHours(hours) {
+      return hours.toFixed(1) + 'h';
+    }
+    function timeToMilliseconds(timeStr) {
+      if (!timeStr || typeof timeStr.split !== 'function') {
+        console.warn('Formato de tempo inválido recebido:', timeStr);
+        return 0;
+      }
+      const parts = timeStr.split(':').map(Number);
+      if (parts.length !== 3 || parts.some(isNaN)) {
+        console.warn('Formato de tempo inválido (partes):', timeStr);
+        return 0;
+      }
+      const [hours, minutes, seconds] = parts;
+      return (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
+    }
+    function calculateTotalStatistics() {
+      let totalMilliseconds = 0;
+      let totalExercisesDone = 0;
+      let totalExercisesCorrect = 0;
+      let totalSessions = 0;
+      for (const date in sessionsByDate) {
+        if (sessionsByDate.hasOwnProperty(date)) {
           const sessions = sessionsByDate[date];
-
           sessions.forEach(session => {
             const timeMs = timeToMilliseconds(session.time);
-            periodMilliseconds += timeMs;
-            periodExercisesDone += session.exercisesDone;
-            periodExercisesCorrect += session.exercisesCorrect;
-            periodSessions++;
+            totalMilliseconds += timeMs;
+            totalExercisesDone += session.exercisesDone || 0;
+            totalExercisesCorrect += session.exercisesCorrect || 0;
+            totalSessions++;
           });
         }
       }
+      const totalDays = Object.keys(sessionsByDate).length;
+      return {
+        totalTime: totalMilliseconds / 3600000,
+        totalExercisesDone: totalExercisesDone,
+        totalExercisesCorrect: totalExercisesCorrect,
+        totalSessions: totalSessions,
+        averageAccuracy: totalExercisesDone > 0 ? (totalExercisesCorrect / totalExercisesDone * 100).toFixed(2) : 0,
+        dailyAverage: totalDays > 0 ? (totalMilliseconds / totalDays) / 3600000 : 0
+      };
     }
-
-    return {
-      time: periodMilliseconds / 3600000, // em horas
-      exercisesDone: periodExercisesDone,
-      exercisesCorrect: periodExercisesCorrect,
-      sessions: periodSessions,
-      accuracy: periodExercisesDone > 0 ? (periodExercisesCorrect / periodExercisesDone * 100).toFixed(2) : 0
-    };
-  }
-
-  // Calcula sequência de dias consecutivos
-  function calculateStreaks() {
-    // Garante que as datas estejam ordenadas da mais antiga para a mais recente
-    const dates = Object.keys(sessionsByDate).sort((a, b) => new Date(a) - new Date(b));
-    if (dates.length === 0) {
-      return { currentStreak: 0, recordStreak: 0 };
-    }
-
-    // --- 1. CALCULA A SEQUÊNCIA RECORDE ---
-    // Itera por todas as datas para encontrar a maior sequência já feita
-    let recordStreak = 0;
-    let tempStreak = 0;
-    if (dates.length > 0) {
-      tempStreak = 1;
-      recordStreak = 1;
-      for (let i = 1; i < dates.length; i++) {
-        const currentDate = new Date(dates[i]);
-        const previousDate = new Date(dates[i - 1]);
-        const diffTime = currentDate.getTime() - previousDate.getTime();
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 1) {
-          // Dia consecutivo, aumenta a sequência temporária
-          tempStreak++;
-        } else {
-          // Quebrou a sequência, reinicia a contagem
-          tempStreak = 1;
-        }
-
-        // Atualiza o recorde se a sequência atual for maior
-        if (tempStreak > recordStreak) {
-          recordStreak = tempStreak;
-        }
+    function calculatePeriodStatistics(period) {
+      const now = new Date();
+      let startDate;
+      if (period === 'today') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (period === 'week') {
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        startDate = new Date(now.setDate(diff));
+        startDate.setHours(0, 0, 0, 0);
+      } else if (period === 'month') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else if (period === 'year') {
+        startDate = new Date(now.getFullYear(), 0, 1);
       }
-    }
-
-    // --- 2. CALCULA A SEQUÊNCIA ATUAL ---
-    // Conta de trás para frente a partir do dia mais recente
-    let currentStreak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const mostRecentStudyDate = new Date(dates[dates.length - 1]);
-    mostRecentStudyDate.setHours(0, 0, 0, 0);
-
-    const diffFromToday = Math.round((today.getTime() - mostRecentStudyDate.getTime()) / (1000 * 60 * 60 * 24));
-
-    // A sequência atual só é válida se o último estudo foi hoje ou ontem
-    if (diffFromToday <= 1) {
-      currentStreak = 1;
-      // Começa do penúltimo e vai voltando
-      for (let i = dates.length - 2; i >= 0; i--) {
-        const currentDate = new Date(dates[i]);
-        const previousDate = new Date(dates[i + 1]); // O "anterior" aqui é o dia seguinte na lista
-        const diffTime = previousDate.getTime() - currentDate.getTime();
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 1) {
-          currentStreak++;
-        } else {
-          // Encontrou uma quebra, para a contagem da sequência ATUAL imediatamente
-          break;
-        }
-      }
-    }
-
-    return {
-      currentStreak: currentStreak,
-      recordStreak: recordStreak
-    };
-  }
-
-  // Atualiza as estatísticas na página
-  function updateStatistics() {
-    const totalStats = calculateTotalStatistics();
-    const todayStats = calculatePeriodStatistics('today');
-    const weekStats = calculatePeriodStatistics('week');
-    const monthStats = calculatePeriodStatistics('month');
-    const yearStats = calculatePeriodStatistics('year');
-    const streaks = calculateStreaks();
-
-    totalTimeElement.textContent = formatHours(totalStats.totalTime);
-    todayTimeElement.textContent = formatHours(todayStats.time);
-    weekTimeElement.textContent = formatHours(weekStats.time);
-    monthTimeElement.textContent = formatHours(monthStats.time);
-    yearTimeElement.textContent = formatHours(yearStats.time);
-    dailyAverageElement.textContent = formatHours(totalStats.dailyAverage);
-    
-    currentStreakElement.textContent = `${streaks.currentStreak} dias`;
-    if (streaks.currentStreak > 0) {
-      currentStreakElement.innerHTML += `<span class="streak-fire">🔥</span>`;
-    }
-    
-    recordStreakElement.textContent = `${streaks.recordStreak} dias`;
-    if (streaks.recordStreak >= 5) {
-      recordStreakElement.innerHTML += `<span class="streak-trophy">🏆</span>`;
-    }
-  }
-
-  // Gera dados para o gráfico
-  function generateChartData(period) {
-    const now = new Date();
-    let labels = [];
-    let data = [];
-    let backgroundColors = [];
-    
-    if (period === 'daily') {
-      // Últimos 7 dias
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-        
-        labels.push(`${date.getDate()}/${date.getMonth() + 1}`);
-        
-        if (sessionsByDate[dateKey]) {
-          let dayMilliseconds = 0;
-          sessionsByDate[dateKey].forEach(session => {
-            dayMilliseconds += timeToMilliseconds(session.time);
-          });
-          data.push((dayMilliseconds / 3600000).toFixed(1)); // Converter para horas com 1 decimal
-        } else {
-          data.push(0);
-        }
-        
-        backgroundColors.push(date.toDateString() === now.toDateString() ? '#4fc3f7' : '#4a6fa5');
-      }
-    } else if (period === 'weekly') {
-      // Últimas 8 semanas
-      for (let i = 7; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - (i * 7));
-        
-        // Encontra o início da semana (domingo)
-        const startOfWeek = new Date(date);
-        startOfWeek.setDate(date.getDate() - date.getDay());
-        
-        // Encontra o fim da semana (sábado)
-        const endOfWeek = new Date(date);
-        endOfWeek.setDate(date.getDate() + (6 - date.getDay()));
-        
-        labels.push(`${startOfWeek.getDate()}/${startOfWeek.getMonth() + 1} - ${endOfWeek.getDate()}/${endOfWeek.getMonth() + 1}`);
-        
-        let weekMilliseconds = 0;
-        
-        // Itera por todos os dias na semana
-        for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate() + 1)) {
-          const dateKey = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-          
-          if (sessionsByDate[dateKey]) {
-            sessionsByDate[dateKey].forEach(session => {
-              weekMilliseconds += timeToMilliseconds(session.time);
+      let periodMilliseconds = 0;
+      let periodExercisesDone = 0;
+      let periodExercisesCorrect = 0;
+      let periodSessions = 0;
+      for (const date in sessionsByDate) {
+        if (sessionsByDate.hasOwnProperty(date)) {
+          const [year, month, day] = date.split('-').map(Number);
+          const sessionDate = new Date(year, month - 1, day);
+          if (sessionDate >= startDate) {
+            const sessions = sessionsByDate[date];
+            sessions.forEach(session => {
+              const timeMs = timeToMilliseconds(session.time);
+              periodMilliseconds += timeMs;
+              periodExercisesDone += session.exercisesDone || 0;
+              periodExercisesCorrect += session.exercisesCorrect || 0;
+              periodSessions++;
             });
           }
         }
-        
-        data.push((weekMilliseconds / 3600000).toFixed(1)); // Converter para horas com 1 decimal
-        
-        // Verifica se a semana atual está no intervalo
-        const currentWeekStart = new Date(now);
-        currentWeekStart.setDate(now.getDate() - now.getDay());
-        backgroundColors.push(
-          startOfWeek.toDateString() === currentWeekStart.toDateString() ? '#4fc3f7' : '#4a6fa5'
-        );
       }
-    } else if (period === 'monthly') {
-      // Últimos 6 meses
-      for (let i = 5; i >= 0; i--) {
-        const date = new Date();
-        date.setMonth(date.getMonth() - i);
-        const month = date.getMonth() + 1;
-        const year = date.getFullYear();
-        
-        labels.push(`${month}/${year.toString().slice(2)}`);
-        
-        let monthMilliseconds = 0;
-        
-        // Itera por todos os dias no mês
-        for (const dateKey in sessionsByDate) {
-          if (sessionsByDate.hasOwnProperty(dateKey)) {
-            const [y, m, d] = dateKey.split('-').map(Number);
-            
-            if (y === year && m === month) {
+      return {
+        time: periodMilliseconds / 3600000,
+        exercisesDone: periodExercisesDone,
+        exercisesCorrect: periodExercisesCorrect,
+        sessions: periodSessions,
+        accuracy: periodExercisesDone > 0 ? (periodExercisesCorrect / periodExercisesDone * 100).toFixed(2) : 0
+      };
+    }
+    function calculateStreaks() {
+      const dates = Object.keys(sessionsByDate).sort((a, b) => new Date(a) - new Date(b));
+      if (dates.length === 0) {
+        return { currentStreak: 0, recordStreak: 0 };
+      }
+      let recordStreak = 0;
+      let tempStreak = 0;
+      if (dates.length > 0) {
+        tempStreak = 1;
+        recordStreak = 1;
+        for (let i = 1; i < dates.length; i++) {
+          const currentDate = new Date(dates[i]);
+          const previousDate = new Date(dates[i - 1]);
+          const diffTime = currentDate.getTime() - previousDate.getTime();
+          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+          if (diffDays === 1) {
+            tempStreak++;
+          } else {
+            tempStreak = 1;
+          }
+          if (tempStreak > recordStreak) {
+            recordStreak = tempStreak;
+          }
+        }
+      }
+      let currentStreak = 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const mostRecentStudyDate = new Date(dates[dates.length - 1]);
+      mostRecentStudyDate.setHours(0, 0, 0, 0);
+      const diffFromToday = Math.round((today.getTime() - mostRecentStudyDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffFromToday <= 1) {
+        currentStreak = 1;
+        for (let i = dates.length - 2; i >= 0; i--) {
+          const currentDate = new Date(dates[i]);
+          const previousDate = new Date(dates[i + 1]);
+          const diffTime = previousDate.getTime() - currentDate.getTime();
+          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+          if (diffDays === 1) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        }
+      }
+      return {
+        currentStreak: currentStreak,
+        recordStreak: recordStreak
+      };
+    }
+    function updateStatistics() {
+      const totalStats = calculateTotalStatistics();
+      const todayStats = calculatePeriodStatistics('today');
+      const weekStats = calculatePeriodStatistics('week');
+      const monthStats = calculatePeriodStatistics('month');
+      const yearStats = calculatePeriodStatistics('year');
+      const streaks = calculateStreaks();
+      totalTimeElement.textContent = formatHours(totalStats.totalTime);
+      todayTimeElement.textContent = formatHours(todayStats.time);
+      weekTimeElement.textContent = formatHours(weekStats.time);
+      monthTimeElement.textContent = formatHours(monthStats.time);
+      yearTimeElement.textContent = formatHours(yearStats.time);
+      dailyAverageElement.textContent = formatHours(totalStats.dailyAverage);
+      currentStreakElement.textContent = `${streaks.currentStreak} dias`;
+      if (streaks.currentStreak > 0) {
+        currentStreakElement.innerHTML += `<span class="streak-fire">🔥</span>`;
+      }
+      recordStreakElement.textContent = `${streaks.recordStreak} dias`;
+      if (streaks.recordStreak >= 5) {
+        recordStreakElement.innerHTML += `<span class="streak-trophy">🏆</span>`;
+      }
+    }
+    function generateChartData(period) {
+      const now = new Date();
+      let labels = [];
+      let data = [];
+      let backgroundColors = [];
+      if (period === 'daily') {
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+          labels.push(`${date.getDate()}/${date.getMonth() + 1}`);
+          if (sessionsByDate[dateKey]) {
+            let dayMilliseconds = 0;
+            sessionsByDate[dateKey].forEach(session => {
+              dayMilliseconds += timeToMilliseconds(session.time);
+            });
+            data.push((dayMilliseconds / 3600000).toFixed(1));
+          } else {
+            data.push(0);
+          }
+          backgroundColors.push(date.toDateString() === now.toDateString() ? '#4fc3f7' : '#4a6fa5');
+        }
+      } else if (period === 'weekly') {
+        for (let i = 7; i >= 0; i--) {
+          const date = new Date();
+          date.setDate(date.getDate() - (i * 7));
+          const startOfWeek = new Date(date);
+          startOfWeek.setDate(date.getDate() - date.getDay());
+          const endOfWeek = new Date(date);
+          endOfWeek.setDate(date.getDate() + (6 - date.getDay()));
+          labels.push(`${startOfWeek.getDate()}/${startOfWeek.getMonth() + 1} - ${endOfWeek.getDate()}/${endOfWeek.getMonth() + 1}`);
+          let weekMilliseconds = 0;
+          for (let d = new Date(startOfWeek); d <= endOfWeek; d.setDate(d.getDate() + 1)) {
+            const dateKey = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+            if (sessionsByDate[dateKey]) {
               sessionsByDate[dateKey].forEach(session => {
-                monthMilliseconds += timeToMilliseconds(session.time);
+                weekMilliseconds += timeToMilliseconds(session.time);
               });
             }
           }
+          data.push((weekMilliseconds / 3600000).toFixed(1));
+          const currentWeekStart = new Date(now);
+          currentWeekStart.setDate(now.getDate() - now.getDay());
+          backgroundColors.push(
+            startOfWeek.toDateString() === currentWeekStart.toDateString() ? '#4fc3f7' : '#4a6fa5'
+          );
         }
-        
-        data.push((monthMilliseconds / 3600000).toFixed(1)); // Converter para horas com 1 decimal
-        backgroundColors.push(month === now.getMonth() + 1 && year === now.getFullYear() ? '#4fc3f7' : '#4a6fa5');
-      }
-    } else if (period === 'yearly') {
-      // Últimos 5 anos
-      for (let i = 4; i >= 0; i--) {
-        const year = now.getFullYear() - i;
-        labels.push(year.toString());
-        
-        let yearMilliseconds = 0;
-        
-        // Itera por todos os dias no ano
-        for (const dateKey in sessionsByDate) {
-          if (sessionsByDate.hasOwnProperty(dateKey)) {
-            const [y, m, d] = dateKey.split('-').map(Number);
-            
-            if (y === year) {
-              sessionsByDate[dateKey].forEach(session => {
-                yearMilliseconds += timeToMilliseconds(session.time);
-              });
-            }
-          }
-        }
-        
-        data.push((yearMilliseconds / 3600000).toFixed(1)); // Converter para horas com 1 decimal
-        backgroundColors.push(year === now.getFullYear() ? '#4fc3f7' : '#4a6fa5');
-      }
-    }
-    
-    return { labels, data, backgroundColors };
-  }
-
-  // Atualiza o gráfico
-  function updateChart(period) {
-    const ctx = document.getElementById('studyChart').getContext('2d');
-    const chartData = generateChartData(period);
-    
-    if (studyChart) {
-      studyChart.destroy();
-    }
-    
-    studyChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: chartData.labels,
-        datasets: [{
-          label: 'Horas Estudadas',
-          data: chartData.data,
-          backgroundColor: chartData.backgroundColors,
-          borderColor: '#166088',
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: 'Horas'
-            }
-          },
-          x: {
-            title: {
-              display: true,
-              text: period === 'daily' ? 'Dias' : 
-                    period === 'weekly' ? 'Semanas' : 
-                    period === 'monthly' ? 'Meses' : 'Anos'
-            }
-          }
-        },
-        plugins: {
-          title: {
-            display: true,
-            text: period === 'daily' ? 'Horas Estudadas nos Últimos 7 Dias' : 
-                  period === 'weekly' ? 'Horas Estudadas nas Últimas 8 Semanas' : 
-                  period === 'monthly' ? 'Horas Estudadas nos Últimos 6 Meses' : 'Horas Estudadas nos Últimos 5 Anos'
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return `${context.dataset.label}: ${context.raw}h`;
+      } else if (period === 'monthly') {
+        for (let i = 5; i >= 0; i--) {
+          const date = new Date();
+          date.setMonth(date.getMonth() - i);
+          const month = date.getMonth() + 1;
+          const year = date.getFullYear();
+          labels.push(`${month}/${year.toString().slice(2)}`);
+          let monthMilliseconds = 0;
+          for (const dateKey in sessionsByDate) {
+            if (sessionsByDate.hasOwnProperty(dateKey)) {
+              const [y, m, d] = dateKey.split('-').map(Number);
+              if (y === year && m === month) {
+                sessionsByDate[dateKey].forEach(session => {
+                  monthMilliseconds += timeToMilliseconds(session.time);
+                });
               }
             }
           }
+          data.push((monthMilliseconds / 3600000).toFixed(1));
+          backgroundColors.push(month === now.getMonth() + 1 && year === now.getFullYear() ? '#4fc3f7' : '#4a6fa5');
         }
-      }
-    });
-  }
-
-  // Preenche a tabela diária
-  function fillDailyTable() {
-    dailyTableBody.innerHTML = '';
-    
-    // Ordena as datas do mais recente para o mais antigo
-    const sortedDates = Object.keys(sessionsByDate).sort((a, b) => {
-      return new Date(b) - new Date(a);
-    });
-    
-    // Calcula a sequência atual para destacar dias consecutivos
-    const streaks = calculateStreaks();
-    let consecutiveDays = 0;
-    let previousDate = null;
-    
-    sortedDates.forEach((date, index) => {
-      const [year, month, day] = date.split('-');
-      const formattedDate = `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
-      
-      let dayMilliseconds = 0;
-      let dayExercisesDone = 0;
-      let dayExercisesCorrect = 0;
-      let daySessions = sessionsByDate[date].length;
-      
-      sessionsByDate[date].forEach(session => {
-        dayMilliseconds += timeToMilliseconds(session.time);
-        dayExercisesDone += session.exercisesDone;
-        dayExercisesCorrect += session.exercisesCorrect;
-      });
-      
-      const hours = (dayMilliseconds / 3600000).toFixed(1);
-      const accuracy = dayExercisesDone > 0 ? (dayExercisesCorrect / dayExercisesDone * 100).toFixed(2) : 0;
-      const accuracyClass = getAccuracyClass(accuracy);
-      
-      // Verifica se é um dia consecutivo
-      const currentDate = new Date(date);
-      currentDate.setHours(0, 0, 0, 0);
-      
-      let isConsecutive = false;
-      if (previousDate) {
-        const diffTime = previousDate - currentDate;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays === 1) {
-          consecutiveDays++;
-          isConsecutive = true;
-        } else if (diffDays > 1) {
-          consecutiveDays = 0;
-        }
-      } else {
-        consecutiveDays = 1;
-      }
-      
-      previousDate = currentDate;
-      
-      const row = document.createElement('tr');
-      if (isConsecutive && consecutiveDays > 0) {
-        row.classList.add('streak-high');
-      }
-      
-      row.innerHTML = `
-        <td>${formattedDate}</td>
-        <td>${hours}h</td>
-        <td>${daySessions}</td>
-        <td>${dayExercisesDone}</td>
-        <td>${dayExercisesCorrect}</td>
-        <td class="${accuracyClass}">${accuracy}%</td>
-      `;
-      
-      dailyTableBody.appendChild(row);
-    });
-  }
-
-  // Preenche a tabela semanal
-  function fillWeeklyTable() {
-    weeklyTableBody.innerHTML = '';
-    
-    // Agrupa os dados por semana
-    const weeklyData = {};
-    
-    for (const date in sessionsByDate) {
-      if (sessionsByDate.hasOwnProperty(date)) {
-        const [year, month, day] = date.split('-').map(Number);
-        const sessionDate = new Date(year, month - 1, day);
-        const weekStart = getWeekStartDate(sessionDate);
-        const weekKey = `${weekStart.getFullYear()}-${weekStart.getMonth() + 1}-${weekStart.getDate()}`;
-        
-        if (!weeklyData[weekKey]) {
-          weeklyData[weekKey] = {
-            time: 0,
-            exercisesDone: 0,
-            exercisesCorrect: 0,
-            sessions: 0,
-            weekStart: weekStart
-          };
-        }
-        
-        sessionsByDate[date].forEach(session => {
-          weeklyData[weekKey].time += timeToMilliseconds(session.time);
-          weeklyData[weekKey].exercisesDone += session.exercisesDone;
-          weeklyData[weekKey].exercisesCorrect += session.exercisesCorrect;
-          weeklyData[weekKey].sessions += 1;
-        });
-      }
-    }
-    
-    // Ordena as semanas do mais recente para o mais antigo
-    const sortedWeeks = Object.keys(weeklyData).sort((a, b) => {
-      return new Date(b) - new Date(a);
-    });
-    
-    sortedWeeks.forEach(weekKey => {
-      const weekData = weeklyData[weekKey];
-      const weekEnd = new Date(weekData.weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      
-      const formattedWeek = `${weekData.weekStart.getDate()}/${weekData.weekStart.getMonth() + 1} - ${weekEnd.getDate()}/${weekEnd.getMonth() + 1}`;
-      
-      const hours = (weekData.time / 3600000).toFixed(1);
-      const accuracy = weekData.exercisesDone > 0 ? (weekData.exercisesCorrect / weekData.exercisesDone * 100).toFixed(2) : 0;
-      const accuracyClass = getAccuracyClass(accuracy);
-      
-      const progress = Math.min((hours / 20) * 100, 100);
-      
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${formattedWeek}</td>
-        <td>${hours}h</td>
-        <td>${weekData.sessions}</td>
-        <td>${weekData.exercisesDone}</td>
-        <td>${weekData.exercisesCorrect}</td>
-        <td class="${accuracyClass}">${accuracy}%</td>
-        <td>
-          ${hours}h / 20h
-          <div class="progress-container">
-            <div class="progress-bar" style="width: ${progress}%"></div>
-          </div>
-        </td>
-      `;
-      
-      weeklyTableBody.appendChild(row);
-    });
-  }
-
-  // Preenche a tabela mensal
-  function fillMonthlyTable() {
-    monthlyTableBody.innerHTML = '';
-    
-    // Agrupa os dados por mês
-    const monthlyData = {};
-    
-    for (const date in sessionsByDate) {
-      if (sessionsByDate.hasOwnProperty(date)) {
-        const [year, month] = date.split('-').map(Number);
-        const monthKey = `${year}-${month}`;
-        
-        if (!monthlyData[monthKey]) {
-          monthlyData[monthKey] = {
-            time: 0,
-            exercisesDone: 0,
-            exercisesCorrect: 0,
-            sessions: 0,
-            year: year,
-            month: month,
-            daysWithSessions: 0
-          };
-        }
-        
-        let hasSession = false;
-        sessionsByDate[date].forEach(session => {
-          monthlyData[monthKey].time += timeToMilliseconds(session.time);
-          monthlyData[monthKey].exercisesDone += session.exercisesDone;
-          monthlyData[monthKey].exercisesCorrect += session.exercisesCorrect;
-          monthlyData[monthKey].sessions += 1;
-          hasSession = true;
-        });
-        
-        if (hasSession) {
-          monthlyData[monthKey].daysWithSessions += 1;
-        }
-      }
-    }
-    
-    // Ordena os meses do mais recente para o mais antigo
-    const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
-      const [aYear, aMonth] = a.split('-').map(Number);
-      const [bYear, bMonth] = b.split('-').map(Number);
-      return new Date(bYear, bMonth - 1) - new Date(aYear, aMonth - 1);
-    });
-    
-    sortedMonths.forEach(monthKey => {
-      const monthData = monthlyData[monthKey];
-      const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
-                          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-      const formattedMonth = `${monthNames[monthData.month - 1]} ${monthData.year}`;
-      
-      const hours = (monthData.time / 3600000).toFixed(1);
-      const accuracy = monthData.exercisesDone > 0 ? (monthData.exercisesCorrect / monthData.exercisesDone * 100).toFixed(2) : 0;
-      const accuracyClass = getAccuracyClass(accuracy);
-      
-      const dailyAverage = monthData.daysWithSessions > 0 ? 
-        ((monthData.time / monthData.daysWithSessions) / 3600000).toFixed(1) : 0;
-      
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${formattedMonth}</td>
-        <td>${hours}h</td>
-        <td>${monthData.sessions}</td>
-        <td>${monthData.exercisesDone}</td>
-        <td>${monthData.exercisesCorrect}</td>
-        <td class="${accuracyClass}">${accuracy}%</td>
-        <td>${dailyAverage}h</td>
-      `;
-      
-      monthlyTableBody.appendChild(row);
-    });
-  }
-
-  // Preenche a tabela anual
-  function fillYearlyTable() {
-    yearlyTableBody.innerHTML = '';
-    
-    // Agrupa os dados por ano
-    const yearlyData = {};
-    
-    for (const date in sessionsByDate) {
-      if (sessionsByDate.hasOwnProperty(date)) {
-        const year = date.split('-')[0];
-        
-        if (!yearlyData[year]) {
-          yearlyData[year] = {
-            time: 0,
-            exercisesDone: 0,
-            exercisesCorrect: 0,
-            sessions: 0,
-            monthsWithSessions: new Set()
-          };
-        }
-        
-        const month = date.split('-')[1];
-        yearlyData[year].monthsWithSessions.add(month);
-        
-        sessionsByDate[date].forEach(session => {
-          yearlyData[year].time += timeToMilliseconds(session.time);
-          yearlyData[year].exercisesDone += session.exercisesDone;
-          yearlyData[year].exercisesCorrect += session.exercisesCorrect;
-          yearlyData[year].sessions += 1;
-        });
-      }
-    }
-    
-    // Ordena os anos do mais recente para o mais antigo
-    const sortedYears = Object.keys(yearlyData).sort((a, b) => b - a);
-    
-    sortedYears.forEach(year => {
-      const yearData = yearlyData[year];
-      
-      const hours = (yearData.time / 3600000).toFixed(1);
-      const accuracy = yearData.exercisesDone > 0 ? (yearData.exercisesCorrect / yearData.exercisesDone * 100).toFixed(2) : 0;
-      const accuracyClass = getAccuracyClass(accuracy);
-      
-      const monthlyAverage = yearData.monthsWithSessions.size > 0 ? 
-        ((yearData.time / yearData.monthsWithSessions.size) / 3600000).toFixed(1) : 0;
-      
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${year}</td>
-        <td>${hours}h</td>
-        <td>${yearData.sessions}</td>
-        <td>${yearData.exercisesDone}</td>
-        <td>${yearData.exercisesCorrect}</td>
-        <td class="${accuracyClass}">${accuracy}%</td>
-        <td>${monthlyAverage}h</td>
-      `;
-      
-      yearlyTableBody.appendChild(row);
-    });
-  }
-
-  // Retorna a classe CSS baseada na precisão
-  function getAccuracyClass(accuracy) {
-    accuracy = parseFloat(accuracy);
-    if (accuracy >= 80) return 'accuracy-high';
-    if (accuracy >= 50) return 'accuracy-medium';
-    return 'accuracy-low';
-  }
-
-  // Retorna a data de início da semana (domingo)
-  function getWeekStartDate(date) {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day;
-    d.setHours(0, 0, 0, 0);
-    return new Date(d.setDate(diff));
-  }
-
-  // Alterna entre as visualizações (diária, semanal, mensal, anual)
-  function switchView(period) {
-    dailyView.classList.add('hidden');
-    weeklyView.classList.add('hidden');
-    monthlyView.classList.add('hidden');
-    yearlyView.classList.add('hidden');
-    
-    if (period === 'daily') {
-      dailyView.classList.remove('hidden');
-    } else if (period === 'weekly') {
-      weeklyView.classList.remove('hidden');
-    } else if (period === 'monthly') {
-      monthlyView.classList.remove('hidden');
-    } else if (period === 'yearly') {
-      yearlyView.classList.remove('hidden');
-    }
-    
-    // Atualiza o gráfico
-    updateChart(period);
-  }
-
-  // ========== CALENDÁRIO DE METAS - VERSÃO COM CÍRCULOS E SEQUÊNCIAS ==========
-  
-  // Gera o calendário para o mês e ano especificados
-  function generateCalendar(month, year) {
-    const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-                        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-    
-    // Cria o cabeçalho do calendário
-    let calendarHTML = `
-      <div class="calendar-header">
-        <h3>${monthNames[month]} ${year}</h3>
-      </div>
-      <div class="calendar-grid">
-        <div class="calendar-day-header">Dom</div>
-        <div class="calendar-day-header">Seg</div>
-        <div class="calendar-day-header">Ter</div>
-        <div class="calendar-day-header">Qua</div>
-        <div class="calendar-day-header">Qui</div>
-        <div class="calendar-day-header">Sex</div>
-        <div class="calendar-day-header">Sáb</div>
-    `;
-    
-    // Obtém o primeiro dia do mês e o último dia do mês
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    
-    // Obtém o dia da semana do primeiro dia (0 = Domingo, 1 = Segunda, etc.)
-    const firstDayIndex = firstDay.getDay();
-    
-    // Obtém o número de dias no mês
-    const daysInMonth = lastDay.getDate();
-    
-    // Obtém a data atual
-    const today = new Date();
-    
-    // Preenche os dias vazios antes do primeiro dia do mês
-    for (let i = 0; i < firstDayIndex; i++) {
-      calendarHTML += `<div class="calendar-day"></div>`;
-    }
-    
-    // Identifica sequências de dias consecutivos com meta cumprida
-    const completedSequences = findCompletedSequences(month, year);
-    
-    // Preenche os dias do mês
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateKey = `${year}-${month + 1}-${day}`;
-      const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
-      
-      // Verifica se há dados para este dia
-      let dayStatus = '';
-      let statusClass = '';
-      let dayExercises = 0;
-      let additionalClass = '';
-      let sequenceClass = '';
-      
-      if (sessionsByDate[dateKey]) {
-        sessionsByDate[dateKey].forEach(session => {
-          dayExercises += session.exercisesDone;
-        });
-        
-        if (dayExercises >= 30) {
-          statusClass = 'completed';
-          dayStatus = '✓';
-          additionalClass = 'completed';
-          
-          // Verifica se este dia faz parte de uma sequência
-          const sequenceInfo = getSequenceInfo(day, completedSequences);
-          if (sequenceInfo) {
-            sequenceClass = sequenceInfo.position;
+      } else if (period === 'yearly') {
+        for (let i = 4; i >= 0; i--) {
+          const year = now.getFullYear() - i;
+          labels.push(year.toString());
+          let yearMilliseconds = 0;
+          for (const dateKey in sessionsByDate) {
+            if (sessionsByDate.hasOwnProperty(dateKey)) {
+              const [y, m, d] = dateKey.split('-').map(Number);
+              if (y === year) {
+                sessionsByDate[dateKey].forEach(session => {
+                  yearMilliseconds += timeToMilliseconds(session.time);
+                });
+              }
+            }
           }
-        } else if (dayExercises > 0) {
-          statusClass = 'partial';
-          dayStatus = `${dayExercises}`;
-          additionalClass = 'partial';
-        } else {
-          statusClass = 'not-completed';
-          dayStatus = '✗';
-          additionalClass = 'not-completed';
+          data.push((yearMilliseconds / 3600000).toFixed(1));
+          backgroundColors.push(year === now.getFullYear() ? '#4fc3f7' : '#4a6fa5');
         }
-      } else {
-        // Verifica se é um dia futuro
-        const currentDate = new Date();
+      }
+      return { labels, data, backgroundColors };
+    }
+    function updateChart(period) {
+      const ctx = document.getElementById('studyChart').getContext('2d');
+      const chartData = generateChartData(period);
+      if (studyChart) {
+        studyChart.destroy();
+      }
+      studyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: chartData.labels,
+          datasets: [{
+            label: 'Horas Estudadas',
+            data: chartData.data,
+            backgroundColor: chartData.backgroundColors,
+            borderColor: '#166088',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Horas' } },
+            x: { title: { display: true, text: period === 'daily' ? 'Dias' : period === 'weekly' ? 'Semanas' : period === 'monthly' ? 'Meses' : 'Anos' } }
+          },
+          plugins: {
+            title: { display: true, text: period === 'daily' ? 'Horas Estudadas nos Últimos 7 Dias' : period === 'weekly' ? 'Horas Estudadas nas Últimas 8 Semanas' : period === 'monthly' ? 'Horas Estudadas nos Últimos 6 Meses' : 'Horas Estudadas nos Últimos 5 Anos' },
+            tooltip: { callbacks: { label: function(context) { return `${context.dataset.label}: ${context.raw}h`; } } }
+          }
+        }
+      });
+    }
+    function fillDailyTable() {
+      dailyTableBody.innerHTML = '';
+      const sortedDates = Object.keys(sessionsByDate).sort((a, b) => new Date(b) - new Date(a));
+      const streaks = calculateStreaks();
+      let consecutiveDays = 0;
+      let previousDate = null;
+      sortedDates.forEach((date, index) => {
+        const [year, month, day] = date.split('-');
+        const formattedDate = `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+        let dayMilliseconds = 0;
+        let dayExercisesDone = 0;
+        let dayExercisesCorrect = 0;
+        let daySessions = sessionsByDate[date].length;
+        sessionsByDate[date].forEach(session => {
+          dayMilliseconds += timeToMilliseconds(session.time);
+          dayExercisesDone += session.exercisesDone || 0;
+          dayExercisesCorrect += session.exercisesCorrect || 0;
+        });
+        const hours = (dayMilliseconds / 3600000).toFixed(1);
+        const accuracy = dayExercisesDone > 0 ? (dayExercisesCorrect / dayExercisesDone * 100).toFixed(2) : 0;
+        const accuracyClass = getAccuracyClass(accuracy);
+        const currentDate = new Date(date);
         currentDate.setHours(0, 0, 0, 0);
-        const dayDate = new Date(year, month, day);
-        
-        if (dayDate > currentDate) {
-          statusClass = '';
-          dayStatus = '';
-          additionalClass = '';
+        let isConsecutive = false;
+        if (previousDate) {
+          const diffTime = previousDate - currentDate;
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          if (diffDays === 1) {
+            consecutiveDays++;
+            isConsecutive = true;
+          } else if (diffDays > 1) {
+            consecutiveDays = 0;
+          }
         } else {
-          statusClass = 'not-completed';
-          dayStatus = '✗';
-          additionalClass = 'not-completed';
+          consecutiveDays = 1;
+        }
+        previousDate = currentDate;
+        const row = document.createElement('tr');
+        if (isConsecutive && consecutiveDays > 0) {
+          row.classList.add('streak-high');
+        }
+        row.innerHTML = `
+          <td>${formattedDate}</td>
+          <td>${hours}h</td>
+          <td>${daySessions}</td>
+          <td>${dayExercisesDone}</td>
+          <td>${dayExercisesCorrect}</td>
+          <td class="${accuracyClass}">${accuracy}%</td>
+        `;
+        dailyTableBody.appendChild(row);
+      });
+    }
+    function fillWeeklyTable() {
+      weeklyTableBody.innerHTML = '';
+      const weeklyData = {};
+      for (const date in sessionsByDate) {
+        if (sessionsByDate.hasOwnProperty(date)) {
+          const [year, month, day] = date.split('-').map(Number);
+          const sessionDate = new Date(year, month - 1, day);
+          const weekStart = getWeekStartDate(sessionDate);
+          const weekKey = `${weekStart.getFullYear()}-${weekStart.getMonth() + 1}-${weekStart.getDate()}`;
+          if (!weeklyData[weekKey]) {
+            weeklyData[weekKey] = { time: 0, exercisesDone: 0, exercisesCorrect: 0, sessions: 0, weekStart: weekStart };
+          }
+          sessionsByDate[date].forEach(session => {
+            weeklyData[weekKey].time += timeToMilliseconds(session.time);
+            weeklyData[weekKey].exercisesDone += session.exercisesDone || 0;
+            weeklyData[weekKey].exercisesCorrect += session.exercisesCorrect || 0;
+            weeklyData[weekKey].sessions += 1;
+          });
         }
       }
-      
-      calendarHTML += `
-        <div class="calendar-day ${isToday ? 'today' : ''} ${additionalClass} ${sequenceClass}">
-          <div class="calendar-day-number">${day}</div>
-          <div class="calendar-day-status ${statusClass}">${dayStatus}</div>
+      const sortedWeeks = Object.keys(weeklyData).sort((a, b) => new Date(b) - new Date(a));
+      sortedWeeks.forEach(weekKey => {
+        const weekData = weeklyData[weekKey];
+        const weekEnd = new Date(weekData.weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        const formattedWeek = `${weekData.weekStart.getDate()}/${weekData.weekStart.getMonth() + 1} - ${weekEnd.getDate()}/${weekEnd.getMonth() + 1}`;
+        const hours = (weekData.time / 3600000).toFixed(1);
+        const accuracy = weekData.exercisesDone > 0 ? (weekData.exercisesCorrect / weekData.exercisesDone * 100).toFixed(2) : 0;
+        const accuracyClass = getAccuracyClass(accuracy);
+        const progress = Math.min(((weekData.time / 3600000) / 20) * 100, 100);
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${formattedWeek}</td>
+          <td>${hours}h</td>
+          <td>${weekData.sessions}</td>
+          <td>${weekData.exercisesDone}</td>
+          <td>${weekData.exercisesCorrect}</td>
+          <td class="${accuracyClass}">${accuracy}%</td>
+          <td>
+            ${hours}h / 20h
+            <div class="progress-container">
+              <div class="progress-bar" style="width: ${progress}%"></div>
+            </div>
+          </td>
+        `;
+        weeklyTableBody.appendChild(row);
+      });
+    }
+    function fillMonthlyTable() {
+      monthlyTableBody.innerHTML = '';
+      const monthlyData = {};
+      for (const date in sessionsByDate) {
+        if (sessionsByDate.hasOwnProperty(date)) {
+          const [year, month] = date.split('-').map(Number);
+          const monthKey = `${year}-${month}`;
+          if (!monthlyData[monthKey]) {
+            monthlyData[monthKey] = { time: 0, exercisesDone: 0, exercisesCorrect: 0, sessions: 0, year: year, month: month, daysWithSessions: 0 };
+          }
+          let hasSession = false;
+          sessionsByDate[date].forEach(session => {
+            monthlyData[monthKey].time += timeToMilliseconds(session.time);
+            monthlyData[monthKey].exercisesDone += session.exercisesDone || 0;
+            monthlyData[monthKey].exercisesCorrect += session.exercisesCorrect || 0;
+            monthlyData[monthKey].sessions += 1;
+            hasSession = true;
+          });
+          if (hasSession) {
+            // Este é um bug sutil no seu original - estava contando 1 dia por sessão, não 1 dia por data
+          }
+        }
+      }
+      // Corrigindo o bug de contagem de dias
+      for (const monthKey in monthlyData) {
+        let daysInMonth = new Set();
+        for (const dateKey in sessionsByDate) {
+           const [year, month] = dateKey.split('-').map(Number);
+           if (`${year}-${month}` === monthKey) {
+             daysInMonth.add(dateKey);
+           }
+        }
+        monthlyData[monthKey].daysWithSessions = daysInMonth.size;
+      }
+      const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
+        const [aYear, aMonth] = a.split('-').map(Number);
+        const [bYear, bMonth] = b.split('-').map(Number);
+        return new Date(bYear, bMonth - 1) - new Date(aYear, aMonth - 1);
+      });
+      sortedMonths.forEach(monthKey => {
+        const monthData = monthlyData[monthKey];
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const formattedMonth = `${monthNames[monthData.month - 1]} ${monthData.year}`;
+        const hours = (monthData.time / 3600000).toFixed(1);
+        const accuracy = monthData.exercisesDone > 0 ? (monthData.exercisesCorrect / monthData.exercisesDone * 100).toFixed(2) : 0;
+        const accuracyClass = getAccuracyClass(accuracy);
+        const dailyAverage = monthData.daysWithSessions > 0 ? ((monthData.time / monthData.daysWithSessions) / 3600000).toFixed(1) : 0;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${formattedMonth}</td>
+          <td>${hours}h</td>
+          <td>${monthData.sessions}</td>
+          <td>${monthData.exercisesDone}</td>
+          <td>${monthData.exercisesCorrect}</td>
+          <td class="${accuracyClass}">${accuracy}%</td>
+          <td>${dailyAverage}h</td>
+        `;
+        monthlyTableBody.appendChild(row);
+      });
+    }
+    function fillYearlyTable() {
+      yearlyTableBody.innerHTML = '';
+      const yearlyData = {};
+      for (const date in sessionsByDate) {
+        if (sessionsByDate.hasOwnProperty(date)) {
+          const year = date.split('-')[0];
+          if (!yearlyData[year]) {
+            yearlyData[year] = { time: 0, exercisesDone: 0, exercisesCorrect: 0, sessions: 0, monthsWithSessions: new Set() };
+          }
+          const month = date.split('-')[1];
+          yearlyData[year].monthsWithSessions.add(month);
+          sessionsByDate[date].forEach(session => {
+            yearlyData[year].time += timeToMilliseconds(session.time);
+            yearlyData[year].exercisesDone += session.exercisesDone || 0;
+            yearlyData[year].exercisesCorrect += session.exercisesCorrect || 0;
+            yearlyData[year].sessions += 1;
+          });
+        }
+      }
+      const sortedYears = Object.keys(yearlyData).sort((a, b) => b - a);
+      sortedYears.forEach(year => {
+        const yearData = yearlyData[year];
+        const hours = (yearData.time / 3600000).toFixed(1);
+        const accuracy = yearData.exercisesDone > 0 ? (yearData.exercisesCorrect / yearData.exercisesDone * 100).toFixed(2) : 0;
+        const accuracyClass = getAccuracyClass(accuracy);
+        const monthlyAverage = yearData.monthsWithSessions.size > 0 ? ((yearData.time / yearData.monthsWithSessions.size) / 3600000).toFixed(1) : 0;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${year}</td>
+          <td>${hours}h</td>
+          <td>${yearData.sessions}</td>
+          <td>${yearData.exercisesDone}</td>
+          <td>${yearData.exercisesCorrect}</td>
+          <td class="${accuracyClass}">${accuracy}%</td>
+          <td>${monthlyAverage}h</td>
+        `;
+        yearlyTableBody.appendChild(row);
+      });
+    }
+    function getAccuracyClass(accuracy) {
+      accuracy = parseFloat(accuracy);
+      if (accuracy >= 80) return 'accuracy-high';
+      if (accuracy >= 50) return 'accuracy-medium';
+      return 'accuracy-low';
+    }
+    function getWeekStartDate(date) {
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff = d.getDate() - day;
+      d.setHours(0, 0, 0, 0);
+      return new Date(d.setDate(diff));
+    }
+    function switchView(period) {
+      dailyView.classList.add('hidden');
+      weeklyView.classList.add('hidden');
+      monthlyView.classList.add('hidden');
+      yearlyView.classList.add('hidden');
+      if (period === 'daily') {
+        dailyView.classList.remove('hidden');
+      } else if (period === 'weekly') {
+        weeklyView.classList.remove('hidden');
+      } else if (period === 'monthly') {
+        monthlyView.classList.remove('hidden');
+      } else if (period === 'yearly') {
+        yearlyView.classList.remove('hidden');
+      }
+      updateChart(period);
+    }
+    function generateCalendar(month, year) {
+      const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      let calendarHTML = `
+        <div class="calendar-header">
+          <h3>${monthNames[month]} ${year}</h3>
         </div>
+        <div class="calendar-grid">
+          <div class="calendar-day-header">Dom</div>
+          <div class="calendar-day-header">Seg</div>
+          <div class="calendar-day-header">Ter</div>
+          <div class="calendar-day-header">Qua</div>
+          <div class="calendar-day-header">Qui</div>
+          <div class="calendar-day-header">Sex</div>
+          <div class="calendar-day-header">Sáb</div>
       `;
-    }
-    
-    calendarHTML += `</div>`;
-    calendarElement.innerHTML = calendarHTML;
-    
-    // Atualiza o resumo do mês
-    updateMonthSummary(month, year);
-  }
-  
-  // Encontra sequências de dias consecutivos com meta cumprida
-  function findCompletedSequences(month, year) {
-    const sequences = [];
-    let currentSequence = [];
-    
-    // Obtém o número de dias no mês
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateKey = `${year}-${month + 1}-${day}`;
-      let dayExercises = 0;
-      
-      if (sessionsByDate[dateKey]) {
-        sessionsByDate[dateKey].forEach(session => {
-          dayExercises += session.exercisesDone;
-        });
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const firstDayIndex = firstDay.getDay();
+      const daysInMonth = lastDay.getDate();
+      const today = new Date();
+      for (let i = 0; i < firstDayIndex; i++) {
+        calendarHTML += `<div class="calendar-day"></div>`;
       }
-      
-      if (dayExercises >= 30) {
-        // Meta cumprida, adiciona ao dia à sequência atual
-        currentSequence.push(day);
-      } else {
-        // Meta não cumprida, finaliza a sequência atual se houver
-        if (currentSequence.length > 0) {
-          sequences.push([...currentSequence]);
-          currentSequence = [];
-        }
-      }
-    }
-    
-    // Adiciona a última sequência se houver
-    if (currentSequence.length > 0) {
-      sequences.push([...currentSequence]);
-    }
-    
-    return sequences;
-  }
-  
-  // Obtém informações sobre a posição de um dia em uma sequência
-  function getSequenceInfo(day, sequences) {
-    for (const sequence of sequences) {
-      const index = sequence.indexOf(day);
-      if (index !== -1) {
-        if (sequence.length === 1) {
-          return { position: '' }; // Apenas um dia na sequência
-        } else if (index === 0) {
-          return { position: 'sequence-start' }; // Primeiro dia da sequência
-        } else if (index === sequence.length - 1) {
-          return { position: 'sequence-end' }; // Último dia da sequência
-        } else {
-          return { position: 'sequence-middle' }; // Dia no meio da sequência
-        }
-      }
-    }
-    return null;
-  }
-  
-  // Atualiza o resumo do mês
-  function updateMonthSummary(month, year) {
-    let totalExercises = 0;
-    let daysWithExercises = 0;
-    let daysCompletedGoal = 0;
-    let daysPartial = 0;
-    
-    // Obtém o número de dias no mês
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    
-    // Conta os exercícios para cada dia do mês
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateKey = `${year}-${month + 1}-${day}`;
-      
-      if (sessionsByDate[dateKey]) {
+      const completedSequences = findCompletedSequences(month, year);
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = `${year}-${month + 1}-${day}`;
+        const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
+        let dayStatus = '';
+        let statusClass = '';
         let dayExercises = 0;
-        sessionsByDate[dateKey].forEach(session => {
-          dayExercises += session.exercisesDone;
-        });
-        
-        totalExercises += dayExercises;
-        daysWithExercises++;
-        
+        let additionalClass = '';
+        let sequenceClass = '';
+        if (sessionsByDate[dateKey]) {
+          sessionsByDate[dateKey].forEach(session => {
+            dayExercises += session.exercisesDone || 0;
+          });
+          if (dayExercises >= 30) {
+            statusClass = 'completed';
+            dayStatus = '✓';
+            additionalClass = 'completed';
+            const sequenceInfo = getSequenceInfo(day, completedSequences);
+            if (sequenceInfo) {
+              sequenceClass = sequenceInfo.position;
+            }
+          } else if (dayExercises > 0) {
+            statusClass = 'partial';
+            dayStatus = `${dayExercises}`;
+            additionalClass = 'partial';
+          } else {
+            statusClass = 'not-completed';
+            dayStatus = '✗';
+            additionalClass = 'not-completed';
+          }
+        } else {
+          const currentDate = new Date();
+          currentDate.setHours(0, 0, 0, 0);
+          const dayDate = new Date(year, month, day);
+          if (dayDate > currentDate) {
+            statusClass = '';
+            dayStatus = '';
+            additionalClass = '';
+          } else {
+            statusClass = 'not-completed';
+            dayStatus = '✗';
+            additionalClass = 'not-completed';
+          }
+        }
+        calendarHTML += `
+          <div class="calendar-day ${isToday ? 'today' : ''} ${additionalClass} ${sequenceClass}">
+            <div class="calendar-day-number">${day}</div>
+            <div class="calendar-day-status ${statusClass}">${dayStatus}</div>
+          </div>
+        `;
+      }
+      calendarHTML += `</div>`;
+      calendarElement.innerHTML = calendarHTML;
+      updateMonthSummary(month, year);
+    }
+    function findCompletedSequences(month, year) {
+      const sequences = [];
+      let currentSequence = [];
+      const lastDay = new Date(year, month + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = `${year}-${month + 1}-${day}`;
+        let dayExercises = 0;
+        if (sessionsByDate[dateKey]) {
+          sessionsByDate[dateKey].forEach(session => {
+            dayExercises += session.exercisesDone || 0;
+          });
+        }
         if (dayExercises >= 30) {
-          daysCompletedGoal++;
-        } else if (dayExercises > 0) {
-          daysPartial++;
+          currentSequence.push(day);
+        } else {
+          if (currentSequence.length > 0) {
+            sequences.push([...currentSequence]);
+            currentSequence = [];
+          }
         }
       }
-    }
-    
-    completedDaysElement.textContent = daysCompletedGoal;
-    partialDaysElement.textContent = daysPartial;
-    totalQuestionsElement.textContent = totalExercises;
-  }
-  
-  // Navega para o mês anterior
-  function prevMonth() {
-    currentCalendarMonth--;
-    if (currentCalendarMonth < 0) {
-      currentCalendarMonth = 11;
-      currentCalendarYear--;
-    }
-    generateCalendar(currentCalendarMonth, currentCalendarYear);
-  }
-  
-  // Navega para o próximo mês
-  function nextMonth() {
-    currentCalendarMonth++;
-    if (currentCalendarMonth > 11) {
-      currentCalendarMonth = 0;
-      currentCalendarYear++;
-    }
-    generateCalendar(currentCalendarMonth, currentCalendarYear);
-  }
-
-  // Atualiza todas as exibições
-  function updateAllDisplays() {
-    updateStatistics();
-    fillDailyTable();
-    fillWeeklyTable();
-    fillMonthlyTable();
-    fillYearlyTable();
-    updateChart('daily');
-    generateCalendar(currentCalendarMonth, currentCalendarYear);
-  }
-
-  // Inicializa a página
-  async function init() {
-    // Primeiro inicializa com dados locais
-    updateAllDisplays();
-    
-    // Depois tenta carregar do Firebase (sem bloquear a interface)
-    setTimeout(async () => {
-      if (database) {
-        await loadFromFirebase();
+      if (currentSequence.length > 0) {
+        sequences.push([...currentSequence]);
       }
-    }, 1000);
+      return sequences;
+    }
+    function getSequenceInfo(day, sequences) {
+      for (const sequence of sequences) {
+        const index = sequence.indexOf(day);
+        if (index !== -1) {
+          if (sequence.length === 1) {
+            return { position: '' };
+          } else if (index === 0) {
+            return { position: 'sequence-start' };
+          } else if (index === sequence.length - 1) {
+            return { position: 'sequence-end' };
+          } else {
+            return { position: 'sequence-middle' };
+          }
+        }
+      }
+      return null;
+    }
+    function updateMonthSummary(month, year) {
+      let totalExercises = 0;
+      let daysWithExercises = 0;
+      let daysCompletedGoal = 0;
+      let daysPartial = 0;
+      const lastDay = new Date(year, month + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = `${year}-${month + 1}-${day}`;
+        if (sessionsByDate[dateKey]) {
+          let dayExercises = 0;
+          sessionsByDate[dateKey].forEach(session => {
+            dayExercises += session.exercisesDone || 0;
+          });
+          totalExercises += dayExercises;
+          daysWithExercises++;
+          if (dayExercises >= 30) {
+            daysCompletedGoal++;
+          } else if (dayExercises > 0) {
+            daysPartial++;
+          }
+        }
+      }
+      completedDaysElement.textContent = daysCompletedGoal;
+      partialDaysElement.textContent = daysPartial;
+      totalQuestionsElement.textContent = totalExercises;
+    }
+    function prevMonth() {
+      currentCalendarMonth--;
+      if (currentCalendarMonth < 0) {
+        currentCalendarMonth = 11;
+        currentCalendarYear--;
+      }
+      generateCalendar(currentCalendarMonth, currentCalendarYear);
+    }
+    function nextMonth() {
+      currentCalendarMonth++;
+      if (currentCalendarMonth > 11) {
+        currentCalendarMonth = 0;
+        currentCalendarYear++;
+      }
+      generateCalendar(currentCalendarMonth, currentCalendarYear);
+    }
+    function updateAllDisplays() {
+      console.log("Atualizando todas as exibições...");
+      updateStatistics();
+      fillDailyTable();
+      fillWeeklyTable();
+      fillMonthlyTable();
+      fillYearlyTable();
+      updateChart('daily');
+      generateCalendar(currentCalendarMonth, currentCalendarYear);
+    }
     
-    // Configura verificação periódica de atualizações (a cada 30 segundos)
-    setInterval(checkForUpdates, 30000);
-    
-    // Adiciona event listeners aos botões de período
-    timePeriodButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        timePeriodButtons.forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        switchView(button.dataset.period);
+    // --- CORREÇÃO 4: SUBSTITUIR A FUNÇÃO init() PELO LISTENER DE TEMPO REAL ---
+    document.addEventListener('DOMContentLoaded', () => {
+      // Configura os botões de período (esta parte da sua 'init' original)
+      timePeriodButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          timePeriodButtons.forEach(btn => btn.classList.remove('active'));
+          button.classList.add('active');
+          switchView(button.dataset.period);
+        });
+      });
+
+      // Configura os botões do calendário (esta parte da sua 'init' original)
+      prevMonthButton.addEventListener('click', prevMonth);
+      nextMonthButton.addEventListener('click', nextMonth);
+      
+      // Apague os listeners dos botões de sync (uploadButton, downloadButton),
+      // pois eles não são mais necessários.
+
+      // --- OUVINTE PRINCIPAL DO FIREBASE ---
+      // Agora, ouvimos os dados da nuvem em tempo real
+      // Exatamente como fizemos no index.html
+      dbRef.on('value', (snapshot) => {
+          console.log("Dados do histórico recebidos do Firebase!");
+          const data = snapshot.val();
+          sessionsByDate = data || {}; // Atualiza a variável global
+
+          // Agora que temos os dados, atualiza TODA a tela
+          updateAllDisplays(); 
+          
+      }, (errorObject) => {
+          console.error("A leitura do Firebase falhou: " + errorObject.name);
+          alert("Não foi possível conectar ao banco de dados. Verifique sua configuração do Firebase e as regras de segurança.");
       });
     });
-    
-    // Adiciona event listeners aos botões de navegação do calendário
-    prevMonthButton.addEventListener('click', prevMonth);
-    nextMonthButton.addEventListener('click', nextMonth);
-    
-    // Adiciona event listeners aos botões de sincronização
-    uploadButton.addEventListener('click', saveToFirebase);
-    downloadButton.addEventListener('click', loadFromFirebase);
-  }
 
-  // Inicia a aplicação quando o DOM estiver carregado
-  document.addEventListener('DOMContentLoaded', init);
-</script>
+  </script>
 </body>
 </html>

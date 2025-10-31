@@ -9,8 +9,10 @@
   
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script> <style>
-    /* Seu CSS original completo (sem alterações) */
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  
+  <style>
+    /* Seu CSS (sem alterações) */
     :root {
       --primary-color: #4a6fa5;
       --secondary-color: #166088;
@@ -107,7 +109,8 @@
     </div>
     <ul class="sidebar-menu">
       <li>
-        <a href="#" class="sidebar-button active"> <i class="fas fa-home"></i>
+        <a href="#" class="sidebar-button active">
+          <i class="fas fa-home"></i>
           <span>Início</span>
         </a>
       </li>
@@ -212,7 +215,7 @@
   </div>
 
   <script>
-    // Sua Configuração do Firebase (copiada do seu código)
+    // Sua Configuração do Firebase (Correta)
     const firebaseConfig = {
       apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
       authDomain: "meu-study-tracker.firebaseapp.com",
@@ -226,33 +229,29 @@
     // --- INICIALIZAÇÃO DO FIREBASE ---
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
-    const auth = firebase.auth(); // <-- INICIALIZA O SERVIÇO DE AUTH
-
+    const auth = firebase.auth(); 
     
     // =======================================================
-    // === PASSO 3.3: ADICIONAR O "GUARDA" DE AUTENTICAÇÃO ===
+    // --- GUARDA DE AUTENTICAÇÃO ---
     // =======================================================
-    auth.onAuthStateChanged(user => {
+    
+    // Adicionamos 'async' para poder usar 'await dbRef.get()'
+    auth.onAuthStateChanged(async (user) => {
       if (user) {
         // O USUÁRIO ESTÁ LOGADO!
         console.log("Usuário logado:", user.uid);
         
-        // --- MODIFICAÇÃO PRINCIPAL DA DBREF ---
-        // Aponta para a pasta DO USUÁRIO logado
-        // Ex: 'users/Abc...123/sessionsByDate'
         const dbRef = database.ref('users/' + user.uid + '/sessionsByDate');
 
         // =======================================================
-        // <<< TODO O SEU CÓDIGO JS ANTIGO FOI MOVIDO AQUI PARA DENTRO >>>
+        // <<< INÍCIO DO CÓDIGO DA APLICAÇÃO >>>
         // =======================================================
 
-        // --- VARIÁVEIS GLOBAIS ---
         let startTime;
         let timerInterval;
         let totalTime = 0;
-        let sessionsByDate = {}; // Começa vazio, será preenchido pelo Firebase
+        let sessionsByDate = {}; 
 
-        // --- SELETORES DE ELEMENTOS ---
         const timerDisplay = document.getElementById('timer');
         const startButton = document.getElementById('startButton');
         const stopButton = document.getElementById('stopButton');
@@ -265,11 +264,11 @@
         const weeklyStudyTimeDisplay = document.getElementById('weeklyStudyTime');
         const todayStudyTimeDisplay = document.getElementById('todayStudyTime');
         const todayExercisesDisplay = document.getElementById('todayExercises');
-        const btnLogout = document.getElementById('btnLogout'); // <-- Pega o botão de Sair
+        const btnLogout = document.getElementById('btnLogout');
         const importButton = document.getElementById('importButton');
         const fileInput = document.createElement('input');
 
-        // --- FUNÇÕES DE LÓGICA (Seu código original, sem mudanças) ---
+        // --- FUNÇÕES DE LÓGICA ---
         
         function startStudySession() {
           startTime = new Date().getTime();
@@ -278,6 +277,7 @@
           stopButton.classList.remove('hidden');
         }
 
+        // --- FUNÇÃO STOP (OTIMIZADA) ---
         function stopStudySession() {
           clearInterval(timerInterval);
           startButton.classList.remove('hidden');
@@ -307,22 +307,33 @@
             accuracy: accuracy
           };
 
+          // Atualiza a variável LOCAL primeiro
           sessionsByDate[dateKey].push(sessionData);
 
-          // Salva no Firebase (agora no caminho 'users/UID/sessionsByDate')
+          // Apenas ENVIA os dados (sem 'ouvinte' para re-baixar)
           dbRef.set(sessionsByDate)
             .then(() => {
               console.log("Dados salvos no Firebase com sucesso!");
+              
+              // === OTIMIZAÇÃO 1 ===
+              // Agora que os dados foram salvos, atualizamos a tela
+              // USANDO OS DADOS LOCAIS, sem re-baixar.
+              inicializarDashboard();
+              
             })
             .catch((error) => {
               console.error("Erro ao salvar dados no Firebase: ", error);
               alert("Erro ao salvar sessão. Verifique sua conexão e a configuração do Firebase.");
+              // Se deu erro, removemos a sessão que tentamos adicionar localmente (para manter a sincronia)
+              sessionsByDate[dateKey].pop(); 
             });
 
           totalTime = 0;
-          updateDisplay();
+          updateDisplay(); // Reseta os inputs
         }
 
+        // --- Restante das suas funções (sem alterações) ---
+        
         function getStartOfWeek(date) {
           const d = new Date(date);
           const day = d.getDay();
@@ -341,7 +352,7 @@
               const sessionDate = new Date(year, month - 1, day);
               if (sessionDate >= startOfWeek) {
                 sessionsByDate[dateKey].forEach(session => {
-                  const timeParts = (session.time || "0:0:0").split(':').map(Number); // Adiciona checagem
+                  const timeParts = (session.time || "0:0:0").split(':').map(Number);
                   if(timeParts.length === 3) {
                     const [hours, minutes, seconds] = timeParts;
                     weeklyMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
@@ -363,7 +374,7 @@
           let todayExercises = 0;
           if (sessionsByDate[dateKey]) {
             sessionsByDate[dateKey].forEach(session => {
-              const timeParts = (session.time || "0:0:0").split(':').map(Number); // Adiciona checagem
+              const timeParts = (session.time || "0:0:0").split(':').map(Number);
               if(timeParts.length === 3) {
                 const [hours, minutes, seconds] = timeParts;
                 todayMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
@@ -465,7 +476,7 @@
           let dailyMilliseconds = 0;
           if (sessionsByDate[dateKey]) {
             sessionsByDate[dateKey].forEach(session => {
-              const timeParts = (session.time || "0:0:0").split(':').map(Number); // Adiciona checagem
+              const timeParts = (session.time || "0:0:0").split(':').map(Number);
               if(timeParts.length === 3) {
                 const [hours, minutes, seconds] = timeParts;
                 dailyMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
@@ -525,7 +536,7 @@
             if (sessionsByDate.hasOwnProperty(date)) {
               const sessions = sessionsByDate[date];
               sessions.forEach(session => {
-                const timeParts = (session.time || "0:0:0").split(':').map(Number); // Adiciona checagem
+                const timeParts = (session.time || "0:0:0").split(':').map(Number);
                 if(timeParts.length === 3) {
                   const [hours, minutes, seconds] = timeParts;
                   totalMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
@@ -559,24 +570,18 @@
             try {
               const importedData = JSON.parse(e.target.result);
               if (typeof importedData === 'object' && importedData !== null) {
-                
-                // Pergunta ao usuário se quer MESCLAR ou SUBSTITUIR
                 if (confirm("Você quer MESCLAR estes dados com os seus dados na nuvem?\n\n(Clique em 'Cancelar' para SUBSTITUIR TUDO na nuvem com este arquivo.)")) {
-                  // Lógica de Mesclagem (um pouco mais complexa)
-                  // Isso é uma mesclagem simples, priorizando os dados do arquivo
                   const mergedData = { ...sessionsByDate, ...importedData };
                   dbRef.set(mergedData).then(() => {
                      alert('Dados mesclados com sucesso! A página será recarregada.');
                      location.reload();
                   });
                 } else {
-                  // Lógica de Substituição (a que você tinha)
                   dbRef.set(importedData).then(() => {
                     alert('Dados substituídos com sucesso! A página será recarregada.');
                     location.reload();
                   });
                 }
-                
               } else {
                 throw new Error("Formato de arquivo inválido.");
               }
@@ -627,7 +632,8 @@
           updateTodayStats();
         }
 
-        // --- LÓGICA PARA O BOTÃO DE IMPORTAR ---
+        // --- LÓGICA DE INICIALIZAÇÃO E LISTENERS ---
+
         fileInput.type = 'file';
         fileInput.accept = '.json, .txt';
         fileInput.style.display = 'none';
@@ -635,54 +641,62 @@
         document.body.appendChild(fileInput);
 
         importButton.addEventListener('click', () => fileInput.click());
-
-        // --- EVENT LISTENERS ---
         startButton.addEventListener('click', startStudySession);
         stopButton.addEventListener('click', stopStudySession);
         downloadButton.addEventListener('click', downloadData);
-
-        // --- NOVO EVENT LISTENER PARA O LOGOUT ---
+        
         btnLogout.addEventListener('click', (e) => {
           e.preventDefault();
           auth.signOut().then(() => {
             console.log('Usuário deslogado.');
-            // O 'onAuthStateChanged' vai pegar isso e redirecionar
-            // para 'login.html' automaticamente.
           }).catch((error) => {
             console.error('Erro ao sair:', error);
           });
         });
 
-        // --- CARREGAMENTO INICIAL DOS DADOS (Ouvinte Principal) ---
-        // Este código agora usa o 'dbRef' que aponta para 'users/UID/...'
-        dbRef.on('value', (snapshot) => {
-          console.log("Dados recebidos ou atualizados do Firebase.");
-          const data = snapshot.val();
+        // =================================================================
+        // --- OTIMIZAÇÃO 2: CARREGAMENTO INICIAL (UMA SÓ VEZ) ---
+        // =================================================================
+        
+        // Substituímos o dbRef.on('value', ...) por dbRef.get()
+        // 'dbRef.get()' retorna uma Promise, por isso usamos 'await'
+        // no 'auth.onAuthStateChanged' (lá no topo)
+        
+        console.log("Buscando dados do Firebase (uma única vez)...");
+        try {
+          const snapshot = await dbRef.get();
           
-          sessionsByDate = data || {}; 
+          if (snapshot.exists()) {
+            sessionsByDate = snapshot.val(); // Carrega os dados na variável local
+          } else {
+            console.log("Nenhum dado encontrado para este usuário.");
+            sessionsByDate = {}; // Começa vazio
+          }
           
+          // Agora que temos os dados (ou um objeto vazio),
+          // renderizamos a tela pela primeira vez.
           inicializarDashboard();
           
+          // Atualiza a visibilidade do botão de download
           if (Object.keys(sessionsByDate).length > 0) {
             downloadButton.classList.remove('hidden');
           } else {
             downloadButton.classList.add('hidden');
           }
           
-        }, (errorObject) => {
+        } catch (errorObject) {
+          // Trata erros de leitura
           console.error("A leitura do Firebase falhou: " + errorObject.name);
           alert("Não foi possível conectar ao banco de dados. Verifique sua configuração do Firebase e as regras de segurança.");
-        });
+        }
 
         // =======================================================
-        // <<< FIM DO CÓDIGO JS ANTIGO >>>
+        // <<< FIM DO CÓDIGO DA APLICAÇÃO >>>
         // =======================================================
 
       } else {
         // O USUÁRIO NÃO ESTÁ LOGADO!
-        // Redireciona ele para a página de login.
         console.log("Usuário não logado. Redirecionando para login.html...");
-        // Certifique-se de que o nome do arquivo está correto (login.html)
         window.location.href = 'login.html'; 
       }
     });

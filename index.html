@@ -12,7 +12,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
 
   <style>
-    /* Seu CSS (sem alterações) */
     :root {
       --primary-color: #4a6fa5;
       --secondary-color: #166088;
@@ -214,7 +213,6 @@
   </div>
 
   <script>
-    // Sua Configuração do Firebase (Correta)
     const firebaseConfig = {
       apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
       authDomain: "meu-study-tracker.firebaseapp.com",
@@ -225,27 +223,25 @@
       appId: "1:715609213126:web:3e9cbe7e840ea20a1b6fc7"
     };
 
-    // --- INICIALIZAÇÃO DO FIREBASE ---
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     const auth = firebase.auth();
 
-    // =======================================================
-    // --- GUARDA DE AUTENTICAÇÃO ---
-    // =======================================================
+    let appInicializada = false;
 
-    // Adicionamos 'async' para poder usar 'await dbRef.get()'
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        // O USUÁRIO ESTÁ LOGADO!
-        console.log("Usuário logado:", user.uid);
+        
+        if (appInicializada) {
+          console.log("App já inicializado, ignorando re-fire do auth.");
+          return; 
+        }
+        appInicializada = true; 
+
+        console.log("Usuário logado, inicializando app:", user.uid);
 
         const dbRef = database.ref('users/' + user.uid + '/sessionsByDate');
-
-        // =======================================================
-        // <<< INÍCIO DO CÓDIGO DA APLICAÇÃO >>>
-        // =======================================================
-
+        
         let startTime;
         let timerInterval;
         let totalTime = 0;
@@ -265,9 +261,7 @@
         const btnLogout = document.getElementById('btnLogout');
         const importButton = document.getElementById('importButton');
         const fileInput = document.createElement('input');
-
-        // --- FUNÇÕES DE LÓGICA ---                
-
+        
         function startStudySession() {
           startTime = new Date().getTime();
           timerInterval = setInterval(updateTimer, 1000);
@@ -275,11 +269,16 @@
           stopButton.classList.remove('hidden');
         }
 
-        // --- FUNÇÃO STOP (OTIMIZADA) ---
         function stopStudySession() {
           clearInterval(timerInterval);
           startButton.classList.remove('hidden');
           stopButton.classList.add('hidden');
+
+          if (totalTime < 1000) { 
+            totalTime = 0;
+            updateDisplay();
+            return; 
+          }
 
           const sessionTime = formatTime(totalTime);
           const exercisesInput = document.getElementById('exercisesInput');
@@ -295,42 +294,31 @@
           if (!sessionsByDate[dateKey]) {
             sessionsByDate[dateKey] = [];
           }
-
           const accuracy = exercisesDone > 0 ? (exercisesCorrect / exercisesDone * 100).toFixed(2) : '0.00';
-
           const sessionData = {
             time: sessionTime,
             exercisesDone: exercisesDone,
             exercisesCorrect: exercisesCorrect,
             accuracy: accuracy
           };
-
-          // Atualiza a variável LOCAL primeiro
+          
           sessionsByDate[dateKey].push(sessionData);
-
-          // Apenas ENVIA os dados (sem 'ouvinte' para re-baixar)
+          
           dbRef.set(sessionsByDate)
             .then(() => {
               console.log("Dados salvos no Firebase com sucesso!");
-                            
-              // === OTIMIZAÇÃO 1 ===
-              // Agora que os dados foram salvos, atualizamos a tela
-              // USANDO OS DADOS LOCAIS, sem re-baixar.
               inicializarDashboard();
-                          
             })
             .catch((error) => {
               console.error("Erro ao salvar dados no Firebase: ", error);
               alert("Erro ao salvar sessão. Verifique sua conexão e a configuração do Firebase.");
-              // Se deu erro, removemos a sessão que tentamos adicionar localmente (para manter a sincronia)
               sessionsByDate[dateKey].pop(); 
             });
 
           totalTime = 0;
-          updateDisplay(); // Reseta os inputs
+          updateDisplay();
         }
-
-        // --- Restante das suas funções (sem alterações) ---                
+        
         function getStartOfWeek(date) {
           const d = new Date(date);
           const day = d.getDay();
@@ -338,10 +326,7 @@
           d.setHours(0, 0, 0, 0);
           return new Date(d.setDate(diff));
         }
-
-        // ==========================================================
-        // >>>>> FUNÇÃO CORRIGIDA 1 <<<<<
-        // ==========================================================
+        
         function calculateWeeklyStudyTime() {
           const now = new Date();
           const startOfWeek = getStartOfWeek(now);
@@ -352,30 +337,22 @@
               const sessionDate = new Date(year, month - 1, day);
               if (sessionDate >= startOfWeek) {
                 sessionsByDate[dateKey].forEach(session => {
-                  
-                  // --- INÍCIO DA CORREÇÃO ---
                   const timeParts = (session.time || "0:0:0").split(':');
                   if(timeParts.length === 3) {
                     const hours = parseInt(timeParts[0], 10);
                     const minutes = parseInt(timeParts[1], 10);
                     const seconds = parseInt(timeParts[2], 10);
-
                     if (!isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)) {
                       weeklyMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
                     }
                   }
-                  // --- FIM DA CORREÇÃO ---
-
                 });
               }
             }
           }
           return formatTime(weeklyMilliseconds);
         }
-
-        // ==========================================================
-        // >>>>> FUNÇÃO CORRIGIDA 2 <<<<<
-        // ==========================================================
+        
         function calculateTodayStats() {
           const currentDate = new Date();
           const year = currentDate.getFullYear();
@@ -386,20 +363,15 @@
           let todayExercises = 0;
           if (sessionsByDate[dateKey]) {
             sessionsByDate[dateKey].forEach(session => {
-              
-              // --- INÍCIO DA CORREÇÃO ---
               const timeParts = (session.time || "0:0:0").split(':');
               if(timeParts.length === 3) {
                 const hours = parseInt(timeParts[0], 10);
                 const minutes = parseInt(timeParts[1], 10);
                 const seconds = parseInt(timeParts[2], 10);
-
                 if (!isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)) {
                   todayMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
                 }
               }
-              // --- FIM DA CORREÇÃO ---
-
               todayExercises += session.exercisesDone || 0;
             });
           }
@@ -408,17 +380,17 @@
             exercises: todayExercises
           };
         }
-
+        
         function updateTodayStats() {
           const todayStats = calculateTodayStats();
           todayStudyTimeDisplay.textContent = todayStats.time;
           todayExercisesDisplay.textContent = todayStats.exercises;
         }
-
+        
         function updateWeeklyStudyTime() {
           weeklyStudyTimeDisplay.textContent = calculateWeeklyStudyTime();
         }
-
+        
         function updateWeeklyProgress() {
           const weeklyTime = calculateWeeklyStudyTime();
           const [hours, minutes, seconds] = weeklyTime.split(':').map(Number);
@@ -427,13 +399,13 @@
           const progress = Math.min((totalHours / weeklyGoal) * 100, 100);
           document.getElementById('weeklyProgress').style.width = `${progress}%`;
         }
-
+        
         function getAccuracyClass(accuracy) {
           if (accuracy >= 80) return 'accuracy-high';
           if (accuracy >= 50) return 'accuracy-medium';
           return 'accuracy-low';
         }
-
+        
         function updateSessionList() {
           sessionList.innerHTML = '';
           const sortedDates = Object.keys(sessionsByDate).sort((a, b) => {
@@ -450,7 +422,7 @@
 
               const dailySummary = document.createElement('div');
               dailySummary.className = 'daily-summary';
-              const dailyTime = calculateDailyStudyTime(date); // <<< USA A FUNÇÃO 3
+              const dailyTime = calculateDailyStudyTime(date); 
               const dailyExercises = calculateDailyExercises(date);
               const accuracyClass = getAccuracyClass(parseFloat(dailyExercises.accuracy));
               dailySummary.innerHTML = `
@@ -492,33 +464,25 @@
             }
           }
         }
-
-        // ==========================================================
-        // >>>>> FUNÇÃO CORRIGIDA 3 <<<<<
-        // ==========================================================
+        
         function calculateDailyStudyTime(dateKey) {
           let dailyMilliseconds = 0;
           if (sessionsByDate[dateKey]) {
             sessionsByDate[dateKey].forEach(session => {
-              
-              // --- INÍCIO DA CORREÇÃO ---
               const timeParts = (session.time || "0:0:0").split(':');
               if(timeParts.length === 3) {
                 const hours = parseInt(timeParts[0], 10);
                 const minutes = parseInt(timeParts[1], 10);
                 const seconds = parseInt(timeParts[2], 10);
-
                 if (!isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)) {
                   dailyMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
                 }
               }
-              // --- FIM DA CORREÇÃO ---
-
             });
           }
           return formatTime(dailyMilliseconds);
         }
-
+        
         function calculateDailyExercises(dateKey) {
           let totalExercises = 0;
           let totalCorrect = 0;
@@ -534,65 +498,57 @@
             accuracy: totalExercises > 0 ? (totalCorrect / totalExercises * 100).toFixed(2) : '0.00'
           };
         }
-
+        
         function formatDateDisplay(dateString) {
           const [year, month, day] = dateString.split('-');
           const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
           return `${day} de ${months[parseInt(month) - 1]} de ${year}`;
         }
-
+        
         function updateTimer() {
           const currentTime = new Date().getTime();
           totalTime = currentTime - startTime;
           timerDisplay.textContent = formatTime(totalTime);
         }
-
+        
         function formatTime(milliseconds) {
           const hours = Math.floor(milliseconds / 3600000);
           const minutes = Math.floor((milliseconds % 3600000) / 60000);
           const seconds = Math.floor((milliseconds % 60000) / 1000);
           return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
         }
-
+        
         function pad(num) {
           return num.toString().padStart(2, '0');
         }
-
+        
         function updateDisplay() {
           document.getElementById('exercisesInput').value = 0;
           document.getElementById('correctExercisesInput').value = 0;
+          timerDisplay.textContent = '00:00:00';
         }
-
-        // ==========================================================
-        // >>>>> FUNÇÃO CORRIGIDA 4 <<<<<
-        // ==========================================================
+        
         function updateTotalStudyTime() {
           let totalMilliseconds = 0;
           for (const date in sessionsByDate) {
             if (sessionsByDate.hasOwnProperty(date)) {
               const sessions = sessionsByDate[date];
               sessions.forEach(session => {
-                
-                // --- INÍCIO DA CORREÇÃO ---
                 const timeParts = (session.time || "0:0:0").split(':');
                 if(timeParts.length === 3) {
                   const hours = parseInt(timeParts[0], 10);
                   const minutes = parseInt(timeParts[1], 10);
                   const seconds = parseInt(timeParts[2], 10);
-
                   if (!isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)) {
                     totalMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
                   }
                 }
-                // --- FIM DA CORREÇÃO ---
-
               });
             }
           }
           const totalFormatted = formatTime(totalMilliseconds);
           totalStudyTimeDisplay.textContent = totalFormatted;
         }
-
 
         function downloadData() {
           const dataStr = JSON.stringify(sessionsByDate, null, 2);
@@ -606,11 +562,11 @@
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
         }
-
+        
         function importData(event) {
           const file = event.target.files[0];
           if (!file) return;
-                    
+                              
           const reader = new FileReader();
           reader.onload = function (e) {
             try {
@@ -636,9 +592,9 @@
               console.error("Erro na importação: ", error);
             }
           };
-          reader.readAsText(file);
+          reader.readText(file);
         }
-
+        
         function calculateStatistics() {
           let totalExercisesDone = 0;
           let totalExercisesCorrect = 0;
@@ -660,25 +616,24 @@
             averageAccuracy: totalAccuracy
           };
         }
-
+        
         function updateStatisticsDisplay() {
           const statistics = calculateStatistics();
           totalExercisesDoneDisplay.textContent = statistics.totalExercisesDone;
           totalExercisesCorrectDisplay.textContent = statistics.totalExercisesCorrect;
           averageAccuracyDisplay.textContent = `${statistics.averageAccuracy}%`;
         }
-                
+                        
         function inicializarDashboard() {
           console.log("Atualizando dashboard com dados...");
-          updateTotalStudyTime(); // <<< USA A FUNÇÃO 4
+          updateTotalStudyTime(); 
           updateStatisticsDisplay();
-          updateWeeklyStudyTime(); // <<< USA A FUNÇÃO 1
+          updateWeeklyStudyTime(); 
           updateWeeklyProgress();
           updateSessionList();
-          updateTodayStats(); // <<< USA A FUNÇÃO 2
+          updateTodayStats(); 
         }
 
-        // --- LÓGICA DE INICIALIZAÇÃO E LISTENERS ---
         fileInput.type = 'file';
         fileInput.accept = '.json, .txt';
         fileInput.style.display = 'none';
@@ -698,31 +653,20 @@
             console.error('Erro ao sair:', error);
           });
         });
-
-        // =================================================================
-        // --- OTIMIZAÇÃO 2: CARREGAMENTO INICIAL (UMA SÓ VEZ) ---
-        // =================================================================
-                
-        // Substituímos o dbRef.on('value', ...) por dbRef.get()
-        // 'dbRef.get()' retorna uma Promise, por isso usamos 'await'
-        // no 'auth.onAuthStateChanged' (lá no topo)
                 
         console.log("Buscando dados do Firebase (uma única vez)...");
         try {
           const snapshot = await dbRef.get();
                     
           if (snapshot.exists()) {
-            sessionsByDate = snapshot.val(); // Carrega os dados na variável local
+            sessionsByDate = snapshot.val();
           } else {
             console.log("Nenhum dado encontrado para este usuário.");
-            sessionsByDate = {}; // Começa vazio
+            sessionsByDate = {};
           }
                     
-          // Agora que temos os dados (ou um objeto vazio),
-          // renderizamos a tela pela primeira vez.
           inicializarDashboard();
                     
-          // Atualiza a visibilidade do botão de download
           if (Object.keys(sessionsByDate).length > 0) {
             downloadButton.classList.remove('hidden');
           } else {
@@ -730,17 +674,12 @@
           }
                   
         } catch (errorObject) {
-          // Trata erros de leitura
           console.error("A leitura do Firebase falhou: " + errorObject.name);
           alert("Não foi possível conectar ao banco de dados. Verifique sua configuração do Firebase e as regras de segurança.");
         }
 
-        // =======================================================
-        // <<< FIM DO CÓDIGO DA APLICAÇÃO >>>
-        // =======================================================
-
       } else {
-        // O USUÁRIO NÃO ESTÁ LOGADO!
+        appInicializada = false;
         console.log("Usuário não logado. Redirecionando para login.html...");
         window.location.href = 'login.html'; 
       }

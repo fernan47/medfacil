@@ -6,11 +6,11 @@
   <title>Tracker de Estudos</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-
+  
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  
   <style>
     :root {
       --primary-color: #4a6fa5;
@@ -56,11 +56,14 @@
     .button-danger:hover { background-color: #d32f2f; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
     .button-success { background-color: var(--success-color); color: white; }
     .button-success:hover { background-color: #388e3c; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
-    .exercises-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto; }
+    
+    /* Estilo para os inputs de categoria */
+    .exercises-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; max-width: 600px; margin-left: auto; margin-right: auto; }
     .input-group { display: flex; flex-direction: column; }
     label { margin-bottom: 8px; font-weight: 500; color: var(--secondary-color); }
-    input[type="number"] { padding: 12px; border: 1px solid #ddd; border-radius: var(--border-radius); font-size: 1rem; transition: border 0.3s ease; }
-    input[type="number"]:focus { border-color: var(--primary-color); outline: none; }
+    input[type="number"], input[type="text"], select { padding: 12px; border: 1px solid #ddd; border-radius: var(--border-radius); font-size: 1rem; transition: border 0.3s ease; width: 100%; background: white; }
+    input:focus, select:focus { border-color: var(--primary-color); outline: none; }
+    
     .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
     .stat-card { background-color: white; border-radius: var(--border-radius); padding: 20px; box-shadow: var(--box-shadow); text-align: center; transition: transform 0.3s ease; }
     .stat-card:hover { transform: translateY(-3px); }
@@ -99,6 +102,7 @@
     }
   </style>
 </head>
+
 <body>
   <div id="sidebar">
     <div class="logo">
@@ -106,42 +110,12 @@
       <h2>Med Fácil</h2>
     </div>
     <ul class="sidebar-menu">
-      <li>
-        <a href="#" class="sidebar-button active">
-          <i class="fas fa-home"></i>
-          <span>Início</span>
-        </a>
-      </li>
-      <li>
-        <a href="historico.html" class="sidebar-button">
-          <i class="fas fa-history"></i>
-          <span>Histórico</span>
-        </a>
-      </li>
-      <li>
-        <a href="conteudos.html" class="sidebar-button">
-          <i class="fas fa-book"></i>
-          <span>Conteúdos</span>
-        </a>
-      </li>
-      <li>
-        <a id="downloadButton" href="#" class="sidebar-button hidden">
-          <i class="fas fa-download"></i>
-          <span>Exportar Dados</span>
-        </a>
-      </li>
-      <li>
-        <a id="importButton" href="#" class="sidebar-button">
-          <i class="fas fa-upload"></i>
-          <span>Importar Dados</span>
-        </a>
-      </li>
-      <li>
-        <a id="btnLogout" href="#" class="sidebar-button">
-          <i class="fas fa-sign-out-alt"></i>
-          <span>Sair</span>
-        </a>
-      </li>
+      <li><a href="#" class="sidebar-button active"><i class="fas fa-home"></i><span>Início</span></a></li>
+      <li><a href="historico.html" class="sidebar-button"><i class="fas fa-history"></i><span>Histórico</span></a></li>
+      <li><a href="conteudos.html" class="sidebar-button"><i class="fas fa-book"></i><span>Conteúdos</span></a></li>
+      <li><a id="downloadButton" href="#" class="sidebar-button hidden"><i class="fas fa-download"></i><span>Exportar Dados</span></a></li>
+      <li><a id="importButton" href="#" class="sidebar-button"><i class="fas fa-upload"></i><span>Importar Dados</span></a></li>
+      <li><a id="btnLogout" href="#" class="sidebar-button"><i class="fas fa-sign-out-alt"></i><span>Sair</span></a></li>
     </ul>
   </div>
 
@@ -159,6 +133,7 @@
         <p id="todayExercises">0</p>
       </div>
     </div>
+
     <div class="timer-section">
       <div id="timer">00:00:00</div>
       <div class="button-container">
@@ -166,10 +141,29 @@
           <i class="fas fa-play"></i> Iniciar Estudo
         </button>
         <button id="stopButton" class="button button-danger hidden">
-          <i class="fas fa-stop"></i> Parar Estudo
+          <i class="fas fa-stop"></i> Parar e Salvar
         </button>
       </div>
     </div>
+
+    <div class="exercises-section">
+      <div class="input-group">
+        <label for="subjectInput"><i class="fas fa-book-medical"></i> Grande Área:</label>
+        <select id="subjectInput">
+          <option value="Clínica Médica">Clínica Médica</option>
+          <option value="Cirurgia Geral">Cirurgia Geral</option>
+          <option value="Pediatria">Pediatria</option>
+          <option value="Ginecologia e Obstetrícia">G.O.</option>
+          <option value="Preventiva">Preventiva</option>
+          <option value="Outros">Outros</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label for="topicInput"><i class="fas fa-tag"></i> Assunto (Ex: Asma):</label>
+        <input type="text" id="topicInput" placeholder="Digite o tema estudado...">
+      </div>
+    </div>
+
     <div class="exercises-section">
       <div class="input-group">
         <label for="exercisesInput"><i class="fas fa-tasks"></i> Exercícios Feitos:</label>
@@ -180,6 +174,7 @@
         <input type="number" id="correctExercisesInput" value="0" min="0">
       </div>
     </div>
+
     <div class="stats-container">
       <div class="stat-card">
         <h3><i class="fas fa-clock"></i> Tempo Total</h3>
@@ -209,6 +204,7 @@
         </div>
       </div>
     </div>
+
     <div id="sessionList"></div>
   </div>
 
@@ -227,25 +223,19 @@
     const database = firebase.database();
     const auth = firebase.auth();
 
-    let appInicializada = false;
-
+    // GUARDA DE AUTENTICAÇÃO
     auth.onAuthStateChanged(async (user) => {
       if (user) {
+        console.log("Usuário logado:", user.uid);
         
-        if (appInicializada) {
-          console.log("App já inicializado, ignorando re-fire do auth.");
-          return; 
-        }
-        appInicializada = true; 
-
-        console.log("Usuário logado, inicializando app:", user.uid);
-
+        // Caminho do Banco de Dados
         const dbRef = database.ref('users/' + user.uid + '/sessionsByDate');
-        
+
         let startTime;
         let timerInterval;
         let totalTime = 0;
-        let sessionsByDate = {}; 
+        let sessionsByDate = {};
+
         const timerDisplay = document.getElementById('timer');
         const startButton = document.getElementById('startButton');
         const stopButton = document.getElementById('stopButton');
@@ -261,7 +251,7 @@
         const btnLogout = document.getElementById('btnLogout');
         const importButton = document.getElementById('importButton');
         const fileInput = document.createElement('input');
-        
+
         function startStudySession() {
           startTime = new Date().getTime();
           timerInterval = setInterval(updateTimer, 1000);
@@ -269,16 +259,11 @@
           stopButton.classList.remove('hidden');
         }
 
+        // --- FUNÇÃO DE PARAR (OTIMIZADA E COM NOVOS CAMPOS) ---
         function stopStudySession() {
           clearInterval(timerInterval);
           startButton.classList.remove('hidden');
           stopButton.classList.add('hidden');
-
-          if (totalTime < 1000) { 
-            totalTime = 0;
-            updateDisplay();
-            return; 
-          }
 
           const sessionTime = formatTime(totalTime);
           const exercisesInput = document.getElementById('exercisesInput');
@@ -291,34 +276,53 @@
           const day = currentDate.getDate();
           const dateKey = `${year}-${month}-${day}`;
 
+          // Captura os novos campos
+          const subjectInput = document.getElementById('subjectInput');
+          const topicInput = document.getElementById('topicInput');
+          const subject = subjectInput.value;
+          const topic = topicInput.value || "Geral";
+
           if (!sessionsByDate[dateKey]) {
             sessionsByDate[dateKey] = [];
           }
+
           const accuracy = exercisesDone > 0 ? (exercisesCorrect / exercisesDone * 100).toFixed(2) : '0.00';
+
           const sessionData = {
             time: sessionTime,
             exercisesDone: exercisesDone,
             exercisesCorrect: exercisesCorrect,
-            accuracy: accuracy
+            accuracy: accuracy,
+            subject: subject, // Salva a área
+            topic: topic      // Salva o assunto
           };
-          
+
+          // Atualiza Localmente
           sessionsByDate[dateKey].push(sessionData);
-          
+
+          // Envia para o Firebase (Sem baixar tudo de novo)
           dbRef.set(sessionsByDate)
             .then(() => {
-              console.log("Dados salvos no Firebase com sucesso!");
-              inicializarDashboard();
+              console.log("Dados salvos no Firebase!");
+              inicializarDashboard(); // Atualiza a tela com os dados locais
             })
             .catch((error) => {
-              console.error("Erro ao salvar dados no Firebase: ", error);
-              alert("Erro ao salvar sessão. Verifique sua conexão e a configuração do Firebase.");
-              sessionsByDate[dateKey].pop(); 
+              console.error("Erro ao salvar:", error);
+              if (error.code === 'PERMISSION_DENIED') {
+                 alert("Sua conta gratuita atingiu o limite ou não está ativa. Fale conosco para assinar!");
+              } else {
+                 alert("Erro ao salvar. Verifique sua conexão.");
+              }
+              // Reverte a mudança local em caso de erro
+              sessionsByDate[dateKey].pop();
             });
 
           totalTime = 0;
           updateDisplay();
+          // Limpa o campo de assunto para a próxima sessão
+          topicInput.value = '';
         }
-        
+
         function getStartOfWeek(date) {
           const d = new Date(date);
           const day = d.getDay();
@@ -326,7 +330,7 @@
           d.setHours(0, 0, 0, 0);
           return new Date(d.setDate(diff));
         }
-        
+
         function calculateWeeklyStudyTime() {
           const now = new Date();
           const startOfWeek = getStartOfWeek(now);
@@ -337,14 +341,10 @@
               const sessionDate = new Date(year, month - 1, day);
               if (sessionDate >= startOfWeek) {
                 sessionsByDate[dateKey].forEach(session => {
-                  const timeParts = (session.time || "0:0:0").split(':');
+                  const timeParts = (session.time || "0:0:0").split(':').map(Number);
                   if(timeParts.length === 3) {
-                    const hours = parseInt(timeParts[0], 10);
-                    const minutes = parseInt(timeParts[1], 10);
-                    const seconds = parseInt(timeParts[2], 10);
-                    if (!isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)) {
-                      weeklyMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
-                    }
+                    const [hours, minutes, seconds] = timeParts;
+                    weeklyMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
                   }
                 });
               }
@@ -352,7 +352,7 @@
           }
           return formatTime(weeklyMilliseconds);
         }
-        
+
         function calculateTodayStats() {
           const currentDate = new Date();
           const year = currentDate.getFullYear();
@@ -363,14 +363,10 @@
           let todayExercises = 0;
           if (sessionsByDate[dateKey]) {
             sessionsByDate[dateKey].forEach(session => {
-              const timeParts = (session.time || "0:0:0").split(':');
+              const timeParts = (session.time || "0:0:0").split(':').map(Number);
               if(timeParts.length === 3) {
-                const hours = parseInt(timeParts[0], 10);
-                const minutes = parseInt(timeParts[1], 10);
-                const seconds = parseInt(timeParts[2], 10);
-                if (!isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)) {
-                  todayMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
-                }
+                const [hours, minutes, seconds] = timeParts;
+                todayMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
               }
               todayExercises += session.exercisesDone || 0;
             });
@@ -380,17 +376,17 @@
             exercises: todayExercises
           };
         }
-        
+
         function updateTodayStats() {
           const todayStats = calculateTodayStats();
           todayStudyTimeDisplay.textContent = todayStats.time;
           todayExercisesDisplay.textContent = todayStats.exercises;
         }
-        
+
         function updateWeeklyStudyTime() {
           weeklyStudyTimeDisplay.textContent = calculateWeeklyStudyTime();
         }
-        
+
         function updateWeeklyProgress() {
           const weeklyTime = calculateWeeklyStudyTime();
           const [hours, minutes, seconds] = weeklyTime.split(':').map(Number);
@@ -399,13 +395,13 @@
           const progress = Math.min((totalHours / weeklyGoal) * 100, 100);
           document.getElementById('weeklyProgress').style.width = `${progress}%`;
         }
-        
+
         function getAccuracyClass(accuracy) {
           if (accuracy >= 80) return 'accuracy-high';
           if (accuracy >= 50) return 'accuracy-medium';
           return 'accuracy-low';
         }
-        
+
         function updateSessionList() {
           sessionList.innerHTML = '';
           const sortedDates = Object.keys(sessionsByDate).sort((a, b) => {
@@ -422,7 +418,7 @@
 
               const dailySummary = document.createElement('div');
               dailySummary.className = 'daily-summary';
-              const dailyTime = calculateDailyStudyTime(date); 
+              const dailyTime = calculateDailyStudyTime(date);
               const dailyExercises = calculateDailyExercises(date);
               const accuracyClass = getAccuracyClass(parseFloat(dailyExercises.accuracy));
               dailySummary.innerHTML = `
@@ -452,8 +448,12 @@
                 const sessionItem = document.createElement('div');
                 sessionItem.className = 'session-item';
                 const accuracyClass = getAccuracyClass(parseFloat(session.accuracy));
+                // Mostra o Assunto na lista se existir
+                const topicDisplay = session.topic ? ` - ${session.topic}` : '';
+                const subjectDisplay = session.subject ? `(${session.subject})` : '';
+                
                 sessionItem.innerHTML = `
-                  <div class="session-stat"><strong>Sessão ${index + 1}:</strong></div>
+                  <div class="session-stat"><strong>Sessão ${index + 1} ${subjectDisplay}${topicDisplay}:</strong></div>
                   <div class="session-stat"><i class="fas fa-clock"></i> ${session.time || '00:00:00'}</div>
                   <div class="session-stat"><i class="fas fa-tasks"></i> ${session.exercisesDone || 0}</div>
                   <div class="session-stat"><i class="fas fa-check-circle"></i> ${session.exercisesCorrect || 0}</div>
@@ -464,25 +464,21 @@
             }
           }
         }
-        
+
         function calculateDailyStudyTime(dateKey) {
           let dailyMilliseconds = 0;
           if (sessionsByDate[dateKey]) {
             sessionsByDate[dateKey].forEach(session => {
-              const timeParts = (session.time || "0:0:0").split(':');
+              const timeParts = (session.time || "0:0:0").split(':').map(Number);
               if(timeParts.length === 3) {
-                const hours = parseInt(timeParts[0], 10);
-                const minutes = parseInt(timeParts[1], 10);
-                const seconds = parseInt(timeParts[2], 10);
-                if (!isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)) {
-                  dailyMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
-                }
+                const [hours, minutes, seconds] = timeParts;
+                dailyMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
               }
             });
           }
           return formatTime(dailyMilliseconds);
         }
-        
+
         function calculateDailyExercises(dateKey) {
           let totalExercises = 0;
           let totalCorrect = 0;
@@ -498,50 +494,45 @@
             accuracy: totalExercises > 0 ? (totalCorrect / totalExercises * 100).toFixed(2) : '0.00'
           };
         }
-        
+
         function formatDateDisplay(dateString) {
           const [year, month, day] = dateString.split('-');
           const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
           return `${day} de ${months[parseInt(month) - 1]} de ${year}`;
         }
-        
+
         function updateTimer() {
           const currentTime = new Date().getTime();
           totalTime = currentTime - startTime;
           timerDisplay.textContent = formatTime(totalTime);
         }
-        
+
         function formatTime(milliseconds) {
           const hours = Math.floor(milliseconds / 3600000);
           const minutes = Math.floor((milliseconds % 3600000) / 60000);
           const seconds = Math.floor((milliseconds % 60000) / 1000);
           return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
         }
-        
+
         function pad(num) {
           return num.toString().padStart(2, '0');
         }
-        
+
         function updateDisplay() {
           document.getElementById('exercisesInput').value = 0;
           document.getElementById('correctExercisesInput').value = 0;
-          timerDisplay.textContent = '00:00:00';
         }
-        
+
         function updateTotalStudyTime() {
           let totalMilliseconds = 0;
           for (const date in sessionsByDate) {
             if (sessionsByDate.hasOwnProperty(date)) {
               const sessions = sessionsByDate[date];
               sessions.forEach(session => {
-                const timeParts = (session.time || "0:0:0").split(':');
+                const timeParts = (session.time || "0:0:0").split(':').map(Number);
                 if(timeParts.length === 3) {
-                  const hours = parseInt(timeParts[0], 10);
-                  const minutes = parseInt(timeParts[1], 10);
-                  const seconds = parseInt(timeParts[2], 10);
-                  if (!isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)) {
-                    totalMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
-                  }
+                  const [hours, minutes, seconds] = timeParts;
+                  totalMilliseconds += (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
                 }
               });
             }
@@ -562,11 +553,11 @@
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
         }
-        
+
         function importData(event) {
           const file = event.target.files[0];
           if (!file) return;
-                              
+          
           const reader = new FileReader();
           reader.onload = function (e) {
             try {
@@ -592,9 +583,9 @@
               console.error("Erro na importação: ", error);
             }
           };
-          reader.readText(file);
+          reader.readAsText(file);
         }
-        
+
         function calculateStatistics() {
           let totalExercisesDone = 0;
           let totalExercisesCorrect = 0;
@@ -616,23 +607,25 @@
             averageAccuracy: totalAccuracy
           };
         }
-        
+
         function updateStatisticsDisplay() {
           const statistics = calculateStatistics();
           totalExercisesDoneDisplay.textContent = statistics.totalExercisesDone;
           totalExercisesCorrectDisplay.textContent = statistics.totalExercisesCorrect;
           averageAccuracyDisplay.textContent = `${statistics.averageAccuracy}%`;
         }
-                        
+        
         function inicializarDashboard() {
           console.log("Atualizando dashboard com dados...");
-          updateTotalStudyTime(); 
+          updateTotalStudyTime();
           updateStatisticsDisplay();
-          updateWeeklyStudyTime(); 
+          updateWeeklyStudyTime();
           updateWeeklyProgress();
           updateSessionList();
-          updateTodayStats(); 
+          updateTodayStats();
         }
+
+        // --- LÓGICA DE INICIALIZAÇÃO E LISTENERS ---
 
         fileInput.type = 'file';
         fileInput.accept = '.json, .txt';
@@ -644,7 +637,7 @@
         startButton.addEventListener('click', startStudySession);
         stopButton.addEventListener('click', stopStudySession);
         downloadButton.addEventListener('click', downloadData);
-                
+        
         btnLogout.addEventListener('click', (e) => {
           e.preventDefault();
           auth.signOut().then(() => {
@@ -653,38 +646,39 @@
             console.error('Erro ao sair:', error);
           });
         });
-                
-        console.log("Buscando dados do Firebase (uma única vez)...");
+
+        // =================================================================
+        // --- OTIMIZAÇÃO: CARREGAMENTO INICIAL (UMA SÓ VEZ) ---
+        // =================================================================
         try {
+          console.log("Buscando dados do histórico (uma única vez)...");
           const snapshot = await dbRef.get();
-                    
+          
           if (snapshot.exists()) {
-            sessionsByDate = snapshot.val();
+            sessionsByDate = snapshot.val(); 
           } else {
             console.log("Nenhum dado encontrado para este usuário.");
-            sessionsByDate = {};
+            sessionsByDate = {}; 
           }
-                    
+          
           inicializarDashboard();
-                    
+          
           if (Object.keys(sessionsByDate).length > 0) {
             downloadButton.classList.remove('hidden');
           } else {
             downloadButton.classList.add('hidden');
           }
-                  
+          
         } catch (errorObject) {
-          console.error("A leitura do Firebase falhou: " + errorObject.name);
-          alert("Não foi possível conectar ao banco de dados. Verifique sua configuração do Firebase e as regras de segurança.");
+          console.error("A leitura do Firebase falhou:", errorObject);
         }
 
       } else {
-        appInicializada = false;
         console.log("Usuário não logado. Redirecionando para login.html...");
         window.location.href = 'login.html'; 
       }
     });
-      
+    
   </script>
 </body>
 </html>

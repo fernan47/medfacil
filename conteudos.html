@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desempenho por Conteúdo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+
+  <style>
+    /* CSS Padrão (Mesmo do index.html) */
+    :root { --primary-color: #4a6fa5; --secondary-color: #166088; --accent-color: #4fc3f7; --success-color: #4caf50; --warning-color: #ff9800; --danger-color: #f44336; --light-color: #f8f9fa; --dark-color: #343a40; --text-color: #333; --border-radius: 12px; --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); --sidebar-width: 250px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Roboto', sans-serif; line-height: 1.6; color: var(--text-color); background-color: #f5f7fa; display: flex; min-height: 100vh; }
+    #sidebar { width: var(--sidebar-width); background: linear-gradient(135deg, #2c3e50, #4a6fa5); color: white; padding: 30px 20px; position: fixed; height: 100%; box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; z-index: 100; }
+    #sidebar .logo { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+    #sidebar .logo h2 { color: white; font-weight: 500; }
+    #sidebar .logo i { font-size: 2rem; margin-bottom: 10px; color: var(--accent-color); }
+    .sidebar-menu { list-style: none; }
+    .sidebar-menu li { margin-bottom: 10px; }
+    .sidebar-button { display: flex; align-items: center; padding: 12px 15px; border-radius: var(--border-radius); color: white; text-decoration: none; transition: all 0.3s ease; font-size: 0.95rem; }
+    .sidebar-button:hover { background-color: rgba(255, 255, 255, 0.1); transform: translateX(5px); }
+    .sidebar-button i { margin-right: 10px; font-size: 1.1rem; width: 20px; text-align: center; }
+    .sidebar-button.active { background-color: var(--accent-color); color: var(--dark-color); font-weight: 500; }
+    #main-content { flex: 1; margin-left: var(--sidebar-width); padding: 30px; max-width: 1200px; margin: 0 auto; padding-left: calc(var(--sidebar-width) + 30px); }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .header h1 { color: var(--primary-color); font-weight: 500; }
+
+    /* CSS Específico desta página */
+    .subject-section { 
+      margin-bottom: 40px; 
+      background: white; 
+      padding: 25px; 
+      border-radius: var(--border-radius); 
+      box-shadow: var(--box-shadow); 
+      animation: fadeIn 0.5s ease;
+    }
+    .subject-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 20px; 
+      border-bottom: 2px solid #f0f0f0; 
+      padding-bottom: 10px; 
+    }
+    .subject-title { 
+      color: var(--primary-color); 
+      font-size: 1.4rem; 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+    }
+    
+    .subject-stats-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+      gap: 20px; 
+    }
+    
+    .topic-card { 
+      background-color: #fff; 
+      border-radius: 8px; 
+      padding: 20px; 
+      border: 1px solid #eee;
+      border-left: 5px solid var(--secondary-color); 
+      transition: transform 0.2s, box-shadow 0.2s; 
+    }
+    .topic-card:hover { 
+      transform: translateY(-3px); 
+      box-shadow: 0 6px 12px rgba(0,0,0,0.08); 
+    }
+    
+    .topic-header { 
+      display: flex; 
+      justify-content: space-between; 
+      margin-bottom: 15px; 
+      font-weight: bold; 
+      color: #333; 
+      font-size: 1.1rem;
+    }
+    
+    .topic-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    .metric {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .metric i {
+      color: var(--primary-color);
+      width: 20px;
+      text-align: center;
+    }
+
+    .accuracy-badge {
+      grid-column: 1 / -1;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+    }
+    
+    .acc-value { font-size: 1.1rem; }
+    
+    /* Cores de Performance */
+    .acc-high { color: var(--success-color); border-left-color: var(--success-color); }
+    .acc-high .acc-value { color: var(--success-color); }
+    
+    .acc-med { color: var(--warning-color); border-left-color: var(--warning-color); }
+    .acc-med .acc-value { color: var(--warning-color); }
+    
+    .acc-low { color: var(--danger-color); border-left-color: var(--danger-color); }
+    .acc-low .acc-value { color: var(--danger-color); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 992px) {
+      #sidebar { width: 70px; padding: 20px 10px; overflow: hidden; }
+      #sidebar .logo h2, .sidebar-button span { display: none; }
+      #sidebar .logo i { margin-right: 0; font-size: 1.8rem; }
+      .sidebar-button { justify-content: center; padding: 12px 5px; }
+      .sidebar-button i { margin-right: 0; font-size: 1.3rem; }
+      #main-content { margin-left: 70px; padding-left: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div class="logo">
+    <i class="fas fa-book-open"></i>
+    <h2>Med Fácil</h2>
+  </div>
+  <ul class="sidebar-menu">
+    <li><a href="index.html" class="sidebar-button"><i class="fas fa-home"></i><span>Início</span></a></li>
+    <li><a href="historico.html" class="sidebar-button"><i class="fas fa-history"></i><span>Histórico</span></a></li>
+    <li><a href="#" class="sidebar-button active"><i class="fas fa-book"></i><span>Conteúdos</span></a></li>
+    <li><a id="btnLogout" href="#" class="sidebar-button"><i class="fas fa-sign-out-alt"></i><span>Sair</span></a></li>
+  </ul>
+</div>
+
+<div id="main-content">
+  <div class="header">
+    <h1><i class="fas fa-chart-pie"></i> Desempenho por Assunto</h1>
+  </div>
+  
+  <div id="content-container">
+    <p style="text-align: center; color: #666; margin-top: 50px;">
+      <i class="fas fa-spinner fa-spin"></i> Carregando seus dados...
+    </p>
+  </div>
+</div>
+
+<script>
+  // === CONFIGURAÇÃO DO FIREBASE ===
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
+    authDomain: "meu-study-tracker.firebaseapp.com",
+    databaseURL: "https://meu-study-tracker-default-rtdb.firebaseio.com",
+    projectId: "meu-study-tracker",
+    storageBucket: "meu-study-tracker.firebasestorage.app",
+    messagingSenderId: "715609213126",
+    appId: "1:715609213126:web:3e9cbe7e840ea20a1b6fc7"
+  };
+
+  let database;
+  let auth;
+  try {
+    const app = firebase.initializeApp(firebaseConfig);
+    database = firebase.database();
+    auth = firebase.auth(); 
+  } catch (error) { console.error(error); }
+
+  // --- FUNÇÕES AUXILIARES ---
+
+  // Converter string "01:30:00" para minutos (float)
+  function timeToMinutes(timeStr) {
+    if (!timeStr) return 0;
+    const p = timeStr.split(':').map(Number);
+    if (p.length !== 3) return 0;
+    return (p[0] * 60) + p[1] + (p[2]/60);
+  }
+
+  // Converter minutos de volta para formato legível "1h 30m"
+  function formatMinutesToHrs(totalMinutes) {
+    const h = Math.floor(totalMinutes / 60);
+    const m = Math.floor(totalMinutes % 60);
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m} min`;
+  }
+
+  // --- LÓGICA DE PROCESSAMENTO DE DADOS ---
+
+  function processData(sessionsByDate) {
+    const subjects = {};
+
+    // Itera por todas as datas e sessões para agrupar os dados
+    for (const date in sessionsByDate) {
+      sessionsByDate[date].forEach(session => {
+        
+        // Se for sessão antiga (sem campo subject), define padrão
+        const subjectName = session.subject || 'Sem Categoria';
+        // Se for antiga ou campo vazio, define "Geral"
+        const topicName = (session.topic && session.topic.trim() !== "") ? session.topic : 'Geral';
+
+        // Inicializa o objeto se ainda não existir
+        if (!subjects[subjectName]) subjects[subjectName] = {};
+        if (!subjects[subjectName][topicName]) {
+          subjects[subjectName][topicName] = {
+            totalTime: 0,
+            totalQuestions: 0,
+            totalCorrect: 0,
+            count: 0
+          };
+        }
+
+        // Acumula as estatísticas
+        const stats = subjects[subjectName][topicName];
+        stats.totalTime += timeToMinutes(session.time);
+        stats.totalQuestions += (session.exercisesDone || 0);
+        stats.totalCorrect += (session.exercisesCorrect || 0);
+        stats.count++;
+      });
+    }
+
+    renderData(subjects);
+  }
+
+  // --- LÓGICA DE DESENHO NA TELA (RENDERIZAÇÃO) ---
+
+  function renderData(subjects) {
+    const container = document.getElementById('content-container');
+    container.innerHTML = '';
+
+    if (Object.keys(subjects).length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; margin-top: 50px; color: #666;">
+          <i class="fas fa-book-open" style="font-size: 3rem; margin-bottom: 15px; color: #ccc;"></i>
+          <p>Nenhum dado de estudo encontrado.</p>
+          <p>Utilize o <strong>Tracker</strong> para registrar suas primeiras sessões!</p>
+        </div>`;
+      return;
+    }
+
+    // Ordem de exibição das Grandes Áreas
+    const order = ["Clínica Médica", "Cirurgia Geral", "Pediatria", "Ginecologia e Obstetrícia", "Preventiva"];
+    
+    // Ordena as chaves do objeto subjects
+    const allKeys = Object.keys(subjects).sort((a, b) => {
+      const idxA = order.indexOf(a);
+      const idxB = order.indexOf(b);
+      // Se ambos estão na lista, ordena pela lista
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      // Se só A está na lista, A vem primeiro
+      if (idxA !== -1) return -1;
+      // Se só B está na lista, B vem primeiro
+      if (idxB !== -1) return 1;
+      // Se nenhum está, ordem alfabética
+      return a.localeCompare(b);
+    });
+
+    allKeys.forEach(subjectName => {
+      const topics = subjects[subjectName];
+      
+      // Cria o container da Grande Área
+      const section = document.createElement('div');
+      section.className = 'subject-section';
+      
+      // Cabeçalho da Área
+      let html = `
+        <div class="subject-header">
+          <h2 class="subject-title">
+            <i class="fas fa-folder-open"></i> ${subjectName}
+          </h2>
+        </div>
+        <div class="subject-stats-grid">
+      `;
+
+      // Ordena os tópicos por quantidade de questões (os mais estudados primeiro)
+      const sortedTopics = Object.keys(topics).sort((a, b) => topics[b].totalQuestions - topics[a].totalQuestions);
+
+      sortedTopics.forEach(topicName => {
+        const stat = topics[topicName];
+        // Calcula acurácia
+        const accuracy = stat.totalQuestions > 0 ? (stat.totalCorrect / stat.totalQuestions * 100).toFixed(1) : 0;
+        
+        // Define a cor baseada na nota
+        let accClass = 'acc-low';
+        if (accuracy >= 80) accClass = 'acc-high';
+        else if (accuracy >= 50) accClass = 'acc-med';
+
+        html += `
+          <div class="topic-card ${accClass}">
+            <div class="topic-header">
+              <span>${topicName}</span>
+            </div>
+            <div class="topic-metrics">
+              <div class="metric" title="Tempo Estudado">
+                <i class="fas fa-clock"></i> ${formatMinutesToHrs(stat.totalTime)}
+              </div>
+              <div class="metric" title="Questões Feitas">
+                <i class="fas fa-tasks"></i> ${stat.totalQuestions} Q
+              </div>
+              <div class="metric" title="Sessões">
+                <i class="fas fa-history"></i> ${stat.count}x
+              </div>
+            </div>
+            <div class="accuracy-badge">
+              <span>Desempenho:</span>
+              <span class="acc-value">${accuracy}%</span>
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div>`; // Fecha grid
+      section.innerHTML = html;
+      container.appendChild(section);
+    });
+  }
+
+  // --- INICIALIZAÇÃO SEGURA (WINDOW.ONLOAD) ---
+  window.addEventListener('load', () => {
+    
+    // Verifica autenticação
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        // Configura botão de sair
+        const btnLogout = document.getElementById('btnLogout');
+        if(btnLogout) {
+            btnLogout.addEventListener('click', (e) => {
+            e.preventDefault();
+            auth.signOut().then(() => window.location.href = 'login.html');
+            });
+        }
+
+        try {
+          // BUSCA OTIMIZADA (dbRef.get)
+          // Baixa os dados apenas uma vez para economizar custo
+          console.log("Buscando dados de conteúdo...");
+          const snapshot = await database.ref('users/' + user.uid + '/sessionsByDate').get();
+          
+          if (snapshot.exists()) {
+            processData(snapshot.val());
+          } else {
+            // Usuário novo ou sem dados
+            document.getElementById('content-container').innerHTML = `
+                <div style="text-align: center; margin-top: 50px; color: #666;">
+                  <p>Nenhum dado encontrado.</p>
+                  <p>Comece a estudar para ver as estatísticas aqui!</p>
+                </div>`;
+          }
+        } catch (error) {
+          console.error("Erro ao buscar dados:", error);
+          document.getElementById('content-container').innerHTML = '<p style="color:red; text-align:center">Erro ao carregar dados. Tente recarregar a página.</p>';
+        }
+      } else {
+        // Se não estiver logado, manda pro login
+        window.location.href = 'login.html';
+      }
+    });
+  });
+</script>
+</body>
+</html>

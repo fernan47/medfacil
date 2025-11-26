@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revisões Espaçadas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+
+  <style>
+    /* --- CSS PADRÃO (MANTIDO) --- */
+    :root { --primary-color: #4a6fa5; --secondary-color: #166088; --accent-color: #4fc3f7; --success-color: #4caf50; --warning-color: #ff9800; --danger-color: #f44336; --light-color: #f8f9fa; --text-color: #333; --border-radius: 12px; --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Roboto', sans-serif; background-color: #f5f7fa; color: var(--text-color); display: flex; min-height: 100vh; }
+    
+    #sidebar { width: 250px; background: linear-gradient(135deg, #2c3e50, #4a6fa5); color: white; padding: 30px 20px; position: fixed; height: 100%; z-index: 1000; }
+    #sidebar .logo { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    #sidebar .logo h2 { color: white; font-weight: 500; }
+    .sidebar-menu { list-style: none; }
+    .sidebar-button { display: flex; align-items: center; padding: 12px 15px; border-radius: 12px; color: white; text-decoration: none; margin-bottom: 10px; transition: 0.3s; }
+    .sidebar-button:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
+    .sidebar-button.active { background-color: var(--accent-color); color: #343a40; font-weight: 500; }
+    .sidebar-button i { margin-right: 10px; width: 20px; text-align: center; }
+    
+    #main-content { flex: 1; margin-left: 250px; padding: 40px; max-width: 1200px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .header h1 { color: var(--primary-color); }
+
+    /* --- CSS ESPECÍFICO DE REVISÕES --- */
+    .review-section { margin-bottom: 40px; }
+    .section-title { font-size: 1.3rem; color: var(--secondary-color); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+    
+    .review-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    
+    .review-card { 
+      background: white; 
+      border-radius: 12px; 
+      padding: 20px; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+      border-left: 5px solid #ccc; 
+      position: relative;
+      transition: transform 0.2s;
+    }
+    .review-card:hover { transform: translateY(-3px); }
+    
+    /* Cores baseadas na urgência */
+    .urgent { border-left-color: var(--danger-color); }
+    .soon { border-left-color: var(--warning-color); }
+    .future { border-left-color: var(--success-color); }
+
+    .card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .subject-tag { background: #eee; padding: 4px 8px; border-radius: 8px; font-size: 0.75rem; font-weight: bold; color: #555; }
+    .card-title { font-size: 1.1rem; font-weight: 700; color: #333; margin-bottom: 5px; }
+    .card-date { font-size: 0.9rem; color: #666; display: flex; align-items: center; gap: 5px; }
+    
+    .card-actions { margin-top: 15px; border-top: 1px solid #f0f0f0; padding-top: 10px; text-align: right; }
+    .btn-check { 
+      background: none; border: none; color: var(--primary-color); font-weight: bold; cursor: pointer; font-size: 0.9rem;
+    }
+    .btn-check:hover { text-decoration: underline; }
+
+    .empty-state { text-align: center; padding: 40px; color: #888; background: white; border-radius: 12px; border: 2px dashed #e0e0e0; }
+
+    @media (max-width: 992px) {
+      #sidebar { width: 70px; padding: 20px 10px; }
+      #sidebar .logo h2, .sidebar-button span { display: none; }
+      #sidebar .logo i { margin: 0; font-size: 1.8rem; }
+      .sidebar-button { justify-content: center; }
+      #main-content { margin-left: 70px; padding-left: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div class="logo"><i class="fas fa-book-open"></i><h2>Med Fácil</h2></div>
+  <ul class="sidebar-menu">
+    <li><a href="index.html" class="sidebar-button"><i class="fas fa-home"></i><span>Início</span></a></li>
+    <li><a href="historico.html" class="sidebar-button"><i class="fas fa-history"></i><span>Histórico</span></a></li>
+    <li><a href="conteudos.html" class="sidebar-button"><i class="fas fa-book"></i><span>Conteúdos</span></a></li>
+    <li><a href="#" class="sidebar-button active"><i class="fas fa-sync-alt"></i><span>Revisões</span></a></li>
+    <li><a id="btnLogout" href="#" class="sidebar-button"><i class="fas fa-sign-out-alt"></i><span>Sair</span></a></li>
+  </ul>
+</div>
+
+<div id="main-content">
+  <div class="header">
+    <h1>Revisões Espaçadas</h1>
+  </div>
+
+  <div id="loading" style="text-align: center; margin-top: 50px;">
+    <i class="fas fa-spinner fa-spin fa-2x" style="color: #666;"></i>
+  </div>
+
+  <div class="review-section">
+    <div class="section-title"><i class="fas fa-exclamation-circle" style="color: var(--danger-color);"></i> Revisar Hoje</div>
+    <div id="urgentGrid" class="review-grid"></div>
+  </div>
+
+  <div class="review-section">
+    <div class="section-title"><i class="fas fa-calendar-alt"></i> Próximas Revisões</div>
+    <div id="futureGrid" class="review-grid"></div>
+  </div>
+
+</div>
+
+<script>
+  // Configuração Firebase (Igual aos outros arquivos)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
+    authDomain: "meu-study-tracker.firebaseapp.com",
+    databaseURL: "https://meu-study-tracker-default-rtdb.firebaseio.com",
+    projectId: "meu-study-tracker",
+    storageBucket: "meu-study-tracker.firebasestorage.app",
+    messagingSenderId: "715609213126",
+    appId: "1:715609213126:web:3e9cbe7e840ea20a1b6fc7"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+  const auth = firebase.auth();
+
+  window.addEventListener('load', () => {
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        document.getElementById('btnLogout').addEventListener('click', (e) => {
+            e.preventDefault(); auth.signOut().then(() => window.location.href='login.html');
+        });
+
+        // Carregar Revisões
+        const reviewsRef = database.ref('users/' + user.uid + '/reviews');
+        
+        try {
+          const snapshot = await reviewsRef.get();
+          document.getElementById('loading').style.display = 'none';
+          
+          if (snapshot.exists()) {
+            renderReviews(snapshot.val());
+          } else {
+            document.getElementById('urgentGrid').innerHTML = '<div class="empty-state">Nenhuma revisão agendada. Estude um tema para começar!</div>';
+          }
+        } catch (error) { console.error(error); }
+
+      } else {
+        window.location.href = 'login.html';
+      }
+    });
+  });
+
+  function renderReviews(reviews) {
+    const urgentGrid = document.getElementById('urgentGrid');
+    const futureGrid = document.getElementById('futureGrid');
+    urgentGrid.innerHTML = '';
+    futureGrid.innerHTML = '';
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    // Converte objeto em array e ordena por data
+    const reviewsArray = Object.values(reviews).sort((a, b) => new Date(a.nextReview) - new Date(b.nextReview));
+
+    let hasUrgent = false;
+
+    reviewsArray.forEach(review => {
+      const reviewDate = new Date(review.nextReview);
+      reviewDate.setHours(0,0,0,0);
+      
+      // Diferença em dias
+      const diffTime = reviewDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      let statusClass = 'future';
+      let dateText = `Em ${diffDays} dias`;
+      
+      if (diffDays <= 0) {
+        statusClass = 'urgent';
+        dateText = diffDays === 0 ? 'Hoje' : `Atrasado ${Math.abs(diffDays)} dias`;
+        hasUrgent = true;
+      } else if (diffDays <= 3) {
+        statusClass = 'soon';
+      }
+
+      const html = `
+        <div class="review-card ${statusClass}">
+          <div class="card-header">
+            <span class="subject-tag">${review.subject}</span>
+            <span style="font-size:0.8rem; color:#999;">Ciclo ${review.level}</span>
+          </div>
+          <div class="card-title">${review.topic}</div>
+          <div class="card-date">
+            <i class="far fa-clock"></i> ${dateText} (${new Date(review.nextReview).toLocaleDateString()})
+          </div>
+          <div class="card-actions">
+            <small style="color:#888;">Estude este tema novamente para avançar o ciclo.</small>
+          </div>
+        </div>
+      `;
+
+      if (diffDays <= 0) {
+        urgentGrid.innerHTML += html;
+      } else {
+        futureGrid.innerHTML += html;
+      }
+    });
+
+    if (!hasUrgent) {
+      urgentGrid.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle" style="color:green; font-size:2rem;"></i><br>Tudo em dia! Sem revisões para hoje.</div>';
+    }
+  }
+</script>
+</body>
+</html>

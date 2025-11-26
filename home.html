@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyTracker - Registre seu Progresso Acadêmico</title>
+    <title>Med Fácil - O Poder do Progresso</title>
     <style>
         /* Reset e configurações básicas */
         * {
@@ -14,12 +14,12 @@
         }
         
         :root {
-            --primary: #4361ee;
-            --secondary: #3a0ca3;
-            --accent: #4cc9f0;
+            --primary: #4a6fa5; /* Sua cor primária */
+            --secondary: #166088; /* Sua cor secundária */
+            --accent: #4fc3f7;
             --light: #f8f9fa;
-            --dark: #212529;
-            --success: #4bb543;
+            --dark: #333;
+            --success: #4caf50;
         }
         
         body {
@@ -31,11 +31,12 @@
         /* Header e Navegação */
         header {
             background-color: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 1000;
+            transition: all 0.3s ease;
         }
         
         .container {
@@ -57,11 +58,15 @@
             font-weight: 700;
             color: var(--primary);
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .nav-links {
             display: flex;
             gap: 1.5rem;
+            align-items: center;
         }
         
         .nav-links a {
@@ -89,11 +94,13 @@
             background-color: var(--primary);
             color: white;
             border: 2px solid var(--primary);
+            box-shadow: 0 4px 15px rgba(74, 111, 165, 0.3);
         }
         
         .btn-primary:hover {
             background-color: var(--secondary);
             border-color: var(--secondary);
+            transform: translateY(-2px);
         }
         
         .btn-outline {
@@ -109,23 +116,28 @@
         
         /* Hero Section */
         .hero {
-            padding: 8rem 0 5rem;
-            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
-            color: white;
+            padding: 8rem 0 6rem;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e3f2fd 100%);
+            color: var(--dark);
             text-align: center;
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
         }
         
         .hero h1 {
-            font-size: 2.8rem;
-            margin-bottom: 1rem;
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
             line-height: 1.2;
+            color: var(--secondary);
+            font-weight: 800;
         }
         
         .hero p {
             font-size: 1.2rem;
             max-width: 700px;
-            margin: 0 auto 2rem;
-            opacity: 0.9;
+            margin: 0 auto 2.5rem;
+            color: #555;
         }
         
         .hero-buttons {
@@ -134,56 +146,49 @@
             justify-content: center;
             flex-wrap: wrap;
         }
-        
+
         /* Citação */
         .quote-section {
-            padding: 4rem 0;
+            padding: 5rem 0;
             background-color: white;
             text-align: center;
         }
         
-        .quote {
+        .quote-box {
             max-width: 800px;
             margin: 0 auto;
-            font-style: italic;
-            font-size: 1.5rem;
-            color: var(--secondary);
+            background: #f0f7ff;
+            padding: 3rem;
+            border-radius: 15px;
+            border-left: 5px solid var(--primary);
             position: relative;
-            padding: 0 2rem;
         }
         
-        .quote::before, .quote::after {
-            content: '"';
-            font-size: 3rem;
-            color: var(--accent);
-            position: absolute;
-        }
-        
-        .quote::before {
-            top: -1rem;
-            left: 0;
-        }
-        
-        .quote::after {
-            bottom: -2rem;
-            right: 0;
+        .quote {
+            font-style: italic;
+            font-size: 1.4rem;
+            color: #444;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
         }
         
         .author {
-            margin-top: 2rem;
-            font-weight: 600;
-            color: var(--dark);
+            font-weight: 700;
+            color: var(--secondary);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
         }
         
         /* Benefícios */
         .benefits {
-            padding: 5rem 0;
-            background-color: #f8f9fa;
+            padding: 6rem 0;
+            background-color: #fcfcfc;
         }
         
         .section-title {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 4rem;
         }
         
         .section-title h2 {
@@ -196,383 +201,209 @@
             max-width: 600px;
             margin: 0 auto;
             color: #666;
+            font-size: 1.1rem;
         }
         
         .benefits-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
         }
         
         .benefit-card {
             background: white;
-            border-radius: 10px;
-            padding: 2rem;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            text-align: center;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            text-align: left;
             transition: transform 0.3s ease;
+            border-top: 4px solid var(--primary);
         }
         
         .benefit-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px);
         }
         
         .benefit-icon {
-            width: 70px;
-            height: 70px;
-            background-color: rgba(67, 97, 238, 0.1);
+            width: 60px;
+            height: 60px;
+            background-color: rgba(74, 111, 165, 0.1);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1.5rem;
+            margin-bottom: 1.5rem;
         }
         
         .benefit-icon i {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             color: var(--primary);
         }
         
         .benefit-card h3 {
             margin-bottom: 1rem;
             color: var(--secondary);
+            font-size: 1.3rem;
         }
         
-        /* Plataformas */
-        .platforms {
-            padding: 5rem 0;
-            background-color: white;
-        }
-        
-        .platforms-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 3rem;
-        }
-        
-        .platforms-text {
-            flex: 1;
-            min-width: 300px;
-        }
-        
-        .platforms-text h2 {
-            font-size: 2.2rem;
-            color: var(--secondary);
-            margin-bottom: 1.5rem;
-        }
-        
-        .platforms-text p {
-            margin-bottom: 1.5rem;
+        .benefit-card p {
             color: #666;
-        }
-        
-        .platforms-devices {
-            flex: 1;
-            min-width: 300px;
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-        }
-        
-        .device {
-            text-align: center;
-        }
-        
-        .device-icon {
-            width: 80px;
-            height: 80px;
-            background-color: rgba(67, 97, 238, 0.1);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-        }
-        
-        .device-icon i {
-            font-size: 2rem;
-            color: var(--primary);
+            font-size: 0.95rem;
         }
         
         /* CTA Final */
         .cta-section {
-            padding: 5rem 0;
-            background: linear-gradient(135deg, #3a0ca3 0%, #4361ee 100%);
+            padding: 6rem 0;
+            background: linear-gradient(135deg, #2c3e50, #4a6fa5);
             color: white;
             text-align: center;
         }
         
         .cta-section h2 {
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             margin-bottom: 1.5rem;
         }
         
         .cta-section p {
-            max-width: 600px;
-            margin: 0 auto 2rem;
+            max-width: 700px;
+            margin: 0 auto 2.5rem;
+            font-size: 1.2rem;
             opacity: 0.9;
         }
-        
+
         /* Footer */
         footer {
             background-color: var(--dark);
             color: white;
-            padding: 3rem 0 1.5rem;
-        }
-        
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-        
-        .footer-column {
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        .footer-column h3 {
-            margin-bottom: 1.5rem;
-            color: var(--accent);
-        }
-        
-        .footer-links {
-            list-style: none;
-        }
-        
-        .footer-links li {
-            margin-bottom: 0.8rem;
-        }
-        
-        .footer-links a {
-            color: #ddd;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .footer-links a:hover {
-            color: var(--accent);
-        }
-        
-        .copyright {
+            padding: 3rem 0;
             text-align: center;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: #aaa;
             font-size: 0.9rem;
+            color: #aaa;
         }
-        
+
+        /* Link para ícones */
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
         /* Responsividade */
         @media (max-width: 768px) {
-            .navbar {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            
-            .nav-links {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            
-            .hero h1 {
-                font-size: 2.2rem;
-            }
-            
-            .hero p {
-                font-size: 1rem;
-            }
-            
-            .quote {
-                font-size: 1.2rem;
-            }
+            .navbar { flex-direction: column; gap: 1rem; }
+            .nav-links { flex-wrap: wrap; justify-content: center; }
+            .hero h1 { font-size: 2.2rem; }
+            .hero { padding-top: 7rem; }
+            .quote-box { padding: 2rem; }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- Header e Navegação -->
+
     <header>
         <div class="container">
             <nav class="navbar">
-                <a href="#" class="logo">StudyTracker</a>
+                <a href="#" class="logo">
+                    <i class="fas fa-book-open"></i> Med Fácil
+                </a>
                 <div class="nav-links">
-                    <a href="#beneficios">Benefícios</a>
-                    <a href="#plataformas">Plataformas</a>
-                    <a href="#sobre">Sobre</a>
-                    <a href="#" class="btn btn-outline">Login</a>
+                    <a href="#motivos">Por que registrar?</a>
+                    <a href="login.html" class="btn btn-outline">Entrar</a>
+                    <a href="login.html" class="btn btn-primary">Criar Conta</a>
                 </div>
             </nav>
         </div>
     </header>
 
-    <!-- Hero Section -->
     <section class="hero">
         <div class="container">
-            <h1>Transforme sua forma de estudar com o StudyTracker</h1>
-            <p>Registre seu progresso, identifique seus pontos fortes e fracos, e alcance seus objetivos acadêmicos com mais eficiência.</p>
+            <h1>Transforme o estudo passivo<br>em uma estratégia ativa.</h1>
+            <p>Registrar o progresso é fundamental para acompanhar o desempenho, manter a motivação e ajustar as estratégias de aprendizagem de forma eficaz.</p>
             <div class="hero-buttons">
-                <a href="#" class="btn btn-primary">Comece Agora</a>
-                <a href="#" class="btn btn-outline" style="border-color: white; color: white;">Saiba Mais</a>
+                <a href="login.html" class="btn btn-primary">Começar a Registrar Agora</a>
             </div>
         </div>
     </section>
 
-    <!-- Citação Inspiradora -->
     <section class="quote-section">
         <div class="container">
-            <div class="quote">
-                O poder de transformar um hábito reside na capacidade de rastrear seu progresso e celebrar pequenas vitórias.
+            <div class="quote-box">
+                <div class="quote">
+                    "Pequenas vitórias são uma aplicação constante de uma pequena vantagem. Uma vez que uma pequena vitória foi conquistada, forças são colocadas em movimento para favorecer outra pequena vitória."
+                </div>
+                <div class="author">- Charles Duhigg, O Poder do Hábito</div>
             </div>
-            <div class="author">- Charles Duhigg, autor de "O Poder do Hábito"</div>
         </div>
     </section>
 
-    <!-- Benefícios -->
-    <section class="benefits" id="beneficios">
+    <section class="benefits" id="motivos">
         <div class="container">
             <div class="section-title">
-                <h2>Por que registrar seu progresso?</h2>
-                <p>Descubra como acompanhar seus estudos pode revolucionar seu aprendizado</p>
+                <h2>Os 6 Pilares do Progresso</h2>
+                <p>Por que os melhores estudantes registram cada passo da jornada?</p>
             </div>
+            
             <div class="benefits-grid">
                 <div class="benefit-card">
-                    <div class="benefit-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <h3>Avalie seu avanço</h3>
-                    <p>Visualize claramente seu progresso ao longo do tempo e mantenha-se motivado com cada conquista.</p>
+                    <div class="benefit-icon"><i class="fas fa-chart-pie"></i></div>
+                    <h3>Visão Clara do Desempenho</h3>
+                    <p>Os registros fornecem uma visão abrangente do seu desenvolvimento de habilidades e conhecimentos ao longo do tempo. Isso ajuda a entender o que foi aprendido e o que ainda precisa ser melhorado.</p>
                 </div>
+
                 <div class="benefit-card">
-                    <div class="benefit-icon">
-                        <i class="fas fa-bullseye"></i>
-                    </div>
-                    <h3>Revisão assertiva</h3>
-                    <p>Identifique quais tópicos precisam de mais atenção e otimize seu tempo de estudo.</p>
+                    <div class="benefit-icon"><i class="fas fa-search-location"></i></div>
+                    <h3>Ajustes de Estratégia</h3>
+                    <p>Identifique prontamente as áreas que apresentam dificuldades (obstáculos) e ajuste suas estratégias de estudo e métodos conforme necessário, otimizando seu tempo.</p>
                 </div>
+
                 <div class="benefit-card">
-                    <div class="benefit-icon">
-                        <i class="fas fa-lightbulb"></i>
-                    </div>
-                    <h3>Forças e fraquezas</h3>
-                    <p>Descubra seus pontos fortes e áreas que precisam de desenvolvimento para um estudo mais eficaz.</p>
+                    <div class="benefit-icon"><i class="fas fa-smile-beam"></i></div>
+                    <h3>Motivação e Bem-estar</h3>
+                    <p>Perceber que você está progredindo leva a sentimentos de felicidade e satisfação. A celebração de pequenas conquistas mantém a motivação em alta para o longo prazo.</p>
                 </div>
+
                 <div class="benefit-card">
-                    <div class="benefit-icon">
-                        <i class="fas fa-trophy"></i>
-                    </div>
-                    <h3>Motivação constante</h3>
-                    <p>Comemore cada marco alcançado e mantenha-se engajado em sua jornada de aprendizado.</p>
+                    <div class="benefit-icon"><i class="fas fa-bullseye"></i></div>
+                    <h3>Alcance de Metas</h3>
+                    <p>Estabeleça indicadores de sucesso mensuráveis e metas alcançáveis. Isso fornece um senso claro de direção e propósito, garantindo que você esteja avançando rumo aos objetivos.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i class="fas fa-user-shield"></i></div>
+                    <h3>Responsabilidade e Autogestão</h3>
+                    <p>O ato de registrar promove a responsabilidade pessoal pela sua formação. Você se torna mais consciente do seu papel no processo e aprende a gerenciar seu tempo de forma mais eficaz.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i class="fas fa-sync-alt"></i></div>
+                    <h3>Feedback Construtivo</h3>
+                    <p>O registro serve como uma forma de autoavaliação, fornecendo feedback construtivo sobre a eficácia dos seus métodos de estudo e permitindo correções de rota em tempo real.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Plataformas -->
-    <section class="platforms" id="plataformas">
-        <div class="container">
-            <div class="platforms-content">
-                <div class="platforms-text">
-                    <h2>Estude em qualquer lugar, a qualquer hora</h2>
-                    <p>Nosso sistema foi desenvolvido para funcionar perfeitamente em todos os seus dispositivos. Acesse suas métricas de estudo no celular, tablet ou computador.</p>
-                    <p>Sincronização automática garante que seus dados estejam sempre atualizados, independentemente do dispositivo que você estiver usando.</p>
-                    <a href="#" class="btn btn-primary">Experimente Agora</a>
-                </div>
-                <div class="platforms-devices">
-                    <div class="device">
-                        <div class="device-icon">
-                            <i class="fas fa-mobile-alt"></i>
-                        </div>
-                        <h4>Celular</h4>
-                    </div>
-                    <div class="device">
-                        <div class="device-icon">
-                            <i class="fas fa-tablet-alt"></i>
-                        </div>
-                        <h4>Tablet</h4>
-                    </div>
-                    <div class="device">
-                        <div class="device-icon">
-                            <i class="fas fa-laptop"></i>
-                        </div>
-                        <h4>Computador</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA Final -->
     <section class="cta-section">
         <div class="container">
-            <h2>Pronto para transformar seus estudos?</h2>
-            <p>Junte-se a milhares de estudantes que já estão otimizando seu aprendizado com o StudyTracker</p>
-            <a href="#" class="btn btn-primary" style="background-color: white; color: var(--primary);">Criar Minha Conta</a>
+            <h2>Seja o agente do seu próprio sucesso.</h2>
+            <p>Em suma, registrar o progresso transforma o estudo de uma atividade passiva em um processo ativo e estratégico.</p>
+            <a href="login.html" class="btn btn-primary" style="background-color: white; color: var(--secondary); border-color: white;">Acessar Plataforma</a>
         </div>
     </section>
 
-    <!-- Footer -->
     <footer>
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-column">
-                    <h3>StudyTracker</h3>
-                    <p>A plataforma definitiva para acompanhar e otimizar seus estudos.</p>
-                </div>
-                <div class="footer-column">
-                    <h3>Links Rápidos</h3>
-                    <ul class="footer-links">
-                        <li><a href="#">Início</a></li>
-                        <li><a href="#beneficios">Benefícios</a></li>
-                        <li><a href="#plataformas">Plataformas</a></li>
-                        <li><a href="#">Preços</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h3>Suporte</h3>
-                    <ul class="footer-links">
-                        <li><a href="#">Central de Ajuda</a></li>
-                        <li><a href="#">Contato</a></li>
-                        <li><a href="#">Política de Privacidade</a></li>
-                        <li><a href="#">Termos de Uso</a></li>
-                    </ul>
-                </div>
-            </div>
             <div class="copyright">
-                &copy; 2023 StudyTracker. Todos os direitos reservados.
+                &copy; 2025 Med Fácil. Todos os direitos reservados.
             </div>
         </div>
     </footer>
 
     <script>
-        // Adicionar funcionalidade para rolagem suave
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                
-                const targetId = this.getAttribute('href');
-                if(targetId === '#') return;
-                
-                const targetElement = document.querySelector(targetId);
-                if(targetElement) {
-                    window.scrollTo({
-                        top: targetElement.offsetTop - 80,
-                        behavior: 'smooth'
-                    });
-                }
-            });
-        });
-        
-        // Adicionar classe de destaque ao header quando rolar a página
+        // Efeito de sombra no header ao rolar
         window.addEventListener('scroll', function() {
             const header = document.querySelector('header');
-            if (window.scrollY > 100) {
-                header.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.1)';
+            if (window.scrollY > 50) {
+                header.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.1)';
             } else {
-                header.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+                header.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.05)';
             }
         });
     </script>

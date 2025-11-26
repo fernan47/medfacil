@@ -2,8 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Desempenho Detalhado</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Desempenho Detalhado</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   
@@ -18,16 +17,19 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; min-height: 100vh; overflow-x: hidden; }
     
-    /* Sidebar Fixa */
-    #sidebar { width: 250px; background: linear-gradient(135deg, #2c3e50, #4a6fa5); color: white; padding: 30px 20px; position: fixed; height: 100%; z-index: 1000; top: 0; left: 0; }
+    /* Sidebar (Desktop) */
+    #sidebar { width: 250px; background: linear-gradient(135deg, #2c3e50, #4a6fa5); color: white; padding: 30px 20px; position: fixed; height: 100%; z-index: 1000; top: 0; left: 0; transition: transform 0.3s ease; }
     #sidebar .logo { text-align: center; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; }
     #sidebar .logo h2 { color: white; font-weight: 500; }
     #sidebar .logo i { font-size: 2rem; margin-bottom: 10px; color: var(--accent-color); }
-    .sidebar-menu { list-style: none; }
+    .sidebar-menu { list-style: none; padding: 0; }
     .sidebar-button { display: flex; align-items: center; padding: 12px 15px; border-radius: 12px; color: white; text-decoration: none; margin-bottom: 10px; transition: 0.3s; }
     .sidebar-button:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
     .sidebar-button.active { background-color: var(--accent-color); color: #343a40; font-weight: 500; }
     .sidebar-button i { margin-right: 10px; width: 20px; text-align: center; }
+
+    /* Botão Menu Mobile (Novo) */
+    .mobile-menu-btn { display: none; position: fixed; top: 15px; left: 15px; z-index: 1100; background: var(--primary-color); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
     /* Layout Principal */
     #main-content { 
@@ -37,79 +39,42 @@
       width: calc(100% - 250px); 
       max-width: 1400px; 
       margin-right: auto;
+      transition: margin-left 0.3s ease, width 0.3s ease;
     }
     
-    /* Cabeçalho e Filtros */
     .dashboard-header { margin-bottom: 30px; }
     .page-title { color: var(--secondary-color); font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* Abas de Filtro */
-    .tabs-container { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; }
-    .filter-tab {
-      padding: 8px 16px;
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 20px;
-      cursor: pointer;
-      font-weight: 500;
-      color: #666;
-      transition: all 0.3s ease;
-      font-size: 0.9rem;
-    }
-    .filter-tab:hover { transform: translateY(-2px); }
-    .filter-tab.active {
-      background-color: var(--primary-color);
-      color: white;
-      border-color: var(--primary-color);
-      box-shadow: 0 4px 10px rgba(74, 111, 165, 0.3);
-    }
+    /* Abas */
+    .tabs-container { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 25px; padding-bottom: 5px; -webkit-overflow-scrolling: touch; } /* Scroll horizontal no mobile */
+    .filter-tab { padding: 8px 16px; background: white; border: 1px solid #ddd; border-radius: 20px; cursor: pointer; font-weight: 500; color: #666; white-space: nowrap; flex-shrink: 0; }
+    .filter-tab.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
 
-    /* Barra de Pesquisa e Ordenação */
+    /* Controles */
     .controls-row { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
     .search-wrapper { flex: 2; position: relative; min-width: 200px; }
-    .search-input {
-      width: 100%;
-      padding: 10px 40px 10px 20px;
-      border-radius: 25px;
-      border: 1px solid #ddd;
-      outline: none;
-      font-size: 0.95rem;
-    }
+    .search-input { width: 100%; padding: 10px 40px 10px 20px; border-radius: 25px; border: 1px solid #ddd; outline: none; }
     .search-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #888; }
     
-    .options-wrapper { display: flex; gap: 15px; align-items: center; flex: 1; justify-content: flex-end; }
-    .sort-select {
-      padding: 10px 15px;
-      border-radius: 25px;
-      border: 1px solid #ddd;
-      background: white;
-      cursor: pointer;
-      color: var(--primary-color);
-      font-weight: 600;
-      outline: none;
-    }
+    .options-wrapper { display: flex; gap: 15px; align-items: center; flex: 1; justify-content: flex-end; flex-wrap: wrap; }
+    .sort-select { padding: 10px 15px; border-radius: 25px; border: 1px solid #ddd; background: white; outline: none; }
 
-    /* Toggle Switch */
-    .toggle-container { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; color: #555; user-select: none; }
-    .toggle-switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+    /* Toggle */
+    .toggle-container { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; color: #555; }
+    .toggle-switch { position: relative; display: inline-block; width: 40px; height: 20px; flex-shrink: 0; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
     .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
     input:checked + .slider { background-color: var(--primary-color); }
     input:checked + .slider:before { transform: translateX(20px); }
 
-    /* --- LISTA DE TÓPICOS --- */
-    .topics-container { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 40px; }
+    /* LISTA DE TÓPICOS */
+    .topics-container { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 40px; }
+    
+    /* Header da lista (escondido no mobile para economizar espaço) */
     .topics-header { display: flex; justify-content: space-between; color: #888; font-weight: 500; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
     
-    .topic-row {
-      display: flex;
-      align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid #f9f9f9;
-      transition: background 0.2s;
-    }
-    .topic-row:hover { background-color: #fcfcfc; }
+    .topic-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f9f9f9; }
     
     .topic-name { flex: 3; font-weight: 500; color: #444; padding-right: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     
@@ -120,37 +85,67 @@
     .topic-time { width: 80px; text-align: right; color: #666; font-size: 0.9rem; font-weight: 500; }
     .topic-percentage { width: 50px; text-align: right; font-weight: 700; color: #333; }
 
-    /* Cores */
     .bar-blue { background-color: #00acc1; }
     .bar-gray { background-color: #cfd8dc; }
 
-    /* Gráfico */
-    .chart-section { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: center; }
+    .chart-section { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: center; }
     .chart-wrapper { position: relative; height: 400px; width: 100%; max-width: 600px; margin: 0 auto; }
 
+    /* --- MÍDIA QUERIES (OTIMIZAÇÃO MOBILE) --- */
     @media (max-width: 900px) {
-      #main-content { margin-left: 70px; width: calc(100% - 70px); padding: 20px; }
-      #sidebar { width: 70px; padding: 20px 10px; }
-      #sidebar .logo h2, .sidebar-button span { display: none; }
-      #sidebar .logo i, .sidebar-button i { margin: 0; font-size: 1.5rem; }
-      .sidebar-button { justify-content: center; }
-    }
+      #sidebar { transform: translateX(-100%); } /* Esconde sidebar */
+      #sidebar.open { transform: translateX(0); } /* Mostra quando ativo */
+      #main-content { margin-left: 0; width: 100%; padding: 20px; padding-top: 60px; }
+      .mobile-menu-btn { display: block; } /* Mostra botão */
+      
+      /* Ajuste da lista para mobile */
+      .topics-header { display: none; } /* Esconde cabeçalho da lista */
+      
+      .topic-row { 
+        flex-direction: column; 
+        align-items: flex-start; 
+        gap: 8px; 
+        padding: 15px 0;
+      }
+      
+      .topic-name { 
+        width: 100%; 
+        white-space: normal; /* Permite quebra de linha no nome */
+        font-size: 1rem;
+        margin-bottom: 5px;
+      }
+      
+      .topic-data-area { 
+        width: 100%; 
+        gap: 10px; 
+        justify-content: space-between; 
+      }
+      
+      .progress-track { flex: 1; } /* Barra ocupa o espaço disponível */
+      
+      .topic-time { 
+        width: auto; 
+        font-size: 0.8rem; 
+        order: -1; /* Coloca o tempo antes da barra no mobile (opcional) ou depois */
+      }
+      
+      .topic-percentage { 
+        font-size: 0.9rem; 
+      }
 
-    @media (max-width: 768px) {
-      #main-content { margin-left: 0; width: 100%; padding-top: 90px; }
-      #sidebar { width: 100%; height: auto; padding: 10px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; }
-      .sidebar-menu { display: none; }
-      
-      .topic-row { flex-wrap: wrap; gap: 5px; }
-      .topic-name { flex: 100%; margin-bottom: 5px; }
-      .topic-data-area { width: 100%; }
-      
       .controls-row { flex-direction: column; align-items: stretch; }
+      .search-wrapper { width: 100%; }
       .options-wrapper { justify-content: space-between; }
+      
+      .chart-wrapper { height: 300px; } /* Gráfico menor no mobile */
     }
   </style>
 </head>
 <body>
+
+<button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
+  <i class="fas fa-bars"></i>
+</button>
 
 <div id="sidebar">
   <div class="logo">
@@ -173,7 +168,7 @@
     <div class="tabs-container">
       <div class="filter-tab active" data-filter="all">Geral</div>
       <div class="filter-tab" data-filter="Cirurgia Geral">Cirurgia</div>
-      <div class="filter-tab" data-filter="Clínica Médica">Clínica Médica</div>
+      <div class="filter-tab" data-filter="Clínica Médica">Clínica</div>
       <div class="filter-tab" data-filter="Pediatria">Pediatria</div>
       <div class="filter-tab" data-filter="Ginecologia e Obstetrícia">G.O.</div>
       <div class="filter-tab" data-filter="Medicina Preventiva">Preventiva</div>
@@ -191,14 +186,14 @@
             <input type="checkbox" id="toggleEmpty">
             <span class="slider"></span>
           </div>
-          Mostrar não estudados
+          <span style="font-size: 0.85rem;">Mostrar não estudados</span>
         </label>
 
         <select class="sort-select" id="sortSelect">
           <option value="az">A-Z</option>
           <option value="performance_desc">Melhor %</option>
           <option value="performance_asc">Pior %</option>
-          <option value="questions">Mais Questões</option>
+          <option value="questions">Mais Q.</option>
         </select>
       </div>
     </div>
@@ -230,7 +225,6 @@
 </div>
 
 <script>
-  // === CONFIGURAÇÃO FIREBASE ===
   const firebaseConfig = {
     apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
     authDomain: "meu-study-tracker.firebaseapp.com",
@@ -248,33 +242,20 @@
     auth = firebase.auth(); 
   } catch (error) { console.error(error); }
 
-  // --- DADOS BASE COM PREVENTIVA CORRIGIDA ---
   const dadosTemasBase = {
     "Cirurgia Geral": ["Anestesia", "Apendicite aguda", "Atendimento inicial ao politraumatizado", "Avaliação da função hepática", "Choque", "Cicatrização", "Cirrose hepática", "Cirurgia vascular", "Cistite aguda", "Complicações pós-operatórias", "Cuidados pré-operatórios", "Câncer de cólon e reto", "Câncer de esôfago", "Câncer de próstata", "Diarreias", "Doença diverticular", "DRGE", "Doença ulcerosa péptica", "Doenças inflamatórias intestinais", "Hemorragia digestiva alta", "Hérnias", "Litíase biliar", "Litíase urinária", "Pancreatite aguda", "Queimaduras", "Trauma abdominal", "Trauma torácico"],
-    "Clínica Médica": ["Anemias", "Angina estável", "Asma", "COVID-19", "Cefaleias", "Demência", "Dengue", "Diabetes", "DPOC", "Doença renal crônica", "HAS", "HIV", "IAM", "ICC", "Infecção Urinaria", "Pneumonia", "Sepse", "Tuberculose", "AVC"],
+    "Clínica Médica": ["Anemias", "Angina estável", "Asma", "COVID-19", "Cefaleias", "Demência", "Dengue", "Diabetes", "DPOC", "Doença renal crônica", "HAS", "HIV", "IAM", "ICC", "Infecção Urinaria", "Pneumonias", "Sepse", "Tuberculose", "AVC"],
     "Ginecologia e Obstetrícia": ["Abortamento", "Amenorreia", "Anticoncepção", "Pré-natal", "Câncer de colo uterino", "Câncer de mama", "Diabetes gestacional", "DHEG", "Endometriose", "Parto", "Sangramento uterino", "SOP", "Vulvovaginites"],
     "Pediatria": ["Aleitamento", "Asma", "Bronquiolite", "Cardiopatias", "Desenvolvimento", "Doenças exantemáticas", "Imunização", "Infecção Urinaria", "Pneumonias", "Puericultura", "Reanimação neonatal"],
-    
-    // LISTA COMPLETA DE PREVENTIVA ADICIONADA AQUI
-    "Medicina Preventiva": [
-      "Análise de métodos diagnósticos", "Caso-controle", "Conceitos na atenção primária", "Coorte", 
-      "Dinâmica de transmissão e distribuição temporal das doenças", "Ensaio clínico", "Gestão do SUS", 
-      "Humanização do atendimento médico", "Leis e diretrizes do SUS", 
-      "Medicina baseada em evidências, revisão sistemática e meta-análise", "Medicina do trabalho", 
-      "Medicina legal", "Morbidade", "Mortalidade", "Outros", "Outros Indicadores", 
-      "Prevenção 1ª/2ª/3ª/4ª", "Princípios do SUS", "Saúde do idoso", "Testes estatísticos", 
-      "Transição epidemiológica e demográfica", "Vigilância epidemiológica", "Ética médica"
-    ]
+    "Medicina Preventiva": ["Análise de métodos diagnósticos", "Caso-controle", "Conceitos na atenção primária", "Coorte", "Dinâmica de transmissão", "Ensaio clínico", "Gestão do SUS", "Humanização", "Leis e diretrizes do SUS", "Medicina baseada em evidências", "Medicina do trabalho", "Medicina legal", "Morbidade", "Mortalidade", "Outros", "Prevenção", "Princípios do SUS", "Saúde do idoso", "Testes estatísticos", "Transição epidemiológica", "Vigilância epidemiológica", "Ética médica"]
   };
 
-  // --- ESTADO GLOBAL ---
   let allSubjectsData = {}; 
   let currentFilter = 'all';
   let currentSort = 'az';
   let showEmpty = false;
   let chartInstance = null;
 
-  // --- FUNÇÕES AUXILIARES ---
   function timeToMinutes(timeStr) {
     if (!timeStr) return 0;
     const p = timeStr.split(':').map(Number);
@@ -290,40 +271,23 @@
     return `${m}m`;
   }
 
-  // --- PROCESSAMENTO DE DADOS ---
   function processData(sessionsByDate) {
     const subjects = {};
-    
-    // 1. Preenche com a base de dados estática
     for (const [area, temas] of Object.entries(dadosTemasBase)) {
-      subjects[area] = {
-        totalQuestions: 0,
-        totalCorrect: 0,
-        topics: {}
-      };
+      subjects[area] = { totalQuestions: 0, totalCorrect: 0, topics: {} };
       temas.forEach(tema => {
-        subjects[area].topics[tema] = {
-          totalTime: 0,
-          questions: 0,
-          correct: 0
-        };
+        subjects[area].topics[tema] = { totalTime: 0, questions: 0, correct: 0 };
       });
     }
 
-    // 2. Preenche com dados do Firebase
     if (sessionsByDate) {
       for (const date in sessionsByDate) {
         sessionsByDate[date].forEach(session => {
           const subjectName = session.subject || 'Outros';
           const topicName = (session.topic && session.topic.trim() !== "") ? session.topic : 'Geral';
 
-          if (!subjects[subjectName]) {
-            subjects[subjectName] = { totalQuestions: 0, totalCorrect: 0, topics: {} };
-          }
-
-          if (!subjects[subjectName].topics[topicName]) {
-            subjects[subjectName].topics[topicName] = { totalTime: 0, questions: 0, correct: 0 };
-          }
+          if (!subjects[subjectName]) subjects[subjectName] = { totalQuestions: 0, totalCorrect: 0, topics: {} };
+          if (!subjects[subjectName].topics[topicName]) subjects[subjectName].topics[topicName] = { totalTime: 0, questions: 0, correct: 0 };
 
           subjects[subjectName].totalQuestions += (session.exercisesDone || 0);
           subjects[subjectName].totalCorrect += (session.exercisesCorrect || 0);
@@ -335,7 +299,6 @@
         });
       }
     }
-
     allSubjectsData = subjects;
     renderInterface();
   }
@@ -363,14 +326,7 @@
         if (!showEmpty && stats.questions === 0) continue;
 
         const accuracy = stats.questions > 0 ? (stats.correct / stats.questions * 100) : 0;
-        
-        flatList.push({
-          area: areaName,
-          name: topicName,
-          accuracy: accuracy,
-          questions: stats.questions,
-          time: stats.totalTime
-        });
+        flatList.push({ area: areaName, name: topicName, accuracy: accuracy, questions: stats.questions, time: stats.totalTime });
       }
     }
 
@@ -402,13 +358,13 @@
           </div>
           
           <div class="topic-data-area">
-            <div class="progress-track">
-              <div class="progress-fill ${barClass}" style="width: ${item.questions > 0 ? item.accuracy : 0}%"></div>
-            </div>
-            
             <div class="topic-time">
               ${item.time > 0 ? '<i class="far fa-clock" style="font-size:0.8rem; margin-right:3px;"></i>' : ''}
               ${formatMinutesToHrs(item.time)}
+            </div>
+
+            <div class="progress-track">
+              <div class="progress-fill ${barClass}" style="width: ${item.questions > 0 ? item.accuracy : 0}%"></div>
             </div>
             
             <div class="topic-percentage">${item.questions > 0 ? item.accuracy.toFixed(0) + '%' : '-'}</div>
@@ -421,9 +377,7 @@
 
   function renderChart() {
     const ctx = document.getElementById('skillsChart').getContext('2d');
-    
-    const labels = [];
-    const dataPoints = [];
+    const labels = []; const dataPoints = [];
     const mainAreas = ["Clínica Médica", "Cirurgia Geral", "Pediatria", "Ginecologia e Obstetrícia", "Medicina Preventiva"];
     
     mainAreas.forEach(area => {
@@ -431,9 +385,7 @@
       if (allSubjectsData[area] && allSubjectsData[area].totalQuestions > 0) {
         const acc = (allSubjectsData[area].totalCorrect / allSubjectsData[area].totalQuestions * 100);
         dataPoints.push(acc.toFixed(1));
-      } else {
-        dataPoints.push(0);
-      }
+      } else { dataPoints.push(0); }
     });
 
     if (chartInstance) chartInstance.destroy();
@@ -455,25 +407,12 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        scales: {
-          r: {
-            angleLines: { display: true, color: '#eee' },
-            grid: { color: '#f0f0f0' },
-            suggestedMin: 0,
-            suggestedMax: 100,
-            ticks: { stepSize: 20, backdropColor: 'transparent', display: false },
-            pointLabels: {
-              font: { size: 12, weight: 'bold' },
-              color: '#555'
-            }
-          }
-        },
+        scales: { r: { angleLines: { display: true, color: '#eee' }, grid: { color: '#f0f0f0' }, suggestedMin: 0, suggestedMax: 100, ticks: { stepSize: 20, backdropColor: 'transparent', display: false } } },
         plugins: { legend: { display: false } }
       }
     });
   }
 
-  // --- EVENT LISTENERS ---
   window.addEventListener('load', () => {
     const tabs = document.querySelectorAll('.filter-tab');
     tabs.forEach(tab => {
@@ -486,12 +425,10 @@
     });
 
     document.getElementById('searchInput').addEventListener('input', renderTopicList);
-    
     document.getElementById('toggleEmpty').addEventListener('change', (e) => {
       showEmpty = e.target.checked;
       renderTopicList();
     });
-
     document.getElementById('sortSelect').addEventListener('change', (e) => {
       currentSort = e.target.value;
       renderTopicList();
@@ -510,10 +447,17 @@
           const data = snapshot.exists() ? snapshot.val() : null;
           processData(data);
         } catch (error) { console.error(error); }
-      } else {
-        window.location.href = 'login.html';
-      }
+      } else { window.location.href = 'login.html'; }
     });
+  });
+
+  // Fecha sidebar ao clicar fora (Mobile)
+  document.addEventListener('click', (e) => {
+    const sidebar = document.getElementById('sidebar');
+    const btn = document.querySelector('.mobile-menu-btn');
+    if(window.innerWidth <= 900 && !sidebar.contains(e.target) && !btn.contains(e.target)) {
+      sidebar.classList.remove('open');
+    }
   });
 </script>
 </body>

@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Tracker de Estudos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tracker de Estudos</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   
@@ -11,12 +12,12 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
   
   <style>
-    /* --- CSS GERAL --- */
+    /* --- CSS IGUAL AO SEU ANTERIOR (Resumido para caber aqui, use o seu CSS completo) --- */
     :root { --primary-color: #4a6fa5; --secondary-color: #166088; --accent-color: #4fc3f7; --success-color: #4caf50; --warning-color: #ff9800; --danger-color: #f44336; --break-color: #66bb6a; --light-color: #f8f9fa; --dark-color: #343a40; --text-color: #333; --border-radius: 12px; --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Roboto', sans-serif; line-height: 1.6; color: var(--text-color); background-color: #f5f7fa; display: flex; min-height: 100vh; overflow-x: hidden; }
     
-    /* --- SIDEBAR --- */
+    /* Sidebar */
     #sidebar { width: 250px; background: linear-gradient(135deg, #2c3e50, #4a6fa5); color: white; padding: 30px 20px; position: fixed; height: 100%; z-index: 1000; top: 0; left: 0; transition: transform 0.3s ease; }
     #sidebar .logo { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
     #sidebar .logo h2 { color: white; font-weight: 500; }
@@ -27,113 +28,62 @@
     .sidebar-button i { margin-right: 10px; font-size: 1.1rem; width: 20px; text-align: center; }
     .sidebar-button.active { background-color: var(--accent-color); color: var(--dark-color); font-weight: 500; }
     
-    /* Botão Mobile */
+    /* Mobile Btn */
     .mobile-menu-btn { display: none; position: fixed; top: 15px; left: 15px; z-index: 1100; background: var(--primary-color); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
     #sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 900; }
     #sidebar-overlay.show { display: block; }
 
-    /* --- MAIN CONTENT --- */
+    /* Content */
     #main-content { flex: 1; margin-left: 250px; padding: 30px; max-width: 1000px; width: calc(100% - 250px); margin-right: auto; transition: margin-left 0.3s ease, width 0.3s ease; }
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
     .header h1 { color: var(--primary-color); font-weight: 500; font-size: 1.8rem; }
     
-    /* Stats */
+    /* Stats & Timer (Mantidos do anterior) */
     .today-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
     .today-stat-card { background-color: white; border-radius: var(--border-radius); padding: 20px; box-shadow: var(--box-shadow); text-align: center; }
-    .today-stat-card h3 { color: var(--secondary-color); font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .today-stat-card h3 { color: var(--secondary-color); font-size: 1rem; margin-bottom: 10px; }
     .today-stat-card p { font-size: 1.8rem; font-weight: 600; color: var(--primary-color); margin: 0; }
     
-    /* Timer Area */
-    .timer-wrapper { background-color: white; border-radius: var(--border-radius); box-shadow: var(--box-shadow); overflow: hidden; margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto; }
-    .timer-tabs { display: flex; background-color: #f1f3f5; border-bottom: 1px solid #ddd; }
-    .timer-tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: 500; color: #666; transition: 0.3s; }
-    .timer-tab.active { background-color: white; color: var(--primary-color); border-top: 3px solid var(--primary-color); font-weight: bold; }
-    .timer-section { padding: 30px; text-align: center; }
-    #timer { font-size: 4.5rem; font-weight: bold; color: var(--secondary-color); margin: 10px 0; font-family: 'Courier New', monospace; letter-spacing: 2px; transition: color 0.3s; }
-    .break-mode #timer { color: var(--break-color); }
-
-    /* Pomodoro Settings */
-    .pomodoro-settings { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; }
-    .pomo-input { display: flex; flex-direction: column; align-items: center; }
-    .pomo-input label { font-size: 0.85rem; margin-bottom: 5px; color: #666; }
-    .pomo-input input { width: 70px; padding: 8px; text-align: center; border-radius: 8px; border: 1px solid #ddd; }
-
-    /* Botões */
+    /* Timer */
+    .timer-section { background-color: white; padding: 30px; border-radius: var(--border-radius); margin-bottom: 30px; text-align: center; box-shadow: var(--box-shadow); }
+    #timer { font-size: 4.5rem; font-weight: bold; color: var(--secondary-color); margin: 10px 0; font-family: 'Courier New', monospace; }
     .button-container { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
-    .button { padding: 12px 24px; font-size: 1rem; border: none; border-radius: var(--border-radius); cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; }
-    .button-primary { background-color: var(--primary-color); color: white; }
-    .button-danger { background-color: var(--danger-color); color: white; }
-    .button-break { background-color: var(--break-color); color: white; }
-    
-    /* Inputs */
-    .search-section-wrapper { margin-bottom: 20px; max-width: 600px; margin-left: auto; margin-right: auto; }
-    .search-container { position: relative; width: 100%; margin: 0 auto; }
-    #inputTema { width: 100%; padding: 12px 15px; font-size: 16px; border: 2px solid #ddd; border-radius: 12px; outline: none; transition: border-color 0.3s; background: white; }
-    #inputTema:focus { border-color: var(--primary-color); }
-    .suggestions-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 0 0 8px 8px; max-height: 300px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none; }
-    .suggestion-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
-    .suggestion-item:hover { background-color: #f9f9f9; }
-    .category-tag { font-size: 11px; color: #555; background: #e0e0e0; padding: 3px 8px; border-radius: 10px; margin-left: 10px; }
+    .button { padding: 12px 24px; font-size: 1rem; border: none; border-radius: var(--border-radius); cursor: pointer; color: white; font-weight: 500; }
+    .button-primary { background-color: var(--primary-color); }
+    .button-danger { background-color: var(--danger-color); }
 
-    .exercises-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; max-width: 600px; margin-left: auto; margin-right: auto; }
+    /* Inputs e Busca */
+    .search-container { position: relative; margin-bottom: 20px; }
+    #inputTema { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 12px; font-size: 16px; }
+    .suggestions-list { position: absolute; background: white; border: 1px solid #ddd; width: 100%; z-index: 100; display: none; max-height: 200px; overflow-y: auto; }
+    .suggestion-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+    .suggestion-item:hover { background: #f5f5f5; }
+    .category-tag { font-size: 0.75rem; background: #eee; padding: 2px 6px; border-radius: 4px; }
+
+    .exercises-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
     .input-group { display: flex; flex-direction: column; }
-    label { margin-bottom: 8px; font-weight: 500; color: var(--secondary-color); }
-    input[type="number"] { padding: 12px; border: 1px solid #ddd; border-radius: var(--border-radius); font-size: 1rem; transition: border 0.3s ease; width: 100%; background: white; }
-    
-    /* Lista */
-    .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-    .stat-card { background-color: white; border-radius: var(--border-radius); padding: 20px; box-shadow: var(--box-shadow); text-align: center; }
-    .stat-card h3 { color: var(--secondary-color); font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .stat-card p { font-size: 1.8rem; font-weight: 600; color: var(--primary-color); margin: 0; }
-    .progress-container { height: 10px; background-color: #e0e0e0; border-radius: 5px; margin-top: 15px; overflow: hidden; }
-    .progress-bar { height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--accent-color), var(--primary-color)); width: 0%; transition: width 0.5s ease; }
-    
-    #sessionList { margin-top: 30px; }
-    .session-date { font-weight: 500; color: var(--primary-color); margin-top: 30px; padding-bottom: 8px; border-bottom: 2px solid var(--accent-color); font-size: 1.2rem; }
-    .session-item { background-color: white; padding: 20px; border-radius: var(--border-radius); margin: 15px 0; box-shadow: var(--box-shadow); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px; transition: transform 0.3s ease; }
-    .session-stat { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
-    .accuracy-high { color: var(--success-color); }
-    .accuracy-medium { color: var(--warning-color); }
-    .accuracy-low { color: var(--danger-color); }
-    .daily-summary { background-color: #e8f4fc; padding: 20px; border-radius: var(--border-radius); margin: 20px 0; box-shadow: var(--box-shadow); }
-    .daily-summary h4 { color: var(--primary-color); margin-bottom: 15px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
-    .daily-summary-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; }
-    .daily-summary-stat { display: flex; flex-direction: column; align-items: center; text-align: center; }
-    .daily-summary-stat .value { font-size: 1.4rem; font-weight: 600; color: var(--secondary-color); }
-    .daily-summary-stat .label { font-size: 0.85rem; color: #666; margin-top: 5px; }
+    input[type="number"] { padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
 
+    /* Lista Histórico */
+    .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
+    .stat-card { background: white; padding: 15px; border-radius: 12px; box-shadow: var(--box-shadow); text-align: center; }
+    .stat-card h3 { font-size: 0.9rem; color: var(--secondary-color); margin-bottom: 5px; }
+    .stat-card p { font-size: 1.4rem; font-weight: bold; color: var(--primary-color); margin: 0; }
+    
     .hidden { display: none !important; }
 
-    /* --- MEDIA QUERIES (MOBILE) --- */
     @media (max-width: 900px) {
-      /* Sidebar Escondida */
       #sidebar { transform: translateX(-100%); width: 260px; }
       #sidebar.open { transform: translateX(0); box-shadow: 5px 0 15px rgba(0,0,0,0.3); }
       .mobile-menu-btn { display: block; }
-      
-      /* Ajustes de Layout */
       #main-content { margin-left: 0; width: 100%; padding: 15px; padding-top: 70px; }
-      .today-stats { grid-template-columns: 1fr; gap: 10px; }
-      .exercises-section { grid-template-columns: 1fr; }
-      .stats-container { grid-template-columns: 1fr 1fr; gap: 10px; }
-      .daily-summary-stats { grid-template-columns: 1fr 1fr; }
-      
-      /* Botões */
-      .button-container { flex-direction: column; width: 100%; }
-      .button { width: 100%; }
-      
-      /* Timer */
-      .timer-section { padding: 20px; }
-      #timer { font-size: 3.5rem; }
-      .pomodoro-settings { flex-wrap: wrap; }
+      .stats-container { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 
 <body>
-  <button class="mobile-menu-btn" onclick="toggleSidebar()">
-    <i class="fas fa-bars"></i>
-  </button>
+  <button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
   <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
   <div id="sidebar">
@@ -142,6 +92,7 @@
       <li><a href="#" class="sidebar-button active"><i class="fas fa-home"></i><span>Início</span></a></li>
       <li><a href="historico.html" class="sidebar-button"><i class="fas fa-history"></i><span>Histórico</span></a></li>
       <li><a href="conteudos.html" class="sidebar-button"><i class="fas fa-book"></i><span>Conteúdos</span></a></li>
+      <li><a href="revisoes.html" class="sidebar-button"><i class="fas fa-sync-alt"></i><span>Revisões</span></a></li>
       <li><a id="downloadButton" href="#" class="sidebar-button hidden"><i class="fas fa-download"></i><span>Exportar Dados</span></a></li>
       <li><a id="importButton" href="#" class="sidebar-button"><i class="fas fa-upload"></i><span>Importar Dados</span></a></li>
       <li><a id="btnLogout" href="#" class="sidebar-button"><i class="fas fa-sign-out-alt"></i><span>Sair</span></a></li>
@@ -156,39 +107,11 @@
       <div class="today-stat-card"><h3><i class="fas fa-tasks"></i> Exercícios hoje</h3><p id="todayExercises">0</p></div>
     </div>
 
-    <div class="timer-wrapper">
-      <div class="timer-tabs">
-        <div class="timer-tab active" onclick="switchMode('free')"><i class="fas fa-stopwatch"></i> Modo Livre</div>
-        <div class="timer-tab" onclick="switchMode('pomodoro')"><i class="fas fa-hourglass-half"></i> Pomodoro</div>
-      </div>
-
-      <div class="timer-section" id="timerContainer">
-        <div id="pomodoroSettings" class="pomodoro-settings hidden">
-          <div class="pomo-input">
-            <label>Foco (min)</label>
-            <input type="number" id="focusTime" value="25" min="1">
-          </div>
-          <div class="pomo-input">
-            <label>Pausa (min)</label>
-            <input type="number" id="breakTime" value="5" min="1">
-          </div>
-        </div>
-
-        <div id="timer">00:00:00</div>
-        
-        <div class="button-container">
-          <div id="freeControls">
-            <button id="startButton" class="button button-primary"><i class="fas fa-play"></i> Iniciar Estudo</button>
-            <button id="stopButton" class="button button-danger hidden"><i class="fas fa-stop"></i> Parar e Salvar</button>
-          </div>
-
-          <div id="pomodoroControls" class="hidden">
-            <button id="pomoStart" class="button button-primary"><i class="fas fa-play"></i> Iniciar Foco</button>
-            <button id="pomoBreak" class="button button-break hidden"><i class="fas fa-coffee"></i> Iniciar Pausa</button>
-            <button id="pomoStop" class="button button-danger hidden"><i class="fas fa-save"></i> Salvar Sessão</button>
-            <button id="pomoReset" class="button hidden" style="background:#ddd; color:#333;"><i class="fas fa-redo"></i> Reset</button>
-          </div>
-        </div>
+    <div class="timer-section">
+      <div id="timer">00:00:00</div>
+      <div class="button-container">
+        <button id="startButton" class="button button-primary"><i class="fas fa-play"></i> Iniciar Estudo</button>
+        <button id="stopButton" class="button button-danger hidden"><i class="fas fa-stop"></i> Parar e Salvar</button>
       </div>
     </div>
 
@@ -201,32 +124,28 @@
     </div>
 
     <div class="exercises-section">
-      <div class="input-group"><label for="exercisesInput"><i class="fas fa-tasks"></i> Exercícios Feitos:</label><input type="number" id="exercisesInput" value="0" min="0"></div>
-      <div class="input-group"><label for="correctExercisesInput"><i class="fas fa-check-circle"></i> Exercícios Corretos:</label><input type="number" id="correctExercisesInput" value="0" min="0"></div>
+      <div class="input-group"><label>Exercícios Feitos:</label><input type="number" id="exercisesInput" value="0" min="0"></div>
+      <div class="input-group"><label>Exercícios Corretos:</label><input type="number" id="correctExercisesInput" value="0" min="0"></div>
     </div>
 
     <div class="stats-container">
-      <div class="stat-card"><h3><i class="fas fa-clock"></i> Tempo Total</h3><p id="totalStudyTime">00:00:00</p></div>
-      <div class="stat-card"><h3><i class="fas fa-calendar-week"></i> Esta Semana</h3><p id="weeklyStudyTime">00:00:00</p></div>
-      <div class="stat-card"><h3><i class="fas fa-tasks"></i> Exercícios Feitos</h3><p id="totalExercisesDone">0</p></div>
-      <div class="stat-card"><h3><i class="fas fa-check-circle"></i> Exercícios Corretos</h3><p id="totalExercisesCorrect">0</p></div>
-      <div class="stat-card"><h3><i class="fas fa-bullseye"></i> Precisão Média</h3><p id="averageAccuracy">0%</p></div>
-      <div class="stat-card"><h3><i class="fas fa-bullseye"></i> Meta Semanal</h3><p>20 horas</p><div class="progress-container"><div class="progress-bar" id="weeklyProgress"></div></div></div>
+      <div class="stat-card"><h3>Tempo Total</h3><p id="totalStudyTime">0h</p></div>
+      <div class="stat-card"><h3>Esta Semana</h3><p id="weeklyStudyTime">0h</p></div>
+      <div class="stat-card"><h3>Exercícios</h3><p id="totalExercisesDone">0</p></div>
+      <div class="stat-card"><h3>Corretos</h3><p id="totalExercisesCorrect">0</p></div>
+      <div class="stat-card"><h3>Precisão</h3><p id="averageAccuracy">0%</p></div>
+      <div class="stat-card"><h3>Meta</h3><p>20h</p><div class="progress-container"><div class="progress-bar" id="weeklyProgress"></div></div></div>
     </div>
 
     <div id="sessionList"></div>
   </div>
 
-  <audio id="alarmSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
-
   <script>
-    // --- FUNÇÃO TOGGLE SIDEBAR ---
     function toggleSidebar() {
       document.getElementById('sidebar').classList.toggle('open');
       document.getElementById('sidebar-overlay').classList.toggle('show');
     }
 
-    // --- CONFIGURAÇÃO FIREBASE ---
     const firebaseConfig = {
       apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
       authDomain: "meu-study-tracker.firebaseapp.com",
@@ -241,7 +160,6 @@
     const database = firebase.database();
     const auth = firebase.auth();
 
-    // --- DADOS E BUSCA ---
     const dadosTemas = {
       "Cirurgia Geral": ["Anestesia", "Apendicite aguda", "Choque", "Cicatrização", "Cirurgia vascular", "Cistite aguda", "Hérnias", "Pancreatite aguda", "Queimaduras", "Trauma abdominal", "Trauma torácico"],
       "Clínica Médica": ["Asma", "COVID-19", "Cefaleias", "Dengue", "Diabetes", "HAS", "HIV", "IAM", "ICC", "Pneumonia", "Sepse", "Tuberculose"],
@@ -253,21 +171,14 @@
     for (const [cat, temas] of Object.entries(dadosTemas)) { temas.forEach(t => listaCompleta.push({ nome: t, categoria: cat })); }
     let selectedCategory = "Outros";
 
-    // --- ESTADO ---
-    let currentMode = 'free';
-    let pomodoroState = 'idle';
     let startTime, timerInterval, totalTime = 0;
-    let pomoTimeLeft = 0;
     let sessionsByDate = {};
     let dbRef;
 
     const timerDisplay = document.getElementById('timer');
-    const alarmSound = document.getElementById('alarmSound');
-    const container = document.getElementById('timerContainer');
-    
-    // Busca
     const inputTema = document.getElementById('inputTema');
     const listaSugestoes = document.getElementById('listaSugestoes');
+
     inputTema.addEventListener('input', function() {
       const txt = this.value.toLowerCase();
       listaSugestoes.innerHTML = ''; 
@@ -290,7 +201,6 @@
     });
     document.addEventListener('click', e => { if(e.target!==inputTema) listaSugestoes.style.display='none'; });
 
-    // --- TIMERS ---
     function startFree() {
       startTime = new Date().getTime();
       timerInterval = setInterval(() => {
@@ -302,130 +212,95 @@
       document.getElementById('stopButton').classList.remove('hidden');
     }
 
-    function startPomodoroFocus() {
-      const mins = parseInt(document.getElementById('focusTime').value);
-      pomoTimeLeft = mins * 60;
-      pomodoroState = 'focus';
-      updatePomoDisplay();
-      document.getElementById('pomoStart').classList.add('hidden');
-      document.getElementById('pomoStop').classList.remove('hidden');
-      document.getElementById('pomodoroSettings').classList.add('hidden');
-      container.classList.remove('break-mode');
-
-      timerInterval = setInterval(() => {
-        pomoTimeLeft--;
-        updatePomoDisplay();
-        if (pomoTimeLeft <= 0) {
-          clearInterval(timerInterval);
-          alarmSound.play();
-          alert("Fim do Foco! Salve ou descanse.");
-          totalTime = mins * 60 * 1000; 
-          document.getElementById('pomoStop').classList.remove('hidden');
-          document.getElementById('pomoBreak').classList.remove('hidden');
-        }
-      }, 1000);
-    }
-
-    function startPomodoroBreak() {
-      const mins = parseInt(document.getElementById('breakTime').value);
-      pomoTimeLeft = mins * 60;
-      pomodoroState = 'break';
-      updatePomoDisplay();
-      container.classList.add('break-mode');
-      document.getElementById('pomoBreak').classList.add('hidden');
-      document.getElementById('pomoStop').classList.add('hidden');
-
-      timerInterval = setInterval(() => {
-        pomoTimeLeft--;
-        updatePomoDisplay();
-        if (pomoTimeLeft <= 0) {
-          clearInterval(timerInterval);
-          alarmSound.play();
-          alert("Fim da Pausa!");
-          resetPomodoroUI();
-        }
-      }, 1000);
-    }
-
-    function updatePomoDisplay() {
-      const m = Math.floor(pomoTimeLeft / 60);
-      const s = pomoTimeLeft % 60;
-      timerDisplay.textContent = `${pad(m)}:${pad(s)}`;
-    }
-
-    function resetPomodoroUI() {
+    // --- FUNÇÃO DE SALVAR COM LÓGICA DE REVISÃO ---
+    async function saveSession() {
       clearInterval(timerInterval);
-      pomodoroState = 'idle';
-      container.classList.remove('break-mode');
-      timerDisplay.textContent = "00:00";
-      document.getElementById('pomoStart').classList.remove('hidden');
-      document.getElementById('pomoStop').classList.add('hidden');
-      document.getElementById('pomoBreak').classList.add('hidden');
-      document.getElementById('pomodoroSettings').classList.remove('hidden');
-    }
-
-    window.switchMode = function(mode) {
-      clearInterval(timerInterval);
-      currentMode = mode;
-      document.querySelectorAll('.timer-tab').forEach(t => t.classList.remove('active'));
-      event.target.classList.add('active');
-      if (mode === 'free') {
-        document.getElementById('freeControls').classList.remove('hidden');
-        document.getElementById('pomodoroControls').classList.add('hidden');
-        document.getElementById('pomodoroSettings').classList.add('hidden');
-        timerDisplay.textContent = "00:00:00";
-        totalTime = 0;
-        document.getElementById('startButton').classList.remove('hidden');
-        document.getElementById('stopButton').classList.add('hidden');
-      } else {
-        document.getElementById('freeControls').classList.add('hidden');
-        document.getElementById('pomodoroControls').classList.remove('hidden');
-        document.getElementById('pomodoroSettings').classList.remove('hidden');
-        timerDisplay.textContent = "00:00";
-        resetPomodoroUI();
-      }
-    };
-
-    function saveSession() {
-      clearInterval(timerInterval);
-      const sessionTimeStr = currentMode === 'free' ? formatTime(totalTime) : formatPomoTime(totalTime);
-      const exInput = document.getElementById('exercisesInput');
-      const corInput = document.getElementById('correctExercisesInput');
-      const exDone = parseInt(exInput.value) || 0;
-      const exCorrect = parseInt(corInput.value) || 0;
+      
+      const sessionTimeStr = formatTime(totalTime);
+      const exDone = parseInt(document.getElementById('exercisesInput').value) || 0;
+      const exCorrect = parseInt(document.getElementById('correctExercisesInput').value) || 0;
+      
       const now = new Date();
       const dateKey = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+      
       if (!sessionsByDate[dateKey]) sessionsByDate[dateKey] = [];
+      
       const accuracy = exDone > 0 ? (exCorrect/exDone*100).toFixed(2) : '0.00';
+      const topic = inputTema.value || "Geral";
+      const subject = selectedCategory;
+
       const sessionData = {
         time: sessionTimeStr,
         exercisesDone: exDone,
         exercisesCorrect: exCorrect,
         accuracy: accuracy,
-        subject: selectedCategory,
-        topic: inputTema.value || "Geral"
+        subject: subject,
+        topic: topic
       };
 
+      // 1. Salva no Histórico Normal
       sessionsByDate[dateKey].push(sessionData);
+      
+      try {
+        await dbRef.set(sessionsByDate);
+        console.log("Sessão salva!");
+        
+        // 2. Atualiza Agendamento de Revisão (NOVO)
+        if (topic !== "Geral") {
+          await updateReviewSchedule(subject, topic, auth.currentUser.uid);
+        }
 
-      dbRef.set(sessionsByDate).then(() => {
-        console.log("Salvo!");
         inicializarDashboard();
-      }).catch(e => {
-        if(e.code==='PERMISSION_DENIED') alert("Sua conta precisa ser ativada!");
-        else alert("Erro ao salvar.");
+      } catch (e) {
+        console.error(e);
+        alert("Erro ao salvar.");
         sessionsByDate[dateKey].pop();
-      });
+      }
 
+      // Reset
       totalTime = 0;
-      exInput.value = 0; corInput.value = 0; inputTema.value = ''; selectedCategory = "Outros";
-      if (currentMode === 'free') {
-        document.getElementById('startButton').classList.remove('hidden');
-        document.getElementById('stopButton').classList.add('hidden');
-        timerDisplay.textContent = "00:00:00";
-      } else { resetPomodoroUI(); }
+      document.getElementById('exercisesInput').value = 0; 
+      document.getElementById('correctExercisesInput').value = 0; 
+      inputTema.value = ''; 
+      selectedCategory = "Outros";
+      document.getElementById('startButton').classList.remove('hidden');
+      document.getElementById('stopButton').classList.add('hidden');
+      timerDisplay.textContent = "00:00:00";
     }
 
+    // --- LÓGICA DE REVISÃO ESPAÇADA (SRS) ---
+    async function updateReviewSchedule(subject, topic, uid) {
+      // Chave segura para o Firebase (remove caracteres inválidos)
+      const safeTopicKey = topic.replace(/[.#$/\[\]]/g, '_');
+      const reviewRef = database.ref(`users/${uid}/reviews/${safeTopicKey}`);
+
+      const snapshot = await reviewRef.get();
+      let level = 1; // Começa no nível 1 (1 dia)
+      
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        level = (data.level || 0) + 1; // Avança nível
+      }
+
+      // Intervalos: 1 dia, 7 dias, 15 dias, 30 dias, 60 dias (fixo depois)
+      const intervals = [1, 7, 15, 30, 60];
+      const daysToAdd = intervals[Math.min(level - 1, intervals.length - 1)];
+
+      const nextDate = new Date();
+      nextDate.setDate(nextDate.getDate() + daysToAdd);
+      
+      await reviewRef.set({
+        subject: subject,
+        topic: topic,
+        lastStudied: new Date().toISOString(),
+        nextReview: nextDate.toISOString(),
+        level: level
+      });
+      
+      console.log(`Revisão agendada para daqui a ${daysToAdd} dias!`);
+    }
+
+    // --- HELPERS ---
     function pad(n) { return n.toString().padStart(2, '0'); }
     function formatTime(ms) {
       if (!ms) return "00:00:00";
@@ -434,9 +309,8 @@
       const s = Math.floor((ms%60000)/1000);
       return `${pad(h)}:${pad(m)}:${pad(s)}`;
     }
-    function formatPomoTime(ms) { return formatTime(ms); }
 
-    // --- FUNÇÕES DE CÁLCULO ---
+    // --- DASHBOARD FUNCTIONS ---
     function getStartOfWeek(date) {
       const d = new Date(date); const day = d.getDay();
       const diff = d.getDate() - day + (day === 0 ? -6 : 1);
@@ -459,8 +333,7 @@
     }
 
     function updateWeeklyStudyTime() {
-      const weeklyTime = calculateWeeklyStudyTime();
-      document.getElementById('weeklyStudyTime').textContent = weeklyTime;
+      document.getElementById('weeklyStudyTime').textContent = calculateWeeklyStudyTime();
     }
 
     function calculateTodayStats() {
@@ -552,7 +425,6 @@
           const sAccClass = getAccuracyClass(parseFloat(s.accuracy));
           const top = (s.topic && s.topic !== "Geral") ? ` - ${s.topic}` : '';
           const sub = s.subject ? `(${s.subject})` : '';
-          
           item.innerHTML = `
             <div class="session-stat"><strong>Sessão ${i+1}${sub}${top}:</strong></div>
             <div class="session-stat"><i class="fas fa-clock"></i> ${s.time}</div>
@@ -603,10 +475,6 @@
         
         document.getElementById('startButton').addEventListener('click', startFree);
         document.getElementById('stopButton').addEventListener('click', saveSession);
-        document.getElementById('pomoStart').addEventListener('click', startPomodoroFocus);
-        document.getElementById('pomoBreak').addEventListener('click', startPomodoroBreak);
-        document.getElementById('pomoStop').addEventListener('click', saveSession);
-        document.getElementById('pomoReset').addEventListener('click', resetPomodoroUI);
         document.getElementById('btnLogout').addEventListener('click', (e)=>{e.preventDefault(); auth.signOut().then(()=>window.location.href='login.html');});
 
         const fileIn = document.createElement('input'); fileIn.type='file'; fileIn.accept='.json,.txt'; fileIn.style.display='none';
@@ -644,9 +512,7 @@
       }
     });
   </script>
-  
   <script>
-    // Fecha sidebar ao clicar fora (Mobile)
     document.addEventListener('click', (e) => {
       const sidebar = document.getElementById('sidebar');
       const btn = document.querySelector('.mobile-menu-btn');

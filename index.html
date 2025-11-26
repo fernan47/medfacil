@@ -297,7 +297,10 @@
           clearInterval(timerInterval);
           alarmSound.play();
           alert("Fim do Foco! Salve ou descanse.");
-          totalTime = mins * 60 * 1000; // Tempo para salvar
+          
+          // DEFINIÇÃO CRÍTICA DO TEMPO PARA SALVAR
+          totalTime = mins * 60 * 1000; 
+          
           document.getElementById('pomoStop').classList.remove('hidden');
           document.getElementById('pomoBreak').classList.remove('hidden');
         }
@@ -364,14 +367,18 @@
       }
     };
 
+    // --- SALVAR SESSÃO (COM CORREÇÕES) ---
     function saveSession() {
       clearInterval(timerInterval);
+      
+      // 1. Formata o tempo dependendo do modo
       const sessionTimeStr = currentMode === 'free' ? formatTime(totalTime) : formatPomoTime(totalTime);
       
+      // 2. Captura e CORRIGE os inputs (Evita NaN)
       const exInput = document.getElementById('exercisesInput');
       const corInput = document.getElementById('correctExercisesInput');
-      const exDone = parseInt(exInput.value);
-      const exCorrect = parseInt(corInput.value);
+      const exDone = parseInt(exInput.value) || 0; // Se vazio ou inválido, vira 0
+      const exCorrect = parseInt(corInput.value) || 0; // Se vazio ou inválido, vira 0
       
       const now = new Date();
       const dateKey = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
@@ -379,6 +386,7 @@
       if (!sessionsByDate[dateKey]) sessionsByDate[dateKey] = [];
       
       const accuracy = exDone > 0 ? (exCorrect/exDone*100).toFixed(2) : '0.00';
+      
       const sessionData = {
         time: sessionTimeStr,
         exercisesDone: exDone,
@@ -387,18 +395,22 @@
         subject: selectedCategory,
         topic: inputTema.value || "Geral"
       };
+      
+      console.log("Salvando:", sessionData); // Debug no console
 
       sessionsByDate[dateKey].push(sessionData);
 
       dbRef.set(sessionsByDate).then(() => {
-        console.log("Salvo!");
+        console.log("Salvo com sucesso!");
         inicializarDashboard();
       }).catch(e => {
+        console.error("Erro detalhado:", e);
         if(e.code==='PERMISSION_DENIED') alert("Sua conta precisa ser ativada!");
-        else alert("Erro ao salvar.");
+        else alert("Erro ao salvar. Veja o console.");
         sessionsByDate[dateKey].pop();
       });
 
+      // 3. Reset da UI
       totalTime = 0;
       exInput.value = 0; corInput.value = 0; inputTema.value = ''; selectedCategory = "Outros";
       if (currentMode === 'free') {
@@ -410,6 +422,7 @@
 
     function pad(n) { return n.toString().padStart(2, '0'); }
     function formatTime(ms) {
+      if (!ms) return "00:00:00";
       const h = Math.floor(ms/3600000);
       const m = Math.floor((ms%3600000)/60000);
       const s = Math.floor((ms%60000)/1000);
@@ -417,59 +430,7 @@
     }
     function formatPomoTime(ms) { return formatTime(ms); }
 
-    // --- FUNÇÕES DE CÁLCULO RESTAURADAS ---
-    function getStartOfWeek(date) {
-      const d = new Date(date); const day = d.getDay();
-      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-      d.setHours(0, 0, 0, 0); return new Date(d.setDate(diff));
-    }
-
-    function calculateWeeklyStudyTime() {
-      const now = new Date(); const start = getStartOfWeek(now);
-      let ms = 0;
-      for (const k in sessionsByDate) {
-        const [y,m,d] = k.split('-').map(Number);
-        if (new Date(y, m-1, d) >= start) {
-          sessionsByDate[k].forEach(s => {
-            const p = s.time.split(':').map(Number);
-            if(p.length===3) ms += (p[0]*3600000 + p[1]*60000 + p[2]*1000);
-          });
-        }
-      }
-      return formatTime(ms);
-    }
-
-    function calculateTodayStats() {
-      const now = new Date();
-      const key = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
-      let ms = 0, ex = 0;
-      if(sessionsByDate[key]) {
-        sessionsByDate[key].forEach(s => {
-          const p = s.time.split(':').map(Number);
-          if(p.length===3) ms += (p[0]*3600000 + p[1]*60000 + p[2]*1000);
-          ex += (s.exercisesDone || 0);
-        });
-      }
-      return { time: formatTime(ms), exercises: ex };
-    }
-
-    function updateTodayStats() {
-      const stats = calculateTodayStats();
-      document.getElementById('todayStudyTime').textContent = stats.time;
-      document.getElementById('todayExercises').textContent = stats.exercises;
-    }
-
-    function updateTotalStudyTime() {
-      let ms = 0;
-      for(const k in sessionsByDate) {
-        sessionsByDate[k].forEach(s => {
-          const p = s.time.split(':').map(Number);
-          if(p.length===3) ms += (p[0]*3600000 + p[1]*60000 + p[2]*1000);
-        });
-      }
-      document.getElementById('totalStudyTime').textContent = formatTime(ms);
-    }
-
+    // --- FUNÇÕES DE DASHBOARD (RESTAURADAS COMPLETAMENTE) ---
     function calculateDailyStudyTime(key) {
       let ms = 0;
       if(sessionsByDate[key]) {
@@ -540,6 +501,58 @@
       }
     }
 
+    function getStartOfWeek(date) {
+      const d = new Date(date); const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      d.setHours(0, 0, 0, 0); return new Date(d.setDate(diff));
+    }
+
+    function calculateWeeklyStudyTime() {
+      const now = new Date(); const start = getStartOfWeek(now);
+      let ms = 0;
+      for (const k in sessionsByDate) {
+        const [y,m,d] = k.split('-').map(Number);
+        if (new Date(y, m-1, d) >= start) {
+          sessionsByDate[k].forEach(s => {
+            const p = s.time.split(':').map(Number);
+            if(p.length===3) ms += (p[0]*3600000 + p[1]*60000 + p[2]*1000);
+          });
+        }
+      }
+      return formatTime(ms);
+    }
+
+    function calculateTodayStats() {
+      const now = new Date();
+      const key = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+      let ms = 0, ex = 0;
+      if(sessionsByDate[key]) {
+        sessionsByDate[key].forEach(s => {
+          const p = s.time.split(':').map(Number);
+          if(p.length===3) ms += (p[0]*3600000 + p[1]*60000 + p[2]*1000);
+          ex += (s.exercisesDone || 0);
+        });
+      }
+      return { time: formatTime(ms), exercises: ex };
+    }
+
+    function updateTodayStats() {
+      const stats = calculateTodayStats();
+      document.getElementById('todayStudyTime').textContent = stats.time;
+      document.getElementById('todayExercises').textContent = stats.exercises;
+    }
+
+    function updateTotalStudyTime() {
+      let ms = 0;
+      for(const k in sessionsByDate) {
+        sessionsByDate[k].forEach(s => {
+          const p = s.time.split(':').map(Number);
+          if(p.length===3) ms += (p[0]*3600000 + p[1]*60000 + p[2]*1000);
+        });
+      }
+      document.getElementById('totalStudyTime').textContent = formatTime(ms);
+    }
+
     function updateStatisticsDisplay() {
       let ex=0, cor=0;
       for(const d in sessionsByDate) {
@@ -568,7 +581,6 @@
       updateWeeklyProgress();
       updateStatisticsDisplay();
       updateSessionList();
-      
       if (Object.keys(sessionsByDate).length > 0) {
         document.getElementById('downloadButton').classList.remove('hidden');
       }
@@ -613,7 +625,7 @@
            document.body.appendChild(a); a.click(); document.body.removeChild(a);
         });
 
-        // Load Data
+        // Load Data (OTIMIZADO: apenas 1 vez)
         try {
           const snap = await dbRef.get();
           if (snap.exists()) sessionsByDate = snap.val();

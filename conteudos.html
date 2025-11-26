@@ -29,12 +29,12 @@
     .sidebar-button.active { background-color: var(--accent-color); color: #343a40; font-weight: 500; }
     .sidebar-button i { margin-right: 10px; width: 20px; text-align: center; }
 
-    /* Layout Principal (Correção do corte) */
+    /* Layout Principal */
     #main-content { 
       flex: 1; 
-      margin-left: 250px; /* Espaço exato da sidebar */
+      margin-left: 250px; 
       padding: 40px; 
-      width: calc(100% - 250px); /* Garante que não estoure */
+      width: calc(100% - 250px); 
       max-width: 1400px; 
       margin-right: auto;
     }
@@ -89,7 +89,7 @@
       outline: none;
     }
 
-    /* Toggle Switch para Itens Vazios */
+    /* Toggle Switch */
     .toggle-container { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; color: #555; user-select: none; }
     .toggle-switch { position: relative; display: inline-block; width: 40px; height: 20px; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
@@ -176,7 +176,7 @@
       <div class="filter-tab" data-filter="Clínica Médica">Clínica Médica</div>
       <div class="filter-tab" data-filter="Pediatria">Pediatria</div>
       <div class="filter-tab" data-filter="Ginecologia e Obstetrícia">G.O.</div>
-      <div class="filter-tab" data-filter="Preventiva">Preventiva</div>
+      <div class="filter-tab" data-filter="Medicina Preventiva">Preventiva</div>
     </div>
 
     <div class="controls-row">
@@ -230,7 +230,7 @@
 </div>
 
 <script>
-  // --- CONFIGURAÇÃO FIREBASE ---
+  // === CONFIGURAÇÃO FIREBASE ===
   const firebaseConfig = {
     apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
     authDomain: "meu-study-tracker.firebaseapp.com",
@@ -248,13 +248,23 @@
     auth = firebase.auth(); 
   } catch (error) { console.error(error); }
 
-  // --- DADOS BASE (Para mostrar temas não estudados) ---
+  // --- DADOS BASE COM PREVENTIVA CORRIGIDA ---
   const dadosTemasBase = {
     "Cirurgia Geral": ["Anestesia", "Apendicite aguda", "Atendimento inicial ao politraumatizado", "Avaliação da função hepática", "Choque", "Cicatrização", "Cirrose hepática", "Cirurgia vascular", "Cistite aguda", "Complicações pós-operatórias", "Cuidados pré-operatórios", "Câncer de cólon e reto", "Câncer de esôfago", "Câncer de próstata", "Diarreias", "Doença diverticular", "DRGE", "Doença ulcerosa péptica", "Doenças inflamatórias intestinais", "Hemorragia digestiva alta", "Hérnias", "Litíase biliar", "Litíase urinária", "Pancreatite aguda", "Queimaduras", "Trauma abdominal", "Trauma torácico"],
     "Clínica Médica": ["Anemias", "Angina estável", "Asma", "COVID-19", "Cefaleias", "Demência", "Dengue", "Diabetes", "DPOC", "Doença renal crônica", "HAS", "HIV", "IAM", "ICC", "Infecção Urinaria", "Pneumonia", "Sepse", "Tuberculose", "AVC"],
     "Ginecologia e Obstetrícia": ["Abortamento", "Amenorreia", "Anticoncepção", "Pré-natal", "Câncer de colo uterino", "Câncer de mama", "Diabetes gestacional", "DHEG", "Endometriose", "Parto", "Sangramento uterino", "SOP", "Vulvovaginites"],
     "Pediatria": ["Aleitamento", "Asma", "Bronquiolite", "Cardiopatias", "Desenvolvimento", "Doenças exantemáticas", "Imunização", "Infecção Urinaria", "Pneumonias", "Puericultura", "Reanimação neonatal"],
-    "Medicina Preventiva": ["Epidemiologia", "SUS", "Ética médica", "Vigilância epidemiológica", "Medicina do trabalho", "Atenção primária"]
+    
+    // LISTA COMPLETA DE PREVENTIVA ADICIONADA AQUI
+    "Medicina Preventiva": [
+      "Análise de métodos diagnósticos", "Caso-controle", "Conceitos na atenção primária", "Coorte", 
+      "Dinâmica de transmissão e distribuição temporal das doenças", "Ensaio clínico", "Gestão do SUS", 
+      "Humanização do atendimento médico", "Leis e diretrizes do SUS", 
+      "Medicina baseada em evidências, revisão sistemática e meta-análise", "Medicina do trabalho", 
+      "Medicina legal", "Morbidade", "Mortalidade", "Outros", "Outros Indicadores", 
+      "Prevenção 1ª/2ª/3ª/4ª", "Princípios do SUS", "Saúde do idoso", "Testes estatísticos", 
+      "Transição epidemiológica e demográfica", "Vigilância epidemiológica", "Ética médica"
+    ]
   };
 
   // --- ESTADO GLOBAL ---
@@ -282,10 +292,9 @@
 
   // --- PROCESSAMENTO DE DADOS ---
   function processData(sessionsByDate) {
-    // 1. Inicializa estrutura com TODOS os temas (zerados)
     const subjects = {};
     
-    // Preenche com a base de dados estática
+    // 1. Preenche com a base de dados estática
     for (const [area, temas] of Object.entries(dadosTemasBase)) {
       subjects[area] = {
         totalQuestions: 0,
@@ -301,24 +310,21 @@
       });
     }
 
-    // 2. Preenche com dados do Firebase (Histórico Real)
+    // 2. Preenche com dados do Firebase
     if (sessionsByDate) {
       for (const date in sessionsByDate) {
         sessionsByDate[date].forEach(session => {
           const subjectName = session.subject || 'Outros';
           const topicName = (session.topic && session.topic.trim() !== "") ? session.topic : 'Geral';
 
-          // Se a área não existe na base, cria
           if (!subjects[subjectName]) {
             subjects[subjectName] = { totalQuestions: 0, totalCorrect: 0, topics: {} };
           }
 
-          // Se o tópico não existe, cria
           if (!subjects[subjectName].topics[topicName]) {
             subjects[subjectName].topics[topicName] = { totalTime: 0, questions: 0, correct: 0 };
           }
 
-          // Acumula
           subjects[subjectName].totalQuestions += (session.exercisesDone || 0);
           subjects[subjectName].totalCorrect += (session.exercisesCorrect || 0);
 
@@ -353,10 +359,7 @@
       if (currentFilter !== 'all' && areaName !== currentFilter) continue;
 
       for (const [topicName, stats] of Object.entries(areaData.topics)) {
-        // Filtro de Pesquisa
         if (searchQuery && !topicName.toLowerCase().includes(searchQuery)) continue;
-        
-        // Filtro de Vazios (Se showEmpty for false, esconde quem tem 0 questões)
         if (!showEmpty && stats.questions === 0) continue;
 
         const accuracy = stats.questions > 0 ? (stats.correct / stats.questions * 100) : 0;
@@ -371,12 +374,10 @@
       }
     }
 
-    // Ordenação
     flatList.sort((a, b) => {
       if (currentSort === 'az') return a.name.localeCompare(b.name);
       if (currentSort === 'performance_desc') return b.accuracy - a.accuracy;
       if (currentSort === 'performance_asc') {
-        // Truque: se ambos forem 0, ordena por nome. Se um for 0 e outro >0, o >0 vem primeiro para não ficar tudo zerado no topo se misturado.
         if(a.accuracy === 0 && b.accuracy === 0) return a.name.localeCompare(b.name);
         return a.accuracy - b.accuracy;
       }
@@ -384,14 +385,14 @@
     });
 
     if (flatList.length === 0) {
-      listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">Nenhum tópico encontrado com os filtros atuais.</p>';
+      listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">Nenhum tópico encontrado.</p>';
       return;
     }
 
     flatList.forEach(item => {
       let barClass = 'bar-blue';
       if (item.questions === 0) barClass = 'bar-gray';
-      else if (item.accuracy >= 80) barClass = 'bar-blue'; // ou verde se preferir
+      else if (item.accuracy >= 80) barClass = 'bar-blue'; 
       
       const html = `
         <div class="topic-row">
@@ -423,7 +424,7 @@
     
     const labels = [];
     const dataPoints = [];
-    const mainAreas = ["Clínica Médica", "Cirurgia Geral", "Pediatria", "Ginecologia e Obstetrícia", "Preventiva"];
+    const mainAreas = ["Clínica Médica", "Cirurgia Geral", "Pediatria", "Ginecologia e Obstetrícia", "Medicina Preventiva"];
     
     mainAreas.forEach(area => {
       labels.push(area);
@@ -474,8 +475,6 @@
 
   // --- EVENT LISTENERS ---
   window.addEventListener('load', () => {
-    
-    // Tabs
     const tabs = document.querySelectorAll('.filter-tab');
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
@@ -486,7 +485,6 @@
       });
     });
 
-    // Busca, Toggle e Sort
     document.getElementById('searchInput').addEventListener('input', renderTopicList);
     
     document.getElementById('toggleEmpty').addEventListener('change', (e) => {
@@ -499,7 +497,6 @@
       renderTopicList();
     });
 
-    // Auth & Data
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         const btnLogout = document.getElementById('btnLogout');
@@ -509,7 +506,6 @@
         });
 
         try {
-          // Busca apenas uma vez (Otimizado)
           const snapshot = await database.ref('users/' + user.uid + '/sessionsByDate').get();
           const data = snapshot.exists() ? snapshot.val() : null;
           processData(data);

@@ -13,13 +13,13 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    /* --- CSS BASE (Compatível com seu index) --- */
+    /* --- CSS BASE --- */
     :root { --primary-color: #4a6fa5; --secondary-color: #166088; --accent-color: #4fc3f7; --text-color: #333; --bg-color: #f5f7fa; --card-bg: #ffffff; --border-radius: 12px; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; min-height: 100vh; }
+    body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; min-height: 100vh; overflow-x: hidden; }
     
-    /* Sidebar (Mantido igual) */
-    #sidebar { width: 250px; background: linear-gradient(135deg, #2c3e50, #4a6fa5); color: white; padding: 30px 20px; position: fixed; height: 100%; z-index: 100; }
+    /* Sidebar Fixa */
+    #sidebar { width: 250px; background: linear-gradient(135deg, #2c3e50, #4a6fa5); color: white; padding: 30px 20px; position: fixed; height: 100%; z-index: 1000; top: 0; left: 0; }
     #sidebar .logo { text-align: center; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; }
     #sidebar .logo h2 { color: white; font-weight: 500; }
     #sidebar .logo i { font-size: 2rem; margin-bottom: 10px; color: var(--accent-color); }
@@ -29,19 +29,24 @@
     .sidebar-button.active { background-color: var(--accent-color); color: #343a40; font-weight: 500; }
     .sidebar-button i { margin-right: 10px; width: 20px; text-align: center; }
 
-    /* Layout Principal */
-    #main-content { flex: 1; margin-left: 250px; padding: 40px; max-width: 1200px; margin: 0 auto; }
-    
-    /* --- ESTILOS NOVOS (BASEADOS NA IMAGEM) --- */
+    /* Layout Principal (Correção do corte) */
+    #main-content { 
+      flex: 1; 
+      margin-left: 250px; /* Espaço exato da sidebar */
+      padding: 40px; 
+      width: calc(100% - 250px); /* Garante que não estoure */
+      max-width: 1400px; 
+      margin-right: auto;
+    }
     
     /* Cabeçalho e Filtros */
     .dashboard-header { margin-bottom: 30px; }
-    .page-title { color: var(--secondary-color); font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; }
+    .page-title { color: var(--secondary-color); font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* Abas de Filtro */
     .tabs-container { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; }
     .filter-tab {
-      padding: 10px 20px;
+      padding: 8px 16px;
       background: white;
       border: 1px solid #ddd;
       border-radius: 20px;
@@ -49,7 +54,7 @@
       font-weight: 500;
       color: #666;
       transition: all 0.3s ease;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      font-size: 0.9rem;
     }
     .filter-tab:hover { transform: translateY(-2px); }
     .filter-tab.active {
@@ -60,23 +65,21 @@
     }
 
     /* Barra de Pesquisa e Ordenação */
-    .controls-row { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
-    .search-wrapper { flex: 2; position: relative; min-width: 250px; }
+    .controls-row { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+    .search-wrapper { flex: 2; position: relative; min-width: 200px; }
     .search-input {
       width: 100%;
-      padding: 12px 45px 12px 20px;
+      padding: 10px 40px 10px 20px;
       border-radius: 25px;
       border: 1px solid #ddd;
       outline: none;
-      font-size: 1rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      font-size: 0.95rem;
     }
     .search-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #888; }
     
-    .sort-wrapper { flex: 1; min-width: 200px; }
+    .options-wrapper { display: flex; gap: 15px; align-items: center; flex: 1; justify-content: flex-end; }
     .sort-select {
-      width: 100%;
-      padding: 12px 20px;
+      padding: 10px 15px;
       border-radius: 25px;
       border: 1px solid #ddd;
       background: white;
@@ -84,57 +87,66 @@
       color: var(--primary-color);
       font-weight: 600;
       outline: none;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
-    /* --- LISTA DE TÓPICOS (ESTILO IMAGEM) --- */
+    /* Toggle Switch para Itens Vazios */
+    .toggle-container { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; color: #555; user-select: none; }
+    .toggle-switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--primary-color); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    /* --- LISTA DE TÓPICOS --- */
     .topics-container { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 40px; }
-    .topics-header { display: flex; justify-content: space-between; color: #888; font-weight: 500; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+    .topics-header { display: flex; justify-content: space-between; color: #888; font-weight: 500; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
     
     .topic-row {
       display: flex;
       align-items: center;
-      padding: 15px 0;
-      border-bottom: 1px solid #f5f5f5;
+      padding: 12px 0;
+      border-bottom: 1px solid #f9f9f9;
       transition: background 0.2s;
     }
-    .topic-row:hover { background-color: #fafafa; }
+    .topic-row:hover { background-color: #fcfcfc; }
     
-    .topic-name { flex: 3; font-weight: 500; color: #444; padding-right: 20px; }
+    .topic-name { flex: 3; font-weight: 500; color: #444; padding-right: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     
-    .topic-progress-area { flex: 4; display: flex; align-items: center; gap: 15px; }
-    .progress-track { flex: 1; height: 12px; background-color: #e9ecef; border-radius: 10px; overflow: hidden; }
+    .topic-data-area { flex: 4; display: flex; align-items: center; gap: 20px; }
+    .progress-track { flex: 1; height: 10px; background-color: #e9ecef; border-radius: 10px; overflow: hidden; }
     .progress-fill { height: 100%; border-radius: 10px; transition: width 1s ease; }
     
-    /* Cores das barras */
-    .bar-blue { background-color: #00acc1; } /* Cor turquesa da imagem */
-    .bar-gray { background-color: #546e7a; } /* Para 0% */
-    
-    .topic-percentage { width: 50px; text-align: right; font-weight: 700; color: #555; }
+    .topic-time { width: 80px; text-align: right; color: #666; font-size: 0.9rem; font-weight: 500; }
+    .topic-percentage { width: 50px; text-align: right; font-weight: 700; color: #333; }
 
-    /* --- GRÁFICO FINAL (CORRIGIDO) --- */
-    .chart-section {
-      background: white;
-      border-radius: 15px;
-      padding: 30px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-      text-align: center;
-    }
-    .chart-wrapper {
-      position: relative;
-      height: 400px;
-      width: 100%;
-      max-width: 600px; /* Impede que fique gigante */
-      margin: 0 auto;
+    /* Cores */
+    .bar-blue { background-color: #00acc1; }
+    .bar-gray { background-color: #cfd8dc; }
+
+    /* Gráfico */
+    .chart-section { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: center; }
+    .chart-wrapper { position: relative; height: 400px; width: 100%; max-width: 600px; margin: 0 auto; }
+
+    @media (max-width: 900px) {
+      #main-content { margin-left: 70px; width: calc(100% - 70px); padding: 20px; }
+      #sidebar { width: 70px; padding: 20px 10px; }
+      #sidebar .logo h2, .sidebar-button span { display: none; }
+      #sidebar .logo i, .sidebar-button i { margin: 0; font-size: 1.5rem; }
+      .sidebar-button { justify-content: center; }
     }
 
     @media (max-width: 768px) {
-      #main-content { margin-left: 0; padding-top: 80px; }
-      #sidebar { width: 100%; height: auto; position: fixed; top: 0; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
-      .sidebar-menu { display: none; } /* Simplificado para mobile */
-      .topic-row { flex-direction: column; align-items: flex-start; gap: 10px; }
-      .topic-progress-area { width: 100%; }
-      .controls-row { flex-direction: column; }
+      #main-content { margin-left: 0; width: 100%; padding-top: 90px; }
+      #sidebar { width: 100%; height: auto; padding: 10px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; }
+      .sidebar-menu { display: none; }
+      
+      .topic-row { flex-wrap: wrap; gap: 5px; }
+      .topic-name { flex: 100%; margin-bottom: 5px; }
+      .topic-data-area { width: 100%; }
+      
+      .controls-row { flex-direction: column; align-items: stretch; }
+      .options-wrapper { justify-content: space-between; }
     }
   </style>
 </head>
@@ -158,7 +170,7 @@
   <div class="dashboard-header">
     <h1 class="page-title">Desempenho por Área</h1>
     
-    <div class="tabs-container" id="tabsContainer">
+    <div class="tabs-container">
       <div class="filter-tab active" data-filter="all">Geral</div>
       <div class="filter-tab" data-filter="Cirurgia Geral">Cirurgia</div>
       <div class="filter-tab" data-filter="Clínica Médica">Clínica Médica</div>
@@ -172,12 +184,21 @@
         <input type="text" class="search-input" id="searchInput" placeholder="Pesquisar assunto...">
         <i class="fas fa-search search-icon"></i>
       </div>
-      <div class="sort-wrapper">
+      
+      <div class="options-wrapper">
+        <label class="toggle-container">
+          <div class="toggle-switch">
+            <input type="checkbox" id="toggleEmpty">
+            <span class="slider"></span>
+          </div>
+          Mostrar não estudados
+        </label>
+
         <select class="sort-select" id="sortSelect">
-          <option value="az">Ordem alfabética</option>
-          <option value="performance_desc">Maior acerto</option>
-          <option value="performance_asc">Menor acerto</option>
-          <option value="questions">Mais questões</option>
+          <option value="az">A-Z</option>
+          <option value="performance_desc">Melhor %</option>
+          <option value="performance_asc">Pior %</option>
+          <option value="questions">Mais Questões</option>
         </select>
       </div>
     </div>
@@ -189,15 +210,18 @@
 
   <div class="topics-container" id="topicsContainer" style="display: none;">
     <div class="topics-header">
-      <span>Assunto / Especialidade</span>
-      <span>% de questões corretas</span>
-    </div>
-    <div id="topicsList">
+      <span style="flex: 3;">Assunto</span>
+      <div style="flex: 4; display: flex; justify-content: flex-end; gap: 35px;">
+        <span>Progresso</span>
+        <span style="width: 80px; text-align: right;">Tempo</span>
+        <span style="width: 50px; text-align: right;">%</span>
       </div>
+    </div>
+    <div id="topicsList"></div>
   </div>
 
   <div class="chart-section" id="chartSection" style="display: none;">
-    <h3 style="color: var(--secondary-color); margin-bottom: 20px;">Análise Geral das Áreas</h3>
+    <h3 style="color: var(--secondary-color); margin-bottom: 20px;">Visão Geral</h3>
     <div class="chart-wrapper">
       <canvas id="skillsChart"></canvas>
     </div>
@@ -206,7 +230,7 @@
 </div>
 
 <script>
-  // === CONFIGURAÇÃO DO FIREBASE ===
+  // --- CONFIGURAÇÃO FIREBASE ---
   const firebaseConfig = {
     apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
     authDomain: "meu-study-tracker.firebaseapp.com",
@@ -224,54 +248,92 @@
     auth = firebase.auth(); 
   } catch (error) { console.error(error); }
 
-  // --- VARIÁVEIS GLOBAIS ---
-  let allSubjectsData = {}; // Guarda todos os dados processados
+  // --- DADOS BASE (Para mostrar temas não estudados) ---
+  const dadosTemasBase = {
+    "Cirurgia Geral": ["Anestesia", "Apendicite aguda", "Atendimento inicial ao politraumatizado", "Avaliação da função hepática", "Choque", "Cicatrização", "Cirrose hepática", "Cirurgia vascular", "Cistite aguda", "Complicações pós-operatórias", "Cuidados pré-operatórios", "Câncer de cólon e reto", "Câncer de esôfago", "Câncer de próstata", "Diarreias", "Doença diverticular", "DRGE", "Doença ulcerosa péptica", "Doenças inflamatórias intestinais", "Hemorragia digestiva alta", "Hérnias", "Litíase biliar", "Litíase urinária", "Pancreatite aguda", "Queimaduras", "Trauma abdominal", "Trauma torácico"],
+    "Clínica Médica": ["Anemias", "Angina estável", "Asma", "COVID-19", "Cefaleias", "Demência", "Dengue", "Diabetes", "DPOC", "Doença renal crônica", "HAS", "HIV", "IAM", "ICC", "Infecção Urinaria", "Pneumonia", "Sepse", "Tuberculose", "AVC"],
+    "Ginecologia e Obstetrícia": ["Abortamento", "Amenorreia", "Anticoncepção", "Pré-natal", "Câncer de colo uterino", "Câncer de mama", "Diabetes gestacional", "DHEG", "Endometriose", "Parto", "Sangramento uterino", "SOP", "Vulvovaginites"],
+    "Pediatria": ["Aleitamento", "Asma", "Bronquiolite", "Cardiopatias", "Desenvolvimento", "Doenças exantemáticas", "Imunização", "Infecção Urinaria", "Pneumonias", "Puericultura", "Reanimação neonatal"],
+    "Medicina Preventiva": ["Epidemiologia", "SUS", "Ética médica", "Vigilância epidemiológica", "Medicina do trabalho", "Atenção primária"]
+  };
+
+  // --- ESTADO GLOBAL ---
+  let allSubjectsData = {}; 
   let currentFilter = 'all';
   let currentSort = 'az';
+  let showEmpty = false;
   let chartInstance = null;
+
+  // --- FUNÇÕES AUXILIARES ---
+  function timeToMinutes(timeStr) {
+    if (!timeStr) return 0;
+    const p = timeStr.split(':').map(Number);
+    if (p.length !== 3) return 0;
+    return (p[0] * 60) + p[1] + (p[2]/60);
+  }
+
+  function formatMinutesToHrs(totalMinutes) {
+    if (totalMinutes === 0) return "0h";
+    const h = Math.floor(totalMinutes / 60);
+    const m = Math.floor(totalMinutes % 60);
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+  }
 
   // --- PROCESSAMENTO DE DADOS ---
   function processData(sessionsByDate) {
-    const subjects = {}; 
-
-    for (const date in sessionsByDate) {
-      sessionsByDate[date].forEach(session => {
-        const subjectName = session.subject || 'Sem Categoria';
-        const topicName = (session.topic && session.topic.trim() !== "") ? session.topic : 'Geral';
-
-        // Se não existe a Grande Área, cria
-        if (!subjects[subjectName]) {
-          subjects[subjectName] = {
-            totalQuestions: 0,
-            totalCorrect: 0,
-            topics: {}
-          };
-        }
-
-        // Dados da Grande Área
-        subjects[subjectName].totalQuestions += (session.exercisesDone || 0);
-        subjects[subjectName].totalCorrect += (session.exercisesCorrect || 0);
-
-        // Se não existe o Tópico, cria
-        if (!subjects[subjectName].topics[topicName]) {
-          subjects[subjectName].topics[topicName] = {
-            questions: 0,
-            correct: 0
-          };
-        }
-
-        // Dados do Tópico
-        const tStat = subjects[subjectName].topics[topicName];
-        tStat.questions += (session.exercisesDone || 0);
-        tStat.correct += (session.exercisesCorrect || 0);
+    // 1. Inicializa estrutura com TODOS os temas (zerados)
+    const subjects = {};
+    
+    // Preenche com a base de dados estática
+    for (const [area, temas] of Object.entries(dadosTemasBase)) {
+      subjects[area] = {
+        totalQuestions: 0,
+        totalCorrect: 0,
+        topics: {}
+      };
+      temas.forEach(tema => {
+        subjects[area].topics[tema] = {
+          totalTime: 0,
+          questions: 0,
+          correct: 0
+        };
       });
+    }
+
+    // 2. Preenche com dados do Firebase (Histórico Real)
+    if (sessionsByDate) {
+      for (const date in sessionsByDate) {
+        sessionsByDate[date].forEach(session => {
+          const subjectName = session.subject || 'Outros';
+          const topicName = (session.topic && session.topic.trim() !== "") ? session.topic : 'Geral';
+
+          // Se a área não existe na base, cria
+          if (!subjects[subjectName]) {
+            subjects[subjectName] = { totalQuestions: 0, totalCorrect: 0, topics: {} };
+          }
+
+          // Se o tópico não existe, cria
+          if (!subjects[subjectName].topics[topicName]) {
+            subjects[subjectName].topics[topicName] = { totalTime: 0, questions: 0, correct: 0 };
+          }
+
+          // Acumula
+          subjects[subjectName].totalQuestions += (session.exercisesDone || 0);
+          subjects[subjectName].totalCorrect += (session.exercisesCorrect || 0);
+
+          const tStat = subjects[subjectName].topics[topicName];
+          tStat.totalTime += timeToMinutes(session.time);
+          tStat.questions += (session.exercisesDone || 0);
+          tStat.correct += (session.exercisesCorrect || 0);
+        });
+      }
     }
 
     allSubjectsData = subjects;
     renderInterface();
   }
 
-  // --- RENDERIZAÇÃO PRINCIPAL ---
   function renderInterface() {
     renderTopicList();
     renderChart();
@@ -280,7 +342,6 @@
     document.getElementById('chartSection').style.display = 'block';
   }
 
-  // --- RENDERIZAR A LISTA ---
   function renderTopicList() {
     const listContainer = document.getElementById('topicsList');
     const searchQuery = document.getElementById('searchInput').value.toLowerCase();
@@ -288,56 +349,68 @@
 
     let flatList = [];
 
-    // 1. Achatar a lista (pegar tópicos de dentro das áreas)
     for (const [areaName, areaData] of Object.entries(allSubjectsData)) {
-      // Filtro por aba (Grande Área)
       if (currentFilter !== 'all' && areaName !== currentFilter) continue;
 
       for (const [topicName, stats] of Object.entries(areaData.topics)) {
-        // Filtro de pesquisa
+        // Filtro de Pesquisa
         if (searchQuery && !topicName.toLowerCase().includes(searchQuery)) continue;
+        
+        // Filtro de Vazios (Se showEmpty for false, esconde quem tem 0 questões)
+        if (!showEmpty && stats.questions === 0) continue;
 
         const accuracy = stats.questions > 0 ? (stats.correct / stats.questions * 100) : 0;
+        
         flatList.push({
           area: areaName,
           name: topicName,
           accuracy: accuracy,
-          questions: stats.questions
+          questions: stats.questions,
+          time: stats.totalTime
         });
       }
     }
 
-    // 2. Ordenação
+    // Ordenação
     flatList.sort((a, b) => {
       if (currentSort === 'az') return a.name.localeCompare(b.name);
       if (currentSort === 'performance_desc') return b.accuracy - a.accuracy;
-      if (currentSort === 'performance_asc') return a.accuracy - b.accuracy;
+      if (currentSort === 'performance_asc') {
+        // Truque: se ambos forem 0, ordena por nome. Se um for 0 e outro >0, o >0 vem primeiro para não ficar tudo zerado no topo se misturado.
+        if(a.accuracy === 0 && b.accuracy === 0) return a.name.localeCompare(b.name);
+        return a.accuracy - b.accuracy;
+      }
       if (currentSort === 'questions') return b.questions - a.questions;
     });
 
-    // 3. Gerar HTML
     if (flatList.length === 0) {
-      listContainer.innerHTML = '<p style="text-align:center; padding:20px;">Nenhum tópico encontrado.</p>';
+      listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">Nenhum tópico encontrado com os filtros atuais.</p>';
       return;
     }
 
     flatList.forEach(item => {
-      // Cor da barra
-      let barClass = 'bar-blue'; // Turquesa padrão
+      let barClass = 'bar-blue';
       if (item.questions === 0) barClass = 'bar-gray';
+      else if (item.accuracy >= 80) barClass = 'bar-blue'; // ou verde se preferir
       
-      // HTML da Linha
       const html = `
         <div class="topic-row">
           <div class="topic-name">
             ${item.name} 
-            <span style="font-size:0.8rem; color:#999; margin-left:5px;">(${item.area})</span>
+            ${currentFilter === 'all' ? `<span style="font-size:0.75rem; color:#999; margin-left:5px; background:#eee; padding:2px 6px; border-radius:4px;">${item.area}</span>` : ''}
           </div>
-          <div class="topic-progress-area">
+          
+          <div class="topic-data-area">
             <div class="progress-track">
-              <div class="progress-fill ${barClass}" style="width: ${item.accuracy}%"></div>
+              <div class="progress-fill ${barClass}" style="width: ${item.questions > 0 ? item.accuracy : 0}%"></div>
             </div>
-            <div class="topic-percentage">${item.accuracy.toFixed(0)}%</div>
+            
+            <div class="topic-time">
+              ${item.time > 0 ? '<i class="far fa-clock" style="font-size:0.8rem; margin-right:3px;"></i>' : ''}
+              ${formatMinutesToHrs(item.time)}
+            </div>
+            
+            <div class="topic-percentage">${item.questions > 0 ? item.accuracy.toFixed(0) + '%' : '-'}</div>
           </div>
         </div>
       `;
@@ -345,15 +418,11 @@
     });
   }
 
-  // --- RENDERIZAR GRÁFICO (ARANHA) ---
   function renderChart() {
     const ctx = document.getElementById('skillsChart').getContext('2d');
     
-    // Preparar dados das Grandes Áreas
     const labels = [];
     const dataPoints = [];
-
-    // Áreas fixas para o gráfico ficar bonito (opcional)
     const mainAreas = ["Clínica Médica", "Cirurgia Geral", "Pediatria", "Ginecologia e Obstetrícia", "Preventiva"];
     
     mainAreas.forEach(area => {
@@ -373,32 +442,32 @@
       data: {
         labels: labels,
         datasets: [{
-          label: 'Percentual de Acertos (%)',
+          label: 'Desempenho (%)',
           data: dataPoints,
-          backgroundColor: 'rgba(0, 172, 193, 0.2)', // Turquesa transparente
-          borderColor: '#00acc1', // Turquesa
+          backgroundColor: 'rgba(0, 172, 193, 0.2)',
+          borderColor: '#00acc1',
           pointBackgroundColor: '#fff',
           pointBorderColor: '#00acc1',
-          pointHoverBackgroundColor: '#00acc1',
-          pointHoverBorderColor: '#fff',
           borderWidth: 2
         }]
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false, // Importante para fixar no container
+        maintainAspectRatio: false,
         scales: {
           r: {
             angleLines: { display: true, color: '#eee' },
-            grid: { color: '#eee' },
+            grid: { color: '#f0f0f0' },
             suggestedMin: 0,
             suggestedMax: 100,
-            ticks: { stepSize: 20, backdropColor: 'transparent', display: false } // Limpa os números do eixo
+            ticks: { stepSize: 20, backdropColor: 'transparent', display: false },
+            pointLabels: {
+              font: { size: 12, weight: 'bold' },
+              color: '#555'
+            }
           }
         },
-        plugins: {
-          legend: { display: false }
-        }
+        plugins: { legend: { display: false } }
       }
     });
   }
@@ -406,31 +475,33 @@
   // --- EVENT LISTENERS ---
   window.addEventListener('load', () => {
     
-    // Setup das Abas
+    // Tabs
     const tabs = document.querySelectorAll('.filter-tab');
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
-        // Remove active de todos
         tabs.forEach(t => t.classList.remove('active'));
-        // Adiciona no clicado
         tab.classList.add('active');
-        // Atualiza filtro
         currentFilter = tab.getAttribute('data-filter');
         renderTopicList();
       });
     });
 
-    // Setup da Busca e Ordenação
+    // Busca, Toggle e Sort
     document.getElementById('searchInput').addEventListener('input', renderTopicList);
+    
+    document.getElementById('toggleEmpty').addEventListener('change', (e) => {
+      showEmpty = e.target.checked;
+      renderTopicList();
+    });
+
     document.getElementById('sortSelect').addEventListener('change', (e) => {
       currentSort = e.target.value;
       renderTopicList();
     });
 
-    // Auth e Load de Dados
+    // Auth & Data
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        // Botão Sair
         const btnLogout = document.getElementById('btnLogout');
         if(btnLogout) btnLogout.addEventListener('click', (e) => {
             e.preventDefault();
@@ -438,16 +509,11 @@
         });
 
         try {
-          // Busca Otimizada (uma vez)
+          // Busca apenas uma vez (Otimizado)
           const snapshot = await database.ref('users/' + user.uid + '/sessionsByDate').get();
-          if (snapshot.exists()) {
-            processData(snapshot.val());
-          } else {
-            document.getElementById('loading-message').innerHTML = "Sem dados. Comece a estudar!";
-          }
-        } catch (error) {
-          console.error(error);
-        }
+          const data = snapshot.exists() ? snapshot.val() : null;
+          processData(data);
+        } catch (error) { console.error(error); }
       } else {
         window.location.href = 'login.html';
       }

@@ -2,8 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agenda de Revisões</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Agenda de Revisões</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   
@@ -28,7 +27,7 @@
     .sidebar-button.active { background-color: var(--accent-color); color: #343a40; font-weight: 500; }
     .sidebar-button i { margin-right: 10px; width: 20px; text-align: center; }
     
-    /* Botão Mobile */
+    /* Mobile Btn */
     .mobile-menu-btn { display: none; position: fixed; top: 15px; left: 15px; z-index: 1100; background: var(--primary-color); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
     #sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 900; }
     #sidebar-overlay.show { display: block; }
@@ -143,7 +142,7 @@
 
   <div class="weak-spots-section" id="weakSection" style="display:none;">
     <div class="weak-header">
-      <h2><i class="fas fa-exclamation-triangle"></i> Prioridade de Estudo (Menor % de Acerto)</h2>
+      <h2><i class="fas fa-exclamation-triangle"></i> Prioridade (Menor % Acerto)</h2>
     </div>
     <div id="weakSpotsGrid" class="weak-grid"></div>
   </div>
@@ -154,7 +153,7 @@
   </div>
 
   <div class="reviews-section" id="futureSection" style="display:none;">
-    <h2><i class="fas fa-calendar-alt"></i> Próximas <span id="badgeFuture" class="badge-count">0</span></h2>
+    <h2><i class="fas fa-calendar-alt"></i> Futuras <span id="badgeFuture" class="badge-count">0</span></h2>
     <div id="futureList" class="review-list"></div>
   </div>
 
@@ -198,50 +197,60 @@
 
   async function loadAllData(uid) {
     try {
-      // Busca Histórico (para Pontos Fracos) e Revisões (para Agenda)
+      // Carrega os dois bancos de dados em paralelo
       const [sessionsSnap, reviewsSnap] = await Promise.all([
         database.ref('users/' + uid + '/sessionsByDate').get(),
         database.ref('users/' + uid + '/reviews').get()
       ]);
 
+      // Esconde o loading e mostra as seções
       document.getElementById('loading').style.display = 'none';
       document.getElementById('weakSection').style.display = 'block';
       document.getElementById('pendingSection').style.display = 'block';
       document.getElementById('futureSection').style.display = 'block';
 
+      // Passa os dados para as funções de renderização
       calculateWeakSpots(sessionsSnap.exists() ? sessionsSnap.val() : {});
       renderSchedule(reviewsSnap.exists() ? reviewsSnap.val() : {});
 
     } catch (e) { console.error(e); }
   }
 
-  // --- RENDERIZAR AGENDA (SEM BOTÕES) ---
+  // --- RENDERIZAR AGENDA ---
   function renderSchedule(reviews) {
     const pendingList = document.getElementById('pendingList');
     const futureList = document.getElementById('futureList');
     pendingList.innerHTML = '';
     futureList.innerHTML = '';
 
+    // Transforma o objeto de reviews em Array e ordena por data
     const list = Object.values(reviews).sort((a, b) => new Date(a.nextReview) - new Date(b.nextReview));
-    const today = new Date(); today.setHours(0,0,0,0);
+    
+    const today = new Date(); 
+    today.setHours(0,0,0,0); // Zera a hora para comparar apenas o dia
 
     let countPending = 0;
     let countFuture = 0;
 
     if(list.length === 0) {
-        pendingList.innerHTML = '<div class="empty-state">Nenhuma revisão agendada. Resolva questões no Tracker para começar!</div>';
+        pendingList.innerHTML = '<div class="empty-state">Nenhuma revisão agendada.</div>';
         futureList.innerHTML = '<div class="empty-state">Sua agenda futura aparecerá aqui.</div>';
         return;
     }
 
     list.forEach(r => {
-      const rDate = new Date(r.nextReview); rDate.setHours(0,0,0,0);
-      const diffDays = Math.ceil((rDate - today) / (1000 * 60 * 60 * 24));
+      const rDate = new Date(r.nextReview);
+      rDate.setHours(0,0,0,0);
+      
+      // Diferença em dias
+      const diffTime = rDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
       let statusClass = 'status-future';
       let statusText = `Em ${diffDays} dias`;
       let actionText = "Agendado";
 
+      // Lógica de Status
       if (diffDays < 0) {
         statusClass = 'status-late';
         statusText = `Atrasado ${Math.abs(diffDays)} dias`;
@@ -259,11 +268,11 @@
       const html = `
         <div class="review-item ${statusClass}">
           <div class="review-info">
-            <h3>${r.topic} <span style="font-weight:normal; font-size:0.85rem; color:#888;">(${r.subject})</span></h3>
+            <h3>${r.topic} <span style="font-weight:normal; font-size:0.85rem; color:#888;">(${r.subject || 'Geral'})</span></h3>
             <div class="review-sub">
               <span class="review-date"><i class="far fa-calendar-alt"></i> ${statusText}</span>
               <span>${new Date(r.nextReview).toLocaleDateString()}</span>
-              <span>Nível: ${r.level || 1}</span>
+              <span>Ciclo: ${getIntervalName(r.level)}</span>
             </div>
           </div>
           <div class="review-action">
@@ -276,6 +285,7 @@
       else futureList.innerHTML += html;
     });
 
+    // Atualiza contadores
     document.getElementById('badgePending').textContent = countPending;
     document.getElementById('badgeFuture').textContent = countFuture;
 
@@ -283,42 +293,55 @@
     if(countFuture === 0) futureList.innerHTML = '<div class="empty-state">Nenhuma revisão futura agendada.</div>';
   }
 
+  function getIntervalName(level) {
+    const intervals = [1, 7, 30, 120];
+    const days = intervals[Math.min((level || 0), intervals.length - 1)];
+    return `${days} dias`;
+  }
+
   // --- PONTOS FRACOS ---
   function calculateWeakSpots(sessionsByDate) {
     const topicsStats = {};
 
+    // Agrega dados de todas as sessões
     for (const date in sessionsByDate) {
       sessionsByDate[date].forEach(s => {
         const topic = s.topic || "Geral";
+        // Ignora tópicos genéricos
         if(topic === "Geral") return;
 
-        if (!topicsStats[topic]) topicsStats[topic] = { correct: 0, total: 0, subject: s.subject };
+        if (!topicsStats[topic]) {
+            topicsStats[topic] = { correct: 0, total: 0, subject: s.subject || "Geral" };
+        }
+        
         topicsStats[topic].correct += (s.exercisesCorrect || 0);
         topicsStats[topic].total += (s.exercisesDone || 0);
       });
     }
 
+    // Calcula % e cria array
     const topicsArray = Object.keys(topicsStats).map(name => {
       const t = topicsStats[name];
       return {
         name: name,
-        subject: t.subject || 'Geral',
+        subject: t.subject,
         accuracy: t.total > 0 ? (t.correct / t.total * 100) : 0,
         total: t.total
       };
     });
 
-    // Filtra (> 5 questões) e Ordena (Pior desempenho primeiro)
+    // Filtra: Apenas tópicos com pelo menos 5 questões feitas (para ter relevância estatística)
+    // Ordena: Menor acurácia primeiro
     const weakSpots = topicsArray
       .filter(t => t.total >= 5) 
       .sort((a, b) => a.accuracy - b.accuracy)
-      .slice(0, 4); 
+      .slice(0, 4); // Top 4
 
     const container = document.getElementById('weakSpotsGrid');
     container.innerHTML = '';
 
     if (weakSpots.length === 0) {
-      container.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#666;">Continue estudando para gerarmos recomendações personalizadas (mínimo 5 questões por tema).</div>';
+      container.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#666;">Continue estudando (mínimo 5 questões por tema) para gerarmos recomendações de prioridade.</div>';
       return;
     }
 

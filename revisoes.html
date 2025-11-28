@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Agenda de Revisões</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda de Revisões</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   
@@ -11,7 +12,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 
   <style>
-    /* --- CSS GERAL --- */
+    /* --- CSS BASE --- */
     :root { --primary-color: #4a6fa5; --secondary-color: #166088; --accent-color: #4fc3f7; --success-color: #4caf50; --warning-color: #ff9800; --danger-color: #f44336; --bg-color: #f5f7fa; --border-radius: 12px; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: #333; display: flex; min-height: 100vh; overflow-x: hidden; }
@@ -27,97 +28,85 @@
     .sidebar-button.active { background-color: var(--accent-color); color: #343a40; font-weight: 500; }
     .sidebar-button i { margin-right: 10px; width: 20px; text-align: center; }
     
-    /* Mobile Btn */
+    /* Mobile */
     .mobile-menu-btn { display: none; position: fixed; top: 15px; left: 15px; z-index: 1100; background: var(--primary-color); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
     #sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 900; }
     #sidebar-overlay.show { display: block; }
 
-    /* Content */
+    /* Main */
     #main-content { flex: 1; margin-left: 250px; padding: 30px; max-width: 1400px; width: calc(100% - 250px); margin-right: auto; transition: margin-left 0.3s ease, width 0.3s ease; }
-    .header { margin-bottom: 30px; }
-    .header h1 { color: var(--primary-color); font-weight: 500; }
+    .header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .header h1 { color: var(--primary-color); font-weight: 500; margin: 0; }
 
-    /* --- SEÇÃO PONTOS FRACOS --- */
-    .weak-spots-section {
-        background: white;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        margin-bottom: 40px;
-        border-left: 5px solid var(--danger-color);
-    }
-    .weak-header { margin-bottom: 15px; }
-    .weak-header h2 { color: var(--danger-color); font-size: 1.2rem; margin: 0; display: flex; align-items: center; gap: 10px; }
-    
+    /* Botão Config */
+    .btn-config { background: white; border: 1px solid #ddd; padding: 8px 15px; border-radius: 20px; cursor: pointer; color: #555; font-weight: 500; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+    .btn-config:hover { background: #eee; }
+
+    /* Cards e Listas */
+    .weak-spots-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 40px; border-left: 5px solid var(--danger-color); }
+    .weak-header h2 { color: var(--danger-color); font-size: 1.2rem; margin: 0 0 15px 0; display: flex; align-items: center; gap: 10px; }
     .weak-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-    
-    .weak-card {
-        background: #ffebee;
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #ffcdd2;
-    }
+    .weak-card { background: #ffebee; padding: 15px; border-radius: 8px; border: 1px solid #ffcdd2; }
     .weak-topic { font-weight: bold; color: #c62828; margin-bottom: 5px; font-size: 0.95rem; }
-    .weak-area { font-size: 0.8rem; color: #b71c1c; margin-bottom: 10px; }
     .weak-stat { display: flex; justify-content: space-between; font-size: 0.85rem; color: #333; font-weight: 500; }
-    .weak-score { color: var(--danger-color); font-weight: bold; }
-
-    /* --- LISTA DE REVISÕES --- */
+    
     .reviews-section { margin-bottom: 40px; }
     .reviews-section h2 { font-size: 1.2rem; color: var(--secondary-color); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
     .badge-count { background: var(--secondary-color); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; margin-left: 10px; }
-
     .review-list { display: flex; flex-direction: column; gap: 10px; }
-
-    .review-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-        border-left: 4px solid #ccc;
-        transition: transform 0.2s;
-    }
+    .review-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border-left: 4px solid #ccc; transition: transform 0.2s; }
     .review-item:hover { transform: translateX(5px); }
-
-    /* Status Cores */
     .status-late { border-left-color: var(--danger-color); }
     .status-today { border-left-color: var(--success-color); }
     .status-future { border-left-color: var(--primary-color); }
-
     .review-info h3 { font-size: 1rem; color: #333; margin: 0 0 5px 0; }
     .review-sub { font-size: 0.85rem; color: #666; display: flex; gap: 15px; flex-wrap: wrap; }
-    .review-date { font-weight: 500; color: var(--secondary-color); }
-
-    .review-action { 
-        font-size: 0.85rem; 
-        color: #555; 
-        background: #f0f0f0; 
-        padding: 6px 12px; 
-        border-radius: 20px; 
-        white-space: nowrap;
-    }
-    
+    .review-action { font-size: 0.85rem; color: #555; background: #f0f0f0; padding: 6px 12px; border-radius: 20px; white-space: nowrap; }
     .status-late .review-action { background: #ffebee; color: var(--danger-color); font-weight: bold; }
     .status-today .review-action { background: #e8f5e9; color: var(--success-color); font-weight: bold; }
+    .empty-state { text-align: center; padding: 30px; color: #888; font-style: italic; background: white; border-radius: 8px; border: 1px dashed #ccc; }
 
-    .empty-state { text-align: center; padding: 30px; color: #999; font-style: italic; background: white; border-radius: 8px; }
+    /* --- MODAL DE DIAS --- */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
+    .modal-content { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-header { margin-bottom: 20px; font-weight: bold; font-size: 1.2rem; color: var(--primary-color); }
+    .days-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+    .day-check { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border: 1px solid #eee; border-radius: 6px; }
+    .day-check:hover { background: #f9f9f9; }
+    .modal-actions { text-align: right; }
+    .btn-save { background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+    .btn-cancel { background: transparent; color: #666; border: none; padding: 10px 20px; cursor: pointer; margin-right: 10px; }
 
     @media (max-width: 900px) {
       #sidebar { transform: translateX(-100%); width: 260px; }
       #sidebar.open { transform: translateX(0); box-shadow: 5px 0 15px rgba(0,0,0,0.3); }
       .mobile-menu-btn { display: block; }
       #main-content { margin-left: 0; width: 100%; padding: 15px; padding-top: 70px; }
-      
       .review-item { flex-direction: column; align-items: flex-start; gap: 10px; }
       .review-action { align-self: flex-start; }
-      .weak-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
+
+<div id="configModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">Dias de Estudo Permitidos</div>
+    <div class="days-grid">
+      <label class="day-check"><input type="checkbox" class="day-input" value="0"> Domingo</label>
+      <label class="day-check"><input type="checkbox" class="day-input" value="1"> Segunda</label>
+      <label class="day-check"><input type="checkbox" class="day-input" value="2"> Terça</label>
+      <label class="day-check"><input type="checkbox" class="day-input" value="3"> Quarta</label>
+      <label class="day-check"><input type="checkbox" class="day-input" value="4"> Quinta</label>
+      <label class="day-check"><input type="checkbox" class="day-input" value="5"> Sexta</label>
+      <label class="day-check"><input type="checkbox" class="day-input" value="6"> Sábado</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveStudyDays()">Salvar Configuração</button>
+    </div>
+  </div>
+</div>
 
 <button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
 <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
@@ -136,6 +125,7 @@
 <div id="main-content">
   <div class="header">
     <h1>Agenda de Revisões</h1>
+    <button class="btn-config" onclick="openModal()"><i class="fas fa-cog"></i> Configurar Dias</button>
   </div>
 
   <div id="loading" style="text-align:center; margin-top:50px;"><i class="fas fa-spinner fa-spin fa-2x" style="color:#666"></i></div>
@@ -156,7 +146,6 @@
     <h2><i class="fas fa-calendar-alt"></i> Futuras <span id="badgeFuture" class="badge-count">0</span></h2>
     <div id="futureList" class="review-list"></div>
   </div>
-
 </div>
 
 <script>
@@ -165,7 +154,10 @@
     document.getElementById('sidebar-overlay').classList.toggle('show');
   }
 
-  // Configuração Firebase
+  // Modal
+  function openModal() { document.getElementById('configModal').style.display = 'flex'; loadStudyDaysUI(); }
+  function closeModal() { document.getElementById('configModal').style.display = 'none'; }
+
   const firebaseConfig = {
     apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
     authDomain: "meu-study-tracker.firebaseapp.com",
@@ -187,7 +179,6 @@
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         document.getElementById('btnLogout').addEventListener('click', (e)=>{e.preventDefault(); auth.signOut().then(()=>window.location.href='login.html');});
-        
         await loadAllData(user.uid);
       } else {
         window.location.href = 'login.html';
@@ -197,41 +188,60 @@
 
   async function loadAllData(uid) {
     try {
-      // Carrega os dois bancos de dados em paralelo
       const [sessionsSnap, reviewsSnap] = await Promise.all([
         database.ref('users/' + uid + '/sessionsByDate').get(),
         database.ref('users/' + uid + '/reviews').get()
       ]);
 
-      // Esconde o loading e mostra as seções
       document.getElementById('loading').style.display = 'none';
       document.getElementById('weakSection').style.display = 'block';
       document.getElementById('pendingSection').style.display = 'block';
       document.getElementById('futureSection').style.display = 'block';
 
-      // Passa os dados para as funções de renderização
       calculateWeakSpots(sessionsSnap.exists() ? sessionsSnap.val() : {});
       renderSchedule(reviewsSnap.exists() ? reviewsSnap.val() : {});
 
     } catch (e) { console.error(e); }
   }
 
-  // --- RENDERIZAR AGENDA ---
+  // --- SALVAR/CARREGAR DIAS ---
+  async function loadStudyDaysUI() {
+    if(!auth.currentUser) return;
+    const snap = await database.ref('users/' + auth.currentUser.uid + '/settings/studyDays').get();
+    // Padrão: Todos marcados se não existir config
+    const days = snap.exists() ? snap.val() : [0,1,2,3,4,5,6]; 
+    
+    document.querySelectorAll('.day-input').forEach(input => {
+      input.checked = days.includes(parseInt(input.value));
+    });
+  }
+
+  async function saveStudyDays() {
+    if(!auth.currentUser) return;
+    const selected = [];
+    document.querySelectorAll('.day-input:checked').forEach(input => selected.push(parseInt(input.value)));
+    
+    if(selected.length === 0) { alert("Selecione pelo menos um dia!"); return; }
+    
+    await database.ref('users/' + auth.currentUser.uid + '/settings/studyDays').set(selected);
+    alert("Dias configurados! Novas revisões seguirão esta regra.");
+    closeModal();
+  }
+
+  // --- RENDERIZAÇÃO ---
   function renderSchedule(reviews) {
     const pendingList = document.getElementById('pendingList');
     const futureList = document.getElementById('futureList');
     pendingList.innerHTML = '';
     futureList.innerHTML = '';
 
-    // Transforma o objeto de reviews em Array e ordena por data
     const list = Object.values(reviews).sort((a, b) => new Date(a.nextReview) - new Date(b.nextReview));
-    
-    const today = new Date(); 
-    today.setHours(0,0,0,0); // Zera a hora para comparar apenas o dia
+    const today = new Date(); today.setHours(0,0,0,0);
 
     let countPending = 0;
     let countFuture = 0;
 
+    // SE NÃO TIVER NADA NA LISTA
     if(list.length === 0) {
         pendingList.innerHTML = '<div class="empty-state">Nenhuma revisão agendada.</div>';
         futureList.innerHTML = '<div class="empty-state">Sua agenda futura aparecerá aqui.</div>';
@@ -239,18 +249,13 @@
     }
 
     list.forEach(r => {
-      const rDate = new Date(r.nextReview);
-      rDate.setHours(0,0,0,0);
-      
-      // Diferença em dias
-      const diffTime = rDate - today;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const rDate = new Date(r.nextReview); rDate.setHours(0,0,0,0);
+      const diffDays = Math.ceil((rDate - today) / (1000 * 60 * 60 * 24));
       
       let statusClass = 'status-future';
       let statusText = `Em ${diffDays} dias`;
       let actionText = "Agendado";
 
-      // Lógica de Status
       if (diffDays < 0) {
         statusClass = 'status-late';
         statusText = `Atrasado ${Math.abs(diffDays)} dias`;
@@ -275,9 +280,7 @@
               <span>Ciclo: ${getIntervalName(r.level)}</span>
             </div>
           </div>
-          <div class="review-action">
-            ${actionText}
-          </div>
+          <div class="review-action">${actionText}</div>
         </div>
       `;
 
@@ -285,12 +288,16 @@
       else futureList.innerHTML += html;
     });
 
-    // Atualiza contadores
     document.getElementById('badgePending').textContent = countPending;
     document.getElementById('badgeFuture').textContent = countFuture;
 
-    if(countPending === 0) pendingList.innerHTML = '<div class="empty-state">🎉 Tudo em dia! Nenhuma revisão pendente.</div>';
-    if(countFuture === 0) futureList.innerHTML = '<div class="empty-state">Nenhuma revisão futura agendada.</div>';
+    // AQUI ESTÁ A MENSAGEM PERSONALIZADA QUE VOCÊ PEDIU
+    if(countPending === 0) {
+        pendingList.innerHTML = '<div class="empty-state" style="background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9;"><i class="fas fa-check-circle"></i> Não há revisões para hoje!</div>';
+    }
+    if(countFuture === 0) {
+        futureList.innerHTML = '<div class="empty-state">Nenhuma revisão futura agendada.</div>';
+    }
   }
 
   function getIntervalName(level) {
@@ -299,74 +306,49 @@
     return `${days} dias`;
   }
 
-  // --- PONTOS FRACOS ---
   function calculateWeakSpots(sessionsByDate) {
     const topicsStats = {};
-
-    // Agrega dados de todas as sessões
     for (const date in sessionsByDate) {
       sessionsByDate[date].forEach(s => {
         const topic = s.topic || "Geral";
-        // Ignora tópicos genéricos
         if(topic === "Geral") return;
-
-        if (!topicsStats[topic]) {
-            topicsStats[topic] = { correct: 0, total: 0, subject: s.subject || "Geral" };
-        }
-        
+        if (!topicsStats[topic]) topicsStats[topic] = { correct: 0, total: 0, subject: s.subject || "Geral" };
         topicsStats[topic].correct += (s.exercisesCorrect || 0);
         topicsStats[topic].total += (s.exercisesDone || 0);
       });
     }
 
-    // Calcula % e cria array
-    const topicsArray = Object.keys(topicsStats).map(name => {
-      const t = topicsStats[name];
-      return {
+    const weakSpots = Object.keys(topicsStats)
+      .map(name => ({
         name: name,
-        subject: t.subject,
-        accuracy: t.total > 0 ? (t.correct / t.total * 100) : 0,
-        total: t.total
-      };
-    });
-
-    // Filtra: Apenas tópicos com pelo menos 5 questões feitas (para ter relevância estatística)
-    // Ordena: Menor acurácia primeiro
-    const weakSpots = topicsArray
-      .filter(t => t.total >= 5) 
+        subject: topicsStats[name].subject,
+        accuracy: topicsStats[name].total > 0 ? (topicsStats[name].correct / topicsStats[name].total * 100) : 0,
+        total: topicsStats[name].total
+      }))
+      .filter(t => t.total >= 5)
       .sort((a, b) => a.accuracy - b.accuracy)
-      .slice(0, 4); // Top 4
+      .slice(0, 4);
 
     const container = document.getElementById('weakSpotsGrid');
     container.innerHTML = '';
 
     if (weakSpots.length === 0) {
-      container.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#666;">Continue estudando (mínimo 5 questões por tema) para gerarmos recomendações de prioridade.</div>';
+      container.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#666;">Estude mais (mínimo 5 questões por tema) para ver seus pontos de melhoria.</div>';
       return;
     }
 
     weakSpots.forEach(item => {
-      let color = '#d32f2f'; 
-      if(item.accuracy >= 50) color = '#f57c00';
-
-      const html = `
+      let color = '#d32f2f'; if(item.accuracy >= 50) color = '#f57c00';
+      container.innerHTML += `
         <div class="weak-card">
           <div class="weak-topic">${item.name}</div>
           <div class="weak-area">${item.subject}</div>
-          <div class="weak-stat">
-            <span>${item.total} questões</span>
-            <span class="weak-score" style="color:${color}">${item.accuracy.toFixed(0)}%</span>
-          </div>
-          <div style="width:100%; height:6px; background:rgba(0,0,0,0.1); margin-top:8px; border-radius:3px;">
-             <div style="width:${item.accuracy}%; height:100%; background:${color}; border-radius:3px;"></div>
-          </div>
-        </div>
-      `;
-      container.innerHTML += html;
+          <div class="weak-stat"><span>${item.total}Q</span> <span class="weak-score" style="color:${color}">${item.accuracy.toFixed(0)}%</span></div>
+          <div style="width:100%; height:6px; background:rgba(0,0,0,0.1); margin-top:8px; border-radius:3px;"><div style="width:${item.accuracy}%; height:100%; background:${color}; border-radius:3px;"></div></div>
+        </div>`;
     });
   }
 
-  // Fecha sidebar mobile ao clicar fora
   document.addEventListener('click', (e) => {
     const sidebar = document.getElementById('sidebar');
     const btn = document.querySelector('.mobile-menu-btn');

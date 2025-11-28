@@ -34,7 +34,7 @@
     #sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 900; }
     #sidebar-overlay.show { display: block; }
 
-    /* --- LAYOUT PRINCIPAL --- */
+    /* --- LAYOUT --- */
     #main-content { flex: 1; margin-left: 250px; padding: 30px; max-width: 1400px; width: calc(100% - 250px); margin-right: auto; transition: margin-left 0.3s ease, width 0.3s ease; }
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
     .header h1 { color: var(--primary-color); font-weight: 500; font-size: 1.8rem; }
@@ -56,88 +56,72 @@
     .accordion-content { display: none; padding: 20px; animation: slideDown 0.3s ease-out; }
     @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* --- CALENDÁRIO (CSS REFEITO) --- */
-    .calendar-container { padding: 0; }
+    /* --- CALENDÁRIO --- */
+    .calendar-container { padding: 0; width: 100%; }
     .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .calendar-header h2 { color: var(--primary-color); font-size: 1.2rem; margin: 0; }
     .calendar-nav { display: flex; gap: 10px; }
     .calendar-nav button { background-color: var(--primary-color); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     
-    /* Grid do Calendário */
     .calendar-grid { 
       display: grid; 
-      grid-template-columns: repeat(7, 1fr); /* Força 7 colunas */
-      gap: 8px; 
+      grid-template-columns: repeat(7, 1fr); 
+      gap: 5px; 
       margin-bottom: 20px;
     }
     
-    .calendar-day-header { 
-      text-align: center; 
-      font-weight: 600; 
-      color: #666; 
-      font-size: 0.85rem; 
-      text-transform: uppercase;
-      padding-bottom: 5px;
-    }
-    
+    .calendar-day-header { text-align: center; font-weight: 600; color: #666; font-size: 0.85rem; text-transform: uppercase; }
     .calendar-day { 
-      aspect-ratio: 1 / 1; /* Garante que seja quadrado/redondo */
+      aspect-ratio: 1 / 1; 
       display: flex; 
       flex-direction: column; 
       align-items: center; 
       justify-content: center; 
-      border-radius: 50%; /* Círculo perfeito */
+      border-radius: 50%; 
       background-color: #f8f9fa; 
       position: relative; 
       font-size: 0.9rem; 
       transition: 0.2s; 
-      border: 1px solid transparent;
-      cursor: default;
     }
-    
-    .calendar-day:hover { transform: scale(1.1); z-index: 2; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-color: #ddd; }
     .calendar-day.today { border: 2px solid var(--accent-color); background-color: #e3f2fd; }
-    
-    /* Status */
-    .calendar-day.completed { background: var(--success-gradient); color: white; border: none; }
+    .calendar-day.completed { background: var(--success-gradient); color: white; }
     .calendar-day.partial { background: #fff3e0; border: 1px solid var(--warning-color); color: #333; }
     .calendar-day.not-completed { background: #ffebee; border: 1px solid var(--danger-color); color: #333; }
+    .calendar-day-status { font-size: 0.7rem; margin-top: -2px; font-weight: bold; }
     
-    .calendar-day-number { font-weight: 600; }
-    .calendar-day-status { font-size: 0.7rem; margin-top: -2px; }
-    
-    /* Legenda */
-    .calendar-legend { display: flex; justify-content: center; gap: 15px; margin-top: 20px; font-size: 0.8rem; flex-wrap: wrap; }
+    .calendar-legend { display: flex; justify-content: center; gap: 10px; margin-top: 20px; font-size: 0.8rem; flex-wrap: wrap; }
     .legend-item { display: flex; align-items: center; gap: 5px; }
     .legend-color { width: 12px; height: 12px; border-radius: 50%; }
     .legend-color.completed { background: var(--success-color); }
     .legend-color.partial { background: var(--warning-color); }
     .legend-color.not-completed { background: var(--danger-color); }
 
-    /* Resumo */
     .calendar-summary { margin-top: 20px; padding: 15px; background: #e8f4fc; border-radius: 8px; text-align: center; }
-    .calendar-summary h3 { margin-top: 0; font-size: 1rem; color: var(--primary-color); margin-bottom: 10px; }
-    .calendar-summary-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .summary-stat h4 { font-size: 0.75rem; color: #666; margin-bottom: 4px; }
+    .calendar-summary-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
     .summary-stat p { font-size: 1.1rem; font-weight: bold; color: var(--secondary-color); margin: 0; }
+    .summary-stat h4 { font-size: 0.75rem; color: #666; margin: 5px 0 0 0; }
 
-    /* --- TABELAS & OUTROS --- */
+    /* --- TABELAS E GRÁFICO --- */
     .view-container { overflow-x: auto; } 
-    table { width: 100%; border-collapse: collapse; margin: 10px 0; min-width: 600px; }
-    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e0e0e0; font-size: 0.95rem; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; min-width: 500px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0; font-size: 0.9rem; }
     th { background-color: var(--primary-color); color: white; font-weight: 500; white-space: nowrap; }
     tr:nth-child(even) { background-color: #f9f9f9; }
-    
-    .accuracy-high { color: var(--success-color); font-weight: 500; }
-    .accuracy-medium { color: var(--warning-color); font-weight: 500; }
-    .accuracy-low { color: var(--danger-color); font-weight: 500; }
-    .hidden { display: none !important; }
+    .accuracy-high { color: var(--success-color); font-weight: bold; }
+    .accuracy-medium { color: var(--warning-color); font-weight: bold; }
+    .accuracy-low { color: var(--danger-color); font-weight: bold; }
     
     .time-period-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
     .time-period-button { padding: 8px 16px; font-size: 0.9rem; border: none; border-radius: 20px; cursor: pointer; background-color: #eee; color: #555; transition: 0.3s; }
     .time-period-button.active { background-color: var(--primary-color); color: white; }
     
-    .chart-container { position: relative; height: 300px; width: 100%; }
+    .chart-container { 
+        position: relative; 
+        height: 300px; 
+        width: 100%; 
+        min-height: 300px; /* Importante para mobile */
+    }
+    .hidden { display: none !important; }
 
     /* --- MEDIA QUERIES (MOBILE) --- */
     @media (max-width: 900px) {
@@ -147,11 +131,9 @@
       
       #main-content { margin-left: 0; width: 100%; padding: 15px; padding-top: 70px; }
       
-      /* Ajuste Calendário Mobile */
-      .calendar-grid { gap: 4px; } /* Menor gap no mobile */
       .calendar-day { font-size: 0.8rem; }
       .calendar-day-status { font-size: 0.6rem; }
-      .calendar-summary-stats { grid-template-columns: 1fr; gap: 15px; }
+      .calendar-summary-stats { grid-template-columns: 1fr; gap: 10px; }
       
       .stats-container { grid-template-columns: 1fr 1fr; gap: 10px; }
       .stat-card { padding: 15px; }
@@ -168,11 +150,12 @@
 <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
 <div id="sidebar">
-  <div class="logo"><i class="fas fa-book-open"></i><h2>Study Tracker</h2></div>
+  <div class="logo"><i class="fas fa-book-open"></i><h2>Med Fácil</h2></div>
   <ul class="sidebar-menu">
     <li><a href="index.html" class="sidebar-button"><i class="fas fa-stopwatch"></i><span>Tracker</span></a></li>
     <li><a href="#" class="sidebar-button active"><i class="fas fa-history"></i><span>Histórico</span></a></li>
     <li><a href="conteudos.html" class="sidebar-button"><i class="fas fa-book"></i><span>Conteúdos</span></a></li>
+    <li><a href="revisoes.html" class="sidebar-button"><i class="fas fa-sync-alt"></i><span>Revisões</span></a></li>
     <li><a id="btnLogout" href="#" class="sidebar-button"><i class="fas fa-sign-out-alt"></i><span>Sair</span></a></li>
   </ul>
 </div>
@@ -215,7 +198,6 @@
             <div class="calendar-day-header">Sáb</div>
             <div id="calendarDaysContainer" style="display: contents;"></div>
         </div>
-        
         <div class="calendar-legend">
           <div class="legend-item"><div class="legend-color completed"></div><span>Meta</span></div>
           <div class="legend-item"><div class="legend-color partial"></div><span>Parcial</span></div>
@@ -291,24 +273,37 @@
 </div>
 
 <script>
-  // --- FUNÇÕES DE UI ---
+  // --- FUNÇÃO GLOBAL DE ACORDEÃO (CORRIGIDA PARA REDESENHAR) ---
+  function toggleSection(id, element) {
+    const content = document.getElementById(id);
+    element.classList.toggle('active');
+    
+    if (content.style.display === 'block') {
+      content.style.display = 'none';
+    } else {
+      content.style.display = 'block';
+      
+      // FORÇA O REDESENHO DO GRÁFICO AO ABRIR
+      if(id === 'chartContent' && window.myStudyChart) {
+        setTimeout(() => {
+           window.myStudyChart.resize();
+           window.myStudyChart.update();
+        }, 100); // Pequeno delay para garantir que o div abriu
+      }
+
+      // FORÇA O REDESENHO DO CALENDÁRIO AO ABRIR (Se necessário)
+      if(id === 'calendarContent') {
+         // O calendário geralmente é CSS puro, mas se tiver bug, 
+         // podemos forçar um "re-render" aqui se necessário.
+      }
+    }
+  }
+
   function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
     document.getElementById('sidebar-overlay').classList.toggle('show');
   }
 
-  function toggleSection(id, element) {
-    const content = document.getElementById(id);
-    element.classList.toggle('active');
-    if (content.style.display === 'block') {
-      content.style.display = 'none';
-    } else {
-      content.style.display = 'block';
-      if(id === 'chartContent' && window.myStudyChart) window.myStudyChart.resize();
-    }
-  }
-
-  // Configuração Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
     authDomain: "meu-study-tracker.firebaseapp.com",
@@ -362,7 +357,6 @@
         function formatHrs(ms) { return (ms/3600000).toFixed(1)+'h'; }
         function getAccClass(acc) { return acc>=80?'accuracy-high':acc>=50?'accuracy-medium':'accuracy-low'; }
 
-        // --- STATS ---
         function updateStats() {
           let totalMs=0, totalSess=0, totalDays=Object.keys(sessionsByDate).length;
           const now = new Date();
@@ -394,7 +388,6 @@
           yearTimeEl.textContent = formatHrs(msYear);
           dailyAvgEl.textContent = formatHrs(totalDays>0 ? totalMs/totalDays : 0);
           
-          // Streaks
           const dates = Object.keys(sessionsByDate).sort((a,b)=>new Date(a)-new Date(b));
           let current=0, record=0, temp=1;
           if(dates.length > 0) {
@@ -417,7 +410,6 @@
           recordEl.textContent = record + " dias";
         }
 
-        // --- TABELAS ---
         function fillDailyTable() {
           dailyBody.innerHTML = '';
           const dates = Object.keys(sessionsByDate).sort((a,b)=>new Date(b)-new Date(a));
@@ -484,7 +476,6 @@
           });
         }
 
-        // --- GRÁFICO ---
         function updateChart(period) {
           const ctx = document.getElementById('studyChart').getContext('2d');
           let labels=[], data=[];
@@ -492,9 +483,9 @@
           if(period === 'daily') {
             for(let i=6; i>=0; i--) {
               const d = new Date(); d.setDate(d.getDate()-i);
-              const k = d.toISOString().split('T')[0]; 
-              const parts = k.split('-');
-              const key = `${parts[0]}-${parseInt(parts[1])}-${parseInt(parts[2])}`; // Remove zeros a esquerda
+              const parts = d.toISOString().split('T')[0].split('-');
+              // Chave compatível: YYYY-M-D
+              const key = `${parts[0]}-${parseInt(parts[1])}-${parseInt(parts[2])}`;
               
               labels.push(`${d.getDate()}/${d.getMonth()+1}`);
               let ms=0;
@@ -509,11 +500,14 @@
           window.myStudyChart = new Chart(ctx, {
             type: 'bar',
             data: { labels: labels, datasets: [{ label: 'Horas', data: data, backgroundColor: '#4a6fa5' }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, /* CRUCIAL PARA MOBILE */
+                scales: { y: { beginAtZero: true } } 
+            }
           });
         }
 
-        // --- CALENDÁRIO ---
         function updateCalendar(month, year) {
           const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
           calendarTitle.textContent = `${months[month]} ${year}`;
@@ -567,15 +561,12 @@
           updateCalendar(currentCalendarMonth, currentCalendarYear);
         }
 
-        // --- LISTENERS ---
         document.querySelectorAll('.time-period-button').forEach(btn => {
           btn.addEventListener('click', () => {
             document.querySelectorAll('.time-period-button').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
             ['daily','weekly','monthly','yearly'].forEach(v => document.getElementById(v+'View').classList.add('hidden'));
             document.getElementById(btn.dataset.period+'View').classList.remove('hidden');
-            
             updateChart(btn.dataset.period);
           });
         });
@@ -593,15 +584,25 @@
           e.preventDefault(); auth.signOut().then(()=>window.location.href='login.html');
         });
 
-        // --- LOAD DATA ---
         try {
           const snapshot = await dbRef.get();
           if(snapshot.exists()) sessionsByDate = snapshot.val();
-          setTimeout(() => updateAllDisplays(), 100);
+          // Delay para garantir que DOM e ChartJS estejam prontos no mobile
+          setTimeout(() => updateAllDisplays(), 200);
         } catch (e) { console.error(e); }
 
       } else {
         window.location.href = 'login.html'; 
+      }
+    });
+
+    // Fecha sidebar ao clicar fora
+    document.addEventListener('click', (e) => {
+      const sidebar = document.getElementById('sidebar');
+      const btn = document.querySelector('.mobile-menu-btn');
+      if(window.innerWidth <= 900 && !sidebar.contains(e.target) && !btn.contains(e.target)) {
+        sidebar.classList.remove('open');
+        document.getElementById('sidebar-overlay').classList.remove('show');
       }
     });
   });

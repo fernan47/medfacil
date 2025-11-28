@@ -97,23 +97,19 @@
 
     /* --- MEDIA QUERIES (MOBILE) --- */
     @media (max-width: 900px) {
-      /* Sidebar Escondida */
       #sidebar { transform: translateX(-100%); width: 260px; }
       #sidebar.open { transform: translateX(0); box-shadow: 5px 0 15px rgba(0,0,0,0.3); }
       .mobile-menu-btn { display: block; }
       
-      /* Ajustes de Layout */
       #main-content { margin-left: 0; width: 100%; padding: 15px; padding-top: 70px; }
       .today-stats { grid-template-columns: 1fr; gap: 10px; }
       .exercises-section { grid-template-columns: 1fr; }
       .stats-container { grid-template-columns: 1fr 1fr; gap: 10px; }
       .daily-summary-stats { grid-template-columns: 1fr 1fr; }
       
-      /* Botões */
       .button-container { flex-direction: column; width: 100%; }
       .button { width: 100%; }
       
-      /* Timer */
       .timer-section { padding: 20px; }
       #timer { font-size: 3.5rem; }
     }
@@ -259,7 +255,7 @@
       document.getElementById('stopButton').classList.remove('hidden');
     }
 
-    // --- SALVAR SESSÃO COM AUTOMAÇÃO DE REVISÃO ---
+    // --- SALVAR SESSÃO COM INTELIGÊNCIA DE AGENDA ---
     async function saveSession() {
       clearInterval(timerInterval);
       
@@ -288,15 +284,13 @@
       sessionsByDate[dateKey].push(sessionData);
       
       try {
-        // 1. Salva no histórico
         await dbRef.set(sessionsByDate);
+        console.log("Sessão salva!");
         
-        // 2. Agenda Revisão (Automática)
         if (topic !== "Geral") {
           await updateReviewSchedule(subject, topic, auth.currentUser.uid);
         }
 
-        console.log("Sessão salva!");
         inicializarDashboard();
       } catch (e) {
         console.error(e);
@@ -305,7 +299,6 @@
         sessionsByDate[dateKey].pop();
       }
 
-      // Reset
       totalTime = 0;
       document.getElementById('exercisesInput').value = 0; 
       document.getElementById('correctExercisesInput').value = 0; 
@@ -316,32 +309,46 @@
       timerDisplay.textContent = "00:00:00";
     }
 
-    // --- LÓGICA DE REVISÃO AUTOMÁTICA (1, 7, 30, 120) ---
+    // --- LÓGICA DE REVISÃO INTELIGENTE (PULA DIAS PROIBIDOS) ---
     async function updateReviewSchedule(subject, topic, uid) {
       const safeTopicKey = topic.replace(/[.#$/\[\]]/g, '_');
       const reviewRef = database.ref(`users/${uid}/reviews/${safeTopicKey}`);
+      const settingsRef = database.ref(`users/${uid}/settings/studyDays`);
 
-      const snapshot = await reviewRef.get();
-      let level = 0; // Começa do zero (primeiro estudo)
+      // 1. Busca nível atual e configurações
+      const [snapReview, snapSettings] = await Promise.all([reviewRef.get(), settingsRef.get()]);
       
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        level = (data.level || 0) + 1; // Avança
+      let level = 0;
+      if (snapReview.exists()) {
+        level = (snapReview.val().level || 0) + 1;
       }
 
+      // 2. Define dias permitidos (Default: todos)
+      const allowedDays = snapSettings.exists() ? snapSettings.val() : [0,1,2,3,4,5,6];
+
+      // 3. Calcula data base
       const intervals = [1, 7, 30, 120];
       const daysToAdd = intervals[Math.min(level, intervals.length - 1)];
+      let targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + daysToAdd);
 
-      const nextDate = new Date();
-      nextDate.setDate(nextDate.getDate() + daysToAdd);
+      // 4. Ajusta se cair em dia proibido
+      if (allowedDays && allowedDays.length > 0) {
+          while (!allowedDays.includes(targetDate.getDay())) {
+              console.log(`Dia ${targetDate.getDay()} não permitido. Avançando...`);
+              targetDate.setDate(targetDate.getDate() + 1);
+          }
+      }
       
       await reviewRef.set({
         subject: subject,
         topic: topic,
         lastStudied: new Date().toISOString(),
-        nextReview: nextDate.toISOString(),
+        nextReview: targetDate.toISOString(),
         level: level
       });
+      
+      console.log(`Agendado para ${targetDate.toLocaleDateString()} (Nível ${level})`);
     }
 
     // --- HELPERS ---
@@ -354,7 +361,7 @@
       return `${pad(h)}:${pad(m)}:${pad(s)}`;
     }
 
-    // --- CÁLCULOS (RESTAURADOS) ---
+    // --- CÁLCULOS DE DASHBOARD ---
     function getStartOfWeek(date) {
       const d = new Date(date); const day = d.getDay();
       const diff = d.getDate() - day + (day === 0 ? -6 : 1);
@@ -379,7 +386,7 @@
     function updateWeeklyStudyTime() {
       document.getElementById('weeklyStudyTime').textContent = calculateWeeklyStudyTime();
     }
-
+    
     function updateWeeklyProgress() {
       const wTime = calculateWeeklyStudyTime();
       const p = wTime.split(':').map(Number);
@@ -556,7 +563,7 @@
       }
     });
 
-    // Mobile Menu
+    // Fecha sidebar ao clicar fora
     document.addEventListener('click', (e) => {
       const sidebar = document.getElementById('sidebar');
       const btn = document.querySelector('.mobile-menu-btn');

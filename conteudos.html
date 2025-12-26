@@ -2,23 +2,23 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Desempenho Detalhado</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conteúdos e Domínio</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    /* --- CSS BASE --- */
-    :root { --primary-color: #4a6fa5; --secondary-color: #166088; --accent-color: #4fc3f7; --text-color: #333; --bg-color: #f5f7fa; --card-bg: #ffffff; --border-radius: 12px; }
+    /* --- CSS GERAL (Identico aos outros) --- */
+    :root { --primary-color: #4a6fa5; --secondary-color: #166088; --accent-color: #4fc3f7; --success-color: #4caf50; --warning-color: #ff9800; --danger-color: #f44336; --bg-color: #f5f7fa; --border-radius: 12px; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; min-height: 100vh; overflow-x: hidden; }
+    body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: #333; display: flex; min-height: 100vh; overflow-x: hidden; }
     
-    /* Sidebar (Desktop) */
-    #sidebar { width: 250px; background: linear-gradient(135deg, #2c3e50, #4a6fa5); color: white; padding: 30px 20px; position: fixed; height: 100%; z-index: 1000; top: 0; left: 0; transition: transform 0.3s ease; }
+    /* Sidebar */
+    #sidebar { width: 250px; background: linear-gradient(135deg, #2c3e50, #4a6fa5); color: white; padding: 30px 20px; position: fixed; height: 100%; z-index: 1000; top: 0; left: 0; transition: transform 0.3s; }
     #sidebar .logo { text-align: center; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; }
     #sidebar .logo h2 { color: white; font-weight: 500; }
     #sidebar .logo i { font-size: 2rem; margin-bottom: 10px; color: var(--accent-color); }
@@ -27,204 +27,115 @@
     .sidebar-button:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
     .sidebar-button.active { background-color: var(--accent-color); color: #343a40; font-weight: 500; }
     .sidebar-button i { margin-right: 10px; width: 20px; text-align: center; }
-
-    /* Botão Menu Mobile (Novo) */
+    
+    /* Mobile Btn */
     .mobile-menu-btn { display: none; position: fixed; top: 15px; left: 15px; z-index: 1100; background: var(--primary-color); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    #sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 900; }
+    #sidebar-overlay.show { display: block; }
 
-    /* Layout Principal */
-    #main-content { 
-      flex: 1; 
-      margin-left: 250px; 
-      padding: 40px; 
-      width: calc(100% - 250px); 
-      max-width: 1400px; 
-      margin-right: auto;
-      transition: margin-left 0.3s ease, width 0.3s ease;
+    /* Content */
+    #main-content { flex: 1; margin-left: 250px; padding: 30px; max-width: 1400px; width: calc(100% - 250px); margin-right: auto; transition: margin-left 0.3s ease, width 0.3s ease; }
+    .header { margin-bottom: 30px; }
+    .header h1 { color: var(--primary-color); font-weight: 500; }
+
+    /* --- ÁREA DE CONTEÚDOS --- */
+    .subject-section { margin-bottom: 40px; }
+    .subject-title { font-size: 1.4rem; color: var(--secondary-color); margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; }
+    
+    .topics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .topic-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+    .topic-card:hover { transform: translateY(-3px); }
+
+    .topic-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .topic-name { font-weight: bold; color: #333; font-size: 1rem; }
+    .topic-stats { font-size: 0.8rem; color: #666; }
+
+    /* Barra de Progresso (Dominância) */
+    .mastery-container {
+      background: #eee;
+      border-radius: 6px;
+      height: 8px;
+      width: 100%;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .mastery-bar {
+      height: 100%;
+      width: 0%;
+      transition: width 1s ease;
+      background: #ccc;
     }
     
-    .dashboard-header { margin-bottom: 30px; }
-    .page-title { color: var(--secondary-color); font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* Cores de Dominância */
+    .level-high { background: var(--success-color); }
+    .level-mid { background: var(--warning-color); }
+    .level-low { background: var(--danger-color); }
+    .level-none { background: #ccc; }
 
-    /* Abas */
-    .tabs-container { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 25px; padding-bottom: 5px; -webkit-overflow-scrolling: touch; } /* Scroll horizontal no mobile */
-    .filter-tab { padding: 8px 16px; background: white; border: 1px solid #ddd; border-radius: 20px; cursor: pointer; font-weight: 500; color: #666; white-space: nowrap; flex-shrink: 0; }
-    .filter-tab.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+    .mastery-label {
+      font-size: 0.75rem;
+      margin-top: 5px;
+      text-align: right;
+      font-weight: bold;
+    }
+    .label-high { color: var(--success-color); }
+    .label-mid { color: var(--warning-color); }
+    .label-low { color: var(--danger-color); }
+    .label-none { color: #999; }
 
-    /* Controles */
-    .controls-row { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
-    .search-wrapper { flex: 2; position: relative; min-width: 200px; }
-    .search-input { width: 100%; padding: 10px 40px 10px 20px; border-radius: 25px; border: 1px solid #ddd; outline: none; }
-    .search-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #888; }
-    
-    .options-wrapper { display: flex; gap: 15px; align-items: center; flex: 1; justify-content: flex-end; flex-wrap: wrap; }
-    .sort-select { padding: 10px 15px; border-radius: 25px; border: 1px solid #ddd; background: white; outline: none; }
+    #loading { text-align: center; margin-top: 50px; color: #666; }
 
-    /* Toggle */
-    .toggle-container { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; color: #555; }
-    .toggle-switch { position: relative; display: inline-block; width: 40px; height: 20px; flex-shrink: 0; }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
-    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: var(--primary-color); }
-    input:checked + .slider:before { transform: translateX(20px); }
-
-    /* LISTA DE TÓPICOS */
-    .topics-container { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 40px; }
-    
-    /* Header da lista (escondido no mobile para economizar espaço) */
-    .topics-header { display: flex; justify-content: space-between; color: #888; font-weight: 500; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-    
-    .topic-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f9f9f9; }
-    
-    .topic-name { flex: 3; font-weight: 500; color: #444; padding-right: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    
-    .topic-data-area { flex: 4; display: flex; align-items: center; gap: 20px; }
-    .progress-track { flex: 1; height: 10px; background-color: #e9ecef; border-radius: 10px; overflow: hidden; }
-    .progress-fill { height: 100%; border-radius: 10px; transition: width 1s ease; }
-    
-    .topic-time { width: 80px; text-align: right; color: #666; font-size: 0.9rem; font-weight: 500; }
-    .topic-percentage { width: 50px; text-align: right; font-weight: 700; color: #333; }
-
-    .bar-blue { background-color: #00acc1; }
-    .bar-gray { background-color: #cfd8dc; }
-
-    .chart-section { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: center; }
-    .chart-wrapper { position: relative; height: 400px; width: 100%; max-width: 600px; margin: 0 auto; }
-
-    /* --- MÍDIA QUERIES (OTIMIZAÇÃO MOBILE) --- */
     @media (max-width: 900px) {
-      #sidebar { transform: translateX(-100%); } /* Esconde sidebar */
-      #sidebar.open { transform: translateX(0); } /* Mostra quando ativo */
-      #main-content { margin-left: 0; width: 100%; padding: 20px; padding-top: 60px; }
-      .mobile-menu-btn { display: block; } /* Mostra botão */
-      
-      /* Ajuste da lista para mobile */
-      .topics-header { display: none; } /* Esconde cabeçalho da lista */
-      
-      .topic-row { 
-        flex-direction: column; 
-        align-items: flex-start; 
-        gap: 8px; 
-        padding: 15px 0;
-      }
-      
-      .topic-name { 
-        width: 100%; 
-        white-space: normal; /* Permite quebra de linha no nome */
-        font-size: 1rem;
-        margin-bottom: 5px;
-      }
-      
-      .topic-data-area { 
-        width: 100%; 
-        gap: 10px; 
-        justify-content: space-between; 
-      }
-      
-      .progress-track { flex: 1; } /* Barra ocupa o espaço disponível */
-      
-      .topic-time { 
-        width: auto; 
-        font-size: 0.8rem; 
-        order: -1; /* Coloca o tempo antes da barra no mobile (opcional) ou depois */
-      }
-      
-      .topic-percentage { 
-        font-size: 0.9rem; 
-      }
-
-      .controls-row { flex-direction: column; align-items: stretch; }
-      .search-wrapper { width: 100%; }
-      .options-wrapper { justify-content: space-between; }
-      
-      .chart-wrapper { height: 300px; } /* Gráfico menor no mobile */
+      #sidebar { transform: translateX(-100%); width: 260px; }
+      #sidebar.open { transform: translateX(0); box-shadow: 5px 0 15px rgba(0,0,0,0.3); }
+      .mobile-menu-btn { display: block; }
+      #main-content { margin-left: 0; width: 100%; padding: 15px; padding-top: 70px; }
     }
   </style>
 </head>
 <body>
 
-<button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
-  <i class="fas fa-bars"></i>
-</button>
+<button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
 <div id="sidebar">
-  <div class="logo">
-    <i class="fas fa-book-open"></i>
-    <h2>Med Fácil</h2>
-  </div>
+  <div class="logo"><i class="fas fa-book-open"></i><h2>Med Fácil</h2></div>
   <ul class="sidebar-menu">
     <li><a href="index.html" class="sidebar-button"><i class="fas fa-home"></i><span>Início</span></a></li>
     <li><a href="historico.html" class="sidebar-button"><i class="fas fa-history"></i><span>Histórico</span></a></li>
     <li><a href="#" class="sidebar-button active"><i class="fas fa-book"></i><span>Conteúdos</span></a></li>
+    <li><a href="revisoes.html" class="sidebar-button"><i class="fas fa-sync-alt"></i><span>Revisões</span></a></li>
     <li><a id="btnLogout" href="#" class="sidebar-button"><i class="fas fa-sign-out-alt"></i><span>Sair</span></a></li>
   </ul>
 </div>
 
 <div id="main-content">
-  
-  <div class="dashboard-header">
-    <h1 class="page-title">Desempenho por Área</h1>
-    
-    <div class="tabs-container">
-      <div class="filter-tab active" data-filter="all">Geral</div>
-      <div class="filter-tab" data-filter="Cirurgia Geral">Cirurgia</div>
-      <div class="filter-tab" data-filter="Clínica Médica">Clínica</div>
-      <div class="filter-tab" data-filter="Pediatria">Pediatria</div>
-      <div class="filter-tab" data-filter="Ginecologia e Obstetrícia">G.O.</div>
-      <div class="filter-tab" data-filter="Medicina Preventiva">Preventiva</div>
-    </div>
-
-    <div class="controls-row">
-      <div class="search-wrapper">
-        <input type="text" class="search-input" id="searchInput" placeholder="Pesquisar assunto...">
-        <i class="fas fa-search search-icon"></i>
-      </div>
-      
-      <div class="options-wrapper">
-        <label class="toggle-container">
-          <div class="toggle-switch">
-            <input type="checkbox" id="toggleEmpty">
-            <span class="slider"></span>
-          </div>
-          <span style="font-size: 0.85rem;">Mostrar não estudados</span>
-        </label>
-
-        <select class="sort-select" id="sortSelect">
-          <option value="az">A-Z</option>
-          <option value="performance_desc">Melhor %</option>
-          <option value="performance_asc">Pior %</option>
-          <option value="questions">Mais Q.</option>
-        </select>
-      </div>
-    </div>
+  <div class="header">
+    <h1>Domínio de Conteúdo</h1>
+    <p style="color:#666;">Visualize sua taxa de acerto por tema.</p>
   </div>
 
-  <div id="loading-message" style="text-align: center; color: #666; margin-top: 50px;">
-    <i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Carregando seus dados...
-  </div>
-
-  <div class="topics-container" id="topicsContainer" style="display: none;">
-    <div class="topics-header">
-      <span style="flex: 3;">Assunto</span>
-      <div style="flex: 4; display: flex; justify-content: flex-end; gap: 35px;">
-        <span>Progresso</span>
-        <span style="width: 80px; text-align: right;">Tempo</span>
-        <span style="width: 50px; text-align: right;">%</span>
-      </div>
-    </div>
-    <div id="topicsList"></div>
-  </div>
-
-  <div class="chart-section" id="chartSection" style="display: none;">
-    <h3 style="color: var(--secondary-color); margin-bottom: 20px;">Visão Geral</h3>
-    <div class="chart-wrapper">
-      <canvas id="skillsChart"></canvas>
-    </div>
-  </div>
-
+  <div id="loading"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+  <div id="contentContainer"></div>
 </div>
 
 <script>
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('show');
+  }
+
   const firebaseConfig = {
     apiKey: "AIzaSyCWNFjeLIjBgDa5v3W5vsCdJ1PGDeHE35A",
     authDomain: "meu-study-tracker.firebaseapp.com",
@@ -242,221 +153,114 @@
     auth = firebase.auth(); 
   } catch (error) { console.error(error); }
 
-  const dadosTemasBase = {
-    "Cirurgia Geral": ["Anestesia", "Apendicite aguda", "Atendimento inicial ao politraumatizado", "Avaliação da função hepática", "Choque", "Cicatrização", "Cirrose hepática", "Cirurgia vascular", "Cistite aguda", "Complicações pós-operatórias", "Cuidados pré-operatórios", "Câncer de cólon e reto", "Câncer de esôfago", "Câncer de próstata", "Diarreias", "Doença diverticular", "DRGE", "Doença ulcerosa péptica", "Doenças inflamatórias intestinais", "Hemorragia digestiva alta", "Hérnias", "Litíase biliar", "Litíase urinária", "Pancreatite aguda", "Queimaduras", "Trauma abdominal", "Trauma torácico"],
-    "Clínica Médica": ["Anemias", "Angina estável", "Asma", "COVID-19", "Cefaleias", "Demência", "Dengue", "Diabetes", "DPOC", "Doença renal crônica", "HAS", "HIV", "IAM", "ICC", "Infecção Urinaria", "Pneumonias", "Sepse", "Tuberculose", "AVC"],
-    "Ginecologia e Obstetrícia": ["Abortamento", "Amenorreia", "Anticoncepção", "Pré-natal", "Câncer de colo uterino", "Câncer de mama", "Diabetes gestacional", "DHEG", "Endometriose", "Parto", "Sangramento uterino", "SOP", "Vulvovaginites"],
-    "Pediatria": ["Aleitamento", "Asma", "Bronquiolite", "Cardiopatias", "Desenvolvimento", "Doenças exantemáticas", "Imunização", "Infecção Urinaria", "Pneumonias", "Puericultura", "Reanimação neonatal"],
-    "Medicina Preventiva": ["Análise de métodos diagnósticos", "Caso-controle", "Conceitos na atenção primária", "Coorte", "Dinâmica de transmissão", "Ensaio clínico", "Gestão do SUS", "Humanização", "Leis e diretrizes do SUS", "Medicina baseada em evidências", "Medicina do trabalho", "Medicina legal", "Morbidade", "Mortalidade", "Outros", "Prevenção", "Princípios do SUS", "Saúde do idoso", "Testes estatísticos", "Transição epidemiológica", "Vigilância epidemiológica", "Ética médica"]
+  // --- LISTA DE TEMAS (ATUALIZADA COM ELETROCARDIOGRAMA) ---
+  const dadosTemas = {
+    "Cirurgia Geral": ["Anestesia", "Apendicite aguda", "Choque", "Cicatrização", "Cirurgia vascular", "Cistite aguda", "Hérnias", "Pancreatite aguda", "Queimaduras", "Trauma abdominal", "Trauma torácico"],
+    "Clínica Médica": ["Asma", "COVID-19", "Cefaleias", "Dengue", "Diabetes", "HAS", "HIV", "IAM", "ICC", "Pneumonia", "Sepse", "Tuberculose", "Eletrocardiograma"],
+    "Ginecologia e Obstetrícia": ["Abortamento", "Pré-natal", "Câncer de colo uterino", "Câncer de mama", "Diabetes gestacional", "DHEG", "Parto", "Vulvovaginites"],
+    "Pediatria": ["Aleitamento", "Asma", "Bronquiolite", "Cardiopatias", "Desenvolvimento", "Imunização", "Pneumonias", "Puericultura"],
+    "Medicina Preventiva": ["Epidemiologia", "SUS", "Ética médica", "Vigilância epidemiológica"]
   };
 
-  let allSubjectsData = {}; 
-  let currentFilter = 'all';
-  let currentSort = 'az';
-  let showEmpty = false;
-  let chartInstance = null;
-
-  function timeToMinutes(timeStr) {
-    if (!timeStr) return 0;
-    const p = timeStr.split(':').map(Number);
-    if (p.length !== 3) return 0;
-    return (p[0] * 60) + p[1] + (p[2]/60);
-  }
-
-  function formatMinutesToHrs(totalMinutes) {
-    if (totalMinutes === 0) return "0h";
-    const h = Math.floor(totalMinutes / 60);
-    const m = Math.floor(totalMinutes % 60);
-    if (h > 0) return `${h}h ${m}m`;
-    return `${m}m`;
-  }
-
-  function processData(sessionsByDate) {
-    const subjects = {};
-    for (const [area, temas] of Object.entries(dadosTemasBase)) {
-      subjects[area] = { totalQuestions: 0, totalCorrect: 0, topics: {} };
-      temas.forEach(tema => {
-        subjects[area].topics[tema] = { totalTime: 0, questions: 0, correct: 0 };
-      });
-    }
-
-    if (sessionsByDate) {
-      for (const date in sessionsByDate) {
-        sessionsByDate[date].forEach(session => {
-          const subjectName = session.subject || 'Outros';
-          const topicName = (session.topic && session.topic.trim() !== "") ? session.topic : 'Geral';
-
-          if (!subjects[subjectName]) subjects[subjectName] = { totalQuestions: 0, totalCorrect: 0, topics: {} };
-          if (!subjects[subjectName].topics[topicName]) subjects[subjectName].topics[topicName] = { totalTime: 0, questions: 0, correct: 0 };
-
-          subjects[subjectName].totalQuestions += (session.exercisesDone || 0);
-          subjects[subjectName].totalCorrect += (session.exercisesCorrect || 0);
-
-          const tStat = subjects[subjectName].topics[topicName];
-          tStat.totalTime += timeToMinutes(session.time);
-          tStat.questions += (session.exercisesDone || 0);
-          tStat.correct += (session.exercisesCorrect || 0);
-        });
-      }
-    }
-    allSubjectsData = subjects;
-    renderInterface();
-  }
-
-  function renderInterface() {
-    renderTopicList();
-    renderChart();
-    document.getElementById('loading-message').style.display = 'none';
-    document.getElementById('topicsContainer').style.display = 'block';
-    document.getElementById('chartSection').style.display = 'block';
-  }
-
-  function renderTopicList() {
-    const listContainer = document.getElementById('topicsList');
-    const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-    listContainer.innerHTML = '';
-
-    let flatList = [];
-
-    for (const [areaName, areaData] of Object.entries(allSubjectsData)) {
-      if (currentFilter !== 'all' && areaName !== currentFilter) continue;
-
-      for (const [topicName, stats] of Object.entries(areaData.topics)) {
-        if (searchQuery && !topicName.toLowerCase().includes(searchQuery)) continue;
-        if (!showEmpty && stats.questions === 0) continue;
-
-        const accuracy = stats.questions > 0 ? (stats.correct / stats.questions * 100) : 0;
-        flatList.push({ area: areaName, name: topicName, accuracy: accuracy, questions: stats.questions, time: stats.totalTime });
-      }
-    }
-
-    flatList.sort((a, b) => {
-      if (currentSort === 'az') return a.name.localeCompare(b.name);
-      if (currentSort === 'performance_desc') return b.accuracy - a.accuracy;
-      if (currentSort === 'performance_asc') {
-        if(a.accuracy === 0 && b.accuracy === 0) return a.name.localeCompare(b.name);
-        return a.accuracy - b.accuracy;
-      }
-      if (currentSort === 'questions') return b.questions - a.questions;
-    });
-
-    if (flatList.length === 0) {
-      listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">Nenhum tópico encontrado.</p>';
-      return;
-    }
-
-    flatList.forEach(item => {
-      let barClass = 'bar-blue';
-      if (item.questions === 0) barClass = 'bar-gray';
-      else if (item.accuracy >= 80) barClass = 'bar-blue'; 
-      
-      const html = `
-        <div class="topic-row">
-          <div class="topic-name">
-            ${item.name} 
-            ${currentFilter === 'all' ? `<span style="font-size:0.75rem; color:#999; margin-left:5px; background:#eee; padding:2px 6px; border-radius:4px;">${item.area}</span>` : ''}
-          </div>
-          
-          <div class="topic-data-area">
-            <div class="topic-time">
-              ${item.time > 0 ? '<i class="far fa-clock" style="font-size:0.8rem; margin-right:3px;"></i>' : ''}
-              ${formatMinutesToHrs(item.time)}
-            </div>
-
-            <div class="progress-track">
-              <div class="progress-fill ${barClass}" style="width: ${item.questions > 0 ? item.accuracy : 0}%"></div>
-            </div>
-            
-            <div class="topic-percentage">${item.questions > 0 ? item.accuracy.toFixed(0) + '%' : '-'}</div>
-          </div>
-        </div>
-      `;
-      listContainer.innerHTML += html;
-    });
-  }
-
-  function renderChart() {
-    const ctx = document.getElementById('skillsChart').getContext('2d');
-    const labels = []; const dataPoints = [];
-    const mainAreas = ["Clínica Médica", "Cirurgia Geral", "Pediatria", "Ginecologia e Obstetrícia", "Medicina Preventiva"];
-    
-    mainAreas.forEach(area => {
-      labels.push(area);
-      if (allSubjectsData[area] && allSubjectsData[area].totalQuestions > 0) {
-        const acc = (allSubjectsData[area].totalCorrect / allSubjectsData[area].totalQuestions * 100);
-        dataPoints.push(acc.toFixed(1));
-      } else { dataPoints.push(0); }
-    });
-
-    if (chartInstance) chartInstance.destroy();
-
-    chartInstance = new Chart(ctx, {
-      type: 'radar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Desempenho (%)',
-          data: dataPoints,
-          backgroundColor: 'rgba(0, 172, 193, 0.2)',
-          borderColor: '#00acc1',
-          pointBackgroundColor: '#fff',
-          pointBorderColor: '#00acc1',
-          borderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: { r: { angleLines: { display: true, color: '#eee' }, grid: { color: '#f0f0f0' }, suggestedMin: 0, suggestedMax: 100, ticks: { stepSize: 20, backdropColor: 'transparent', display: false } } },
-        plugins: { legend: { display: false } }
-      }
-    });
-  }
-
   window.addEventListener('load', () => {
-    const tabs = document.querySelectorAll('.filter-tab');
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentFilter = tab.getAttribute('data-filter');
-        renderTopicList();
-      });
-    });
-
-    document.getElementById('searchInput').addEventListener('input', renderTopicList);
-    document.getElementById('toggleEmpty').addEventListener('change', (e) => {
-      showEmpty = e.target.checked;
-      renderTopicList();
-    });
-    document.getElementById('sortSelect').addEventListener('change', (e) => {
-      currentSort = e.target.value;
-      renderTopicList();
-    });
-
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        const btnLogout = document.getElementById('btnLogout');
-        if(btnLogout) btnLogout.addEventListener('click', (e) => {
-            e.preventDefault();
-            auth.signOut().then(() => window.location.href = 'login.html');
-        });
-
-        try {
-          const snapshot = await database.ref('users/' + user.uid + '/sessionsByDate').get();
-          const data = snapshot.exists() ? snapshot.val() : null;
-          processData(data);
-        } catch (error) { console.error(error); }
-      } else { window.location.href = 'login.html'; }
+        document.getElementById('btnLogout').addEventListener('click', (e)=>{e.preventDefault(); auth.signOut().then(()=>window.location.href='login.html');});
+        loadMasteryData(user.uid);
+      } else {
+        window.location.href = 'login.html';
+      }
     });
   });
 
-  // Fecha sidebar ao clicar fora (Mobile)
+  async function loadMasteryData(uid) {
+    try {
+      const snap = await database.ref('users/' + uid + '/sessionsByDate').get();
+      const sessions = snap.exists() ? snap.val() : {};
+      
+      calculateAndRender(sessions);
+      document.getElementById('loading').style.display = 'none';
+    } catch (e) { console.error(e); }
+  }
+
+  function calculateAndRender(sessions) {
+    // 1. Processar dados do Firebase para criar um mapa de performance
+    const stats = {}; // { "Asma": { correct: 10, total: 12 }, ... }
+
+    for (const date in sessions) {
+      sessions[date].forEach(s => {
+        const topic = s.topic || "Geral";
+        if(topic === "Geral") return;
+
+        if (!stats[topic]) stats[topic] = { correct: 0, total: 0 };
+        stats[topic].correct += (s.exercisesCorrect || 0);
+        stats[topic].total += (s.exercisesDone || 0);
+      });
+    }
+
+    const container = document.getElementById('contentContainer');
+    container.innerHTML = '';
+
+    // 2. Iterar sobre a lista fixa de temas (dadosTemas)
+    for (const [categoria, temas] of Object.entries(dadosTemas)) {
+      
+      // Cria seção da Categoria
+      const section = document.createElement('div');
+      section.className = 'subject-section';
+      section.innerHTML = `<h2 class="subject-title">${categoria}</h2>`;
+      
+      const grid = document.createElement('div');
+      grid.className = 'topics-grid';
+
+      temas.forEach(tema => {
+        // Pega dados ou zero se não estudou
+        const data = stats[tema] || { correct: 0, total: 0 };
+        const accuracy = data.total > 0 ? (data.correct / data.total * 100) : 0;
+        
+        // Define Cor e Texto
+        let barClass = 'level-none';
+        let labelClass = 'label-none';
+        let labelText = 'Não iniciado';
+
+        if (data.total > 0) {
+          if (accuracy >= 80) {
+            barClass = 'level-high'; labelClass = 'label-high'; labelText = 'Dominado 🚀';
+          } else if (accuracy >= 50) {
+            barClass = 'level-mid'; labelClass = 'label-mid'; labelText = 'Em progresso ⚠️';
+          } else {
+            barClass = 'level-low'; labelClass = 'label-low'; labelText = 'Atenção 🚨';
+          }
+        }
+
+        const card = document.createElement('div');
+        card.className = 'topic-card';
+        card.innerHTML = `
+          <div class="topic-header">
+            <span class="topic-name">${tema}</span>
+            <span class="topic-stats">${data.correct}/${data.total}</span>
+          </div>
+          <div class="mastery-container">
+            <div class="mastery-bar ${barClass}" style="width: ${data.total > 0 ? accuracy : 0}%"></div>
+          </div>
+          <div class="mastery-label ${labelClass}">
+            ${data.total > 0 ? accuracy.toFixed(0) + '% - ' : ''}${labelText}
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      section.appendChild(grid);
+      container.appendChild(section);
+    }
+  }
+
+  // Fecha sidebar mobile ao clicar fora
   document.addEventListener('click', (e) => {
     const sidebar = document.getElementById('sidebar');
     const btn = document.querySelector('.mobile-menu-btn');
     if(window.innerWidth <= 900 && !sidebar.contains(e.target) && !btn.contains(e.target)) {
       sidebar.classList.remove('open');
+      document.getElementById('sidebar-overlay').classList.remove('show');
     }
   });
 </script>

@@ -97,19 +97,23 @@
 
     /* --- MEDIA QUERIES (MOBILE) --- */
     @media (max-width: 900px) {
+      /* Sidebar Escondida */
       #sidebar { transform: translateX(-100%); width: 260px; }
       #sidebar.open { transform: translateX(0); box-shadow: 5px 0 15px rgba(0,0,0,0.3); }
       .mobile-menu-btn { display: block; }
       
+      /* Ajustes de Layout */
       #main-content { margin-left: 0; width: 100%; padding: 15px; padding-top: 70px; }
       .today-stats { grid-template-columns: 1fr; gap: 10px; }
       .exercises-section { grid-template-columns: 1fr; }
       .stats-container { grid-template-columns: 1fr 1fr; gap: 10px; }
       .daily-summary-stats { grid-template-columns: 1fr 1fr; }
       
+      /* Botões */
       .button-container { flex-direction: column; width: 100%; }
       .button { width: 100%; }
       
+      /* Timer */
       .timer-section { padding: 20px; }
       #timer { font-size: 3.5rem; }
     }
@@ -205,7 +209,7 @@
 
     const dadosTemas = {
       "Cirurgia Geral": ["Anestesia", "Apendicite aguda", "Choque", "Cicatrização", "Cirurgia vascular", "Cistite aguda", "Hérnias", "Pancreatite aguda", "Queimaduras", "Trauma abdominal", "Trauma torácico"],
-      "Clínica Médica": ["Asma", "COVID-19", "Cefaleias", "Dengue", "Diabetes", "HAS", "HIV", "IAM", "ICC", "Pneumonia", "Sepse", "Tuberculose"],
+      "Clínica Médica": ["Asma", "COVID-19", "Cefaleias", "Dengue", "Diabetes", "HAS", "HIV", "IAM", "ICC", "Pneumonia", "Sepse", "Tuberculose", "Eletrocardiograma"],
       "Ginecologia e Obstetrícia": ["Abortamento", "Pré-natal", "Câncer de colo uterino", "Câncer de mama", "Diabetes gestacional", "DHEG", "Parto", "Vulvovaginites"],
       "Pediatria": ["Aleitamento", "Asma", "Bronquiolite", "Cardiopatias", "Desenvolvimento", "Imunização", "Pneumonias", "Puericultura"],
       "Medicina Preventiva": ["Epidemiologia", "SUS", "Ética médica", "Vigilância epidemiológica"]
@@ -284,9 +288,11 @@
       sessionsByDate[dateKey].push(sessionData);
       
       try {
+        // 1. Salva Sessão
         await dbRef.set(sessionsByDate);
         console.log("Sessão salva!");
         
+        // 2. Agenda Revisão Inteligente
         if (topic !== "Geral") {
           await updateReviewSchedule(subject, topic, auth.currentUser.uid);
         }
@@ -309,37 +315,45 @@
       timerDisplay.textContent = "00:00:00";
     }
 
-    // --- LÓGICA DE REVISÃO INTELIGENTE (PULA DIAS PROIBIDOS) ---
+    // --- NOVA LÓGICA DE AGENDAMENTO (COM DIAS PERMITIDOS) ---
     async function updateReviewSchedule(subject, topic, uid) {
       const safeTopicKey = topic.replace(/[.#$/\[\]]/g, '_');
       const reviewRef = database.ref(`users/${uid}/reviews/${safeTopicKey}`);
       const settingsRef = database.ref(`users/${uid}/settings/studyDays`);
 
-      // 1. Busca nível atual e configurações
-      const [snapReview, snapSettings] = await Promise.all([reviewRef.get(), settingsRef.get()]);
-      
+      // 1. Busca dados atuais E configurações de dias
+      const [snapReview, snapSettings] = await Promise.all([
+          reviewRef.get(),
+          settingsRef.get()
+      ]);
+
+      // 2. Define Nível
       let level = 0;
       if (snapReview.exists()) {
         level = (snapReview.val().level || 0) + 1;
       }
 
-      // 2. Define dias permitidos (Default: todos)
-      const allowedDays = snapSettings.exists() ? snapSettings.val() : [0,1,2,3,4,5,6];
+      // 3. Define Dias Permitidos (0=Dom, 1=Seg... padrão: todos)
+      const allowedDays = snapSettings.exists() ? snapSettings.val() : [0, 1, 2, 3, 4, 5, 6];
 
-      // 3. Calcula data base
+      // 4. Calcula Data Base
       const intervals = [1, 7, 30, 120];
       const daysToAdd = intervals[Math.min(level, intervals.length - 1)];
       let targetDate = new Date();
       targetDate.setDate(targetDate.getDate() + daysToAdd);
 
-      // 4. Ajusta se cair em dia proibido
+      // 5. AJUSTE DE DIAS PROIBIDOS
       if (allowedDays && allowedDays.length > 0) {
-          while (!allowedDays.includes(targetDate.getDay())) {
-              console.log(`Dia ${targetDate.getDay()} não permitido. Avançando...`);
+          // Loop de segurança (max 30 dias para evitar travamento)
+          let safety = 0;
+          while (!allowedDays.includes(targetDate.getDay()) && safety < 30) {
+              console.log(`Dia ${targetDate.getDay()} bloqueado. Avançando...`);
               targetDate.setDate(targetDate.getDate() + 1);
+              safety++;
           }
       }
-      
+
+      // 6. Salva
       await reviewRef.set({
         subject: subject,
         topic: topic,
@@ -563,7 +577,6 @@
       }
     });
 
-    // Fecha sidebar ao clicar fora
     document.addEventListener('click', (e) => {
       const sidebar = document.getElementById('sidebar');
       const btn = document.querySelector('.mobile-menu-btn');
